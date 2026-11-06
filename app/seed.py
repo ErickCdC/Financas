@@ -12,7 +12,10 @@ DEFAULT_SETTINGS = {
     "aumento_from": "2027-01",
     "teto_semanal": 50.0,        # plano de nov/26: fechar o mês sem ficar no vermelho
     "caixa": 214.74,            # saldo somado em 05/11/2026
-    "salario_data": "2026-10-30",
+    "salario_data": "2026-10-30",  # legado; o app calcula pelo dia do salário
+    "salario_dia": 30,
+    "caixa_ref": "2026-11",     # mês a que o caixa se refere
+    "cartao_venc": {"Nubank": 3, "Mercado Pago": 4, "PicPay": 5},
     "cartoes": ["Nubank", "Mercado Pago", "PicPay"],
     "ciclo_extra": {"Nubank": 27.94, "Mercado Pago": 66.98},
     "ignore_terms": ["pichau", "activeaplus", "damari", "netinjection", "claude", "melimais",
@@ -22,6 +25,19 @@ DEFAULT_SETTINGS = {
     "last_sync": None,
     "caixa_banco": None,
     "cartao_usado": {},
+    "notif": {
+        "enabled": True,
+        "quiet_start": "22:30",
+        "quiet_end": "07:30",
+        "rules": {
+            "daily_log": {"on": True, "time": "20:30"},
+            "teto_alert": {"on": True, "pcts": [80, 100]},
+            "bills_due": {"on": True, "time": "09:00", "days_before": 2},
+            "weekly_summary": {"on": True, "time": "08:30", "weekday": 0},
+            "payday": {"on": True, "time": "10:00"},
+            "auto_sync": {"on": False, "time": "12:30"},
+        },
+    },
 }
 
 RECURRING = [  # nome, valor, cartão (None = paga direto da conta)
@@ -74,7 +90,7 @@ def seed(conn):
     for k, v in DEFAULT_SETTINGS.items():
         conn.execute("INSERT OR IGNORE INTO settings(key,value) VALUES(?,?)", (k, json.dumps(v)))
     for name, amount, card in RECURRING:
-        conn.execute("INSERT INTO recurring(name,amount,card) VALUES(?,?,?)", (name, amount, card))
+        conn.execute("INSERT INTO recurring(name,amount,card,due_day) VALUES(?,?,?,NULL)", (name, amount, card))
     for name, card, amount, total, paid in INSTALLMENTS:
         conn.execute("INSERT INTO installments(name,card,amount,total,paid_count) VALUES(?,?,?,?,?)",
                      (name, card, amount, total, paid))

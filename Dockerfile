@@ -1,9 +1,12 @@
 FROM python:3.12-slim
-ENV PYTHONUNBUFFERED=1 DATA_DIR=/data PORT=8080
+ENV PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1 DATA_DIR=/data PORT=8080
 WORKDIR /app
-COPY server.py projection.py seed.py ./
+COPY requirements.txt ./
+RUN pip install --no-cache-dir -r requirements.txt
+COPY server.py ./
+COPY app ./app
 COPY static ./static
-RUN useradd -r -u 10001 app && mkdir /data && chown app /data
+RUN useradd -r -u 10001 app && mkdir -p /data && chown app /data
 USER app
 VOLUME /data
 EXPOSE 8080

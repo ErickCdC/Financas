@@ -1,5 +1,5 @@
-# Render (plano grátis). Atenção: o disco do plano grátis NÃO é permanente.
-# Exporte o backup em Ajustes com frequência.
+# Render (plano grátis). O disco do plano grátis apaga ao reiniciar:
+# configure GITHUB_TOKEN para o backup automático (veja o README).
 services:
   - type: web
     name: financas
@@ -8,7 +8,17 @@ services:
     healthCheckPath: /health
     envVars:
       - key: APP_PASSWORD
-        sync: false        # você digita no painel do Render
+        sync: false          # você digita no painel
+      - key: APP_SECRET
+        generateValue: true  # chave interna (sessões e notificações)
+      - key: CRON_TOKEN
+        generateValue: true  # copie para o Secret CRON_TOKEN do GitHub
+      - key: GITHUB_TOKEN
+        sync: false          # token do GitHub com acesso de escrita ao repositório
+      - key: GITHUB_REPO
+        value: ErickCdC/Financas
+      - key: GITHUB_BRANCH
+        value: dados
       - key: COOKIE_SECURE
         value: "1"
       - key: DATA_DIR
@@ -16,4 +26,4 @@ services:
       - key: HOST
         value: 0.0.0.0
       - key: BANCO_MCP_KEY
-        sync: false        # opcional
+        sync: false          # opcional

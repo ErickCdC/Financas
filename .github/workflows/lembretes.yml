@@ -1,0 +1,29 @@
+# Acorda o app no Render e roda a rotina de notificações a cada 30 minutos.
+# Precisa dos Secrets APP_URL e CRON_TOKEN (Settings › Secrets and variables › Actions).
+name: Lembretes
+on:
+  schedule:
+    - cron: "5,35 * * * *"
+  workflow_dispatch:
+permissions: {}
+jobs:
+  tick:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - name: Rodar rotina
+        env:
+          APP_URL: ${{ secrets.APP_URL }}
+          CRON_TOKEN: ${{ secrets.CRON_TOKEN }}
+        run: |
+          if [ -z "$APP_URL" ] || [ -z "$CRON_TOKEN" ]; then
+            echo "::warning::Configure os Secrets APP_URL e CRON_TOKEN"; exit 0
+          fi
+          for i in 1 2 3; do
+            code=$(curl -s -o out.json -w "%{http_code}" --max-time 100 -X POST "${APP_URL%/}/api/cron" \
+              -H "Content-Type: application/json" -H "X-Cron-Token: $CRON_TOKEN" -d '{}') || code=000
+            echo "tentativa $i: HTTP $code"
+            if [ "$code" = "200" ]; then jq -c '{hora, enviadas: (.enviadas | length), silencio}' out.json; exit 0; fi
+            sleep 20
+          done
+          exit 1
