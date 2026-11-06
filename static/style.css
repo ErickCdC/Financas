@@ -409,3 +409,5 @@ details.card[open] > summary svg.i { transform: rotate(90deg); }
 .setting .ctrl { margin-left: auto; }
 .chart .lbl { font-size: 15px; }
 .chart .val { font-size: 15px; }
+.setting.stack .body { flex: none; }
+.setting.stack textarea { width: 100%; }

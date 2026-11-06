@@ -15,7 +15,8 @@ def banco_post(path, body):
     for _ in range(5):
         req = urllib.request.Request(C.BANCO_BASE + path, data=data, method="POST",
                                      headers={"Authorization": "Bearer " + C.BANCO_KEY,
-                                              "Content-Type": "application/json"})
+                                              "Content-Type": "application/json", "Accept": "application/json",
+                                              "User-Agent": "financas-app/2 (+uso pessoal)"})
         try:
             with urllib.request.urlopen(req, timeout=30) as r:
                 j = json.loads(r.read().decode("utf-8"))
@@ -27,7 +28,7 @@ def banco_post(path, body):
                     wait = 2
                 time.sleep(min(wait, 10))
                 continue
-            raise RuntimeError("Banco MCP respondeu HTTP %d (%s)" % (e.code, path))
+            raise RuntimeError(_explain(e, path))
         except (urllib.error.URLError, TimeoutError, ValueError):
             raise RuntimeError("Não consegui falar com o Banco MCP (%s)" % path)
         res = j.get("result", j) if isinstance(j, dict) else {}
@@ -37,6 +38,31 @@ def banco_post(path, body):
         time.sleep(0.6)  # o provedor limita a ~2 requisições por segundo
         return res
     raise RuntimeError("Banco MCP: limite de requisições, tente de novo em instantes")
+
+
+HINTS = {
+    "key_binding_mismatch": "a chave é temporária (de link de prompt) e foi bloqueada; gere uma chave permanente no painel do MCP.AI",
+    "key_scope_mismatch": "a chave não tem acesso ao Banco MCP; gere uma chave com acesso a esse MCP",
+    "forbidden": "a chave não tem acesso ao Banco MCP neste workspace",
+    "install_required": "só o dono do workspace pode adicionar este MCP",
+    "unauthorized": "chave inválida ou ausente",
+    "insufficient_credits": "créditos do MCP.AI acabaram",
+    "not_connected": "conecte suas credenciais no MCP.AI",
+}
+
+
+def _explain(e, path):
+    code, msg = "", ""
+    try:
+        err = json.loads(e.read().decode("utf-8", "replace")).get("error") or {}
+        if isinstance(err, dict):
+            code, msg = str(err.get("code") or ""), str(err.get("message") or "")
+        else:
+            msg = str(err)
+    except (ValueError, AttributeError, OSError):
+        pass
+    hint = HINTS.get(code) or msg[:160] or "sem detalhes"
+    return "Banco MCP: HTTP %d%s — %s" % (e.code, f" ({code})" if code else "", hint)
 
 
 def local_date(s):
