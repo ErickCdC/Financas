@@ -125,7 +125,7 @@
   "last_auto_sync": "2026-11-06T17:47",
   "last_force": "2026-11-06T17:48",
   "last_sync": "2026-11-06 17:48",
-  "last_tick": "2026-11-06 18:04"
+  "last_tick": "2026-11-06 18:05"
  },
  "recurring": [
   {
@@ -314,6 +314,90 @@
   {
    "month": "2026-10",
    "key": "rec:3",
+   "paid": 1,
+   "amount": null
+  },
+  {
+   "month": "2026-09",
+   "key": "rec:1",
+   "paid": 1,
+   "amount": null
+  },
+  {
+   "month": "2026-09",
+   "key": "rec:2",
+   "paid": 1,
+   "amount": null
+  },
+  {
+   "month": "2026-09",
+   "key": "rec:4",
+   "paid": 1,
+   "amount": null
+  },
+  {
+   "month": "2026-09",
+   "key": "rec:3",
+   "paid": 1,
+   "amount": null
+  },
+  {
+   "month": "2026-09",
+   "key": "bill:Nubank",
+   "paid": 1,
+   "amount": null
+  },
+  {
+   "month": "2026-09",
+   "key": "bill:Mercado Pago",
+   "paid": 1,
+   "amount": null
+  },
+  {
+   "month": "2026-09",
+   "key": "bill:PicPay",
+   "paid": 1,
+   "amount": null
+  },
+  {
+   "month": "2026-08",
+   "key": "bill:PicPay",
+   "paid": 1,
+   "amount": null
+  },
+  {
+   "month": "2026-08",
+   "key": "bill:Mercado Pago",
+   "paid": 1,
+   "amount": null
+  },
+  {
+   "month": "2026-08",
+   "key": "bill:Nubank",
+   "paid": 1,
+   "amount": null
+  },
+  {
+   "month": "2026-08",
+   "key": "rec:3",
+   "paid": 1,
+   "amount": null
+  },
+  {
+   "month": "2026-08",
+   "key": "rec:4",
+   "paid": 1,
+   "amount": null
+  },
+  {
+   "month": "2026-08",
+   "key": "rec:2",
+   "paid": 1,
+   "amount": null
+  },
+  {
+   "month": "2026-08",
+   "key": "rec:1",
    "paid": 1,
    "amount": null
   }
