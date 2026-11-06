@@ -405,6 +405,17 @@
    "ignored": 0
   }
  ],
- "push_subs": [],
+ "push_subs": [
+  {
+   "id": 1,
+   "endpoint": "https://fcm.googleapis.com/fcm/send/fo23PEcyfLA:APA91bGqKZBfVR4tzHmoJ6k7fTLlH516rb4eIvKU_9OmUL3xidqLE0X57mGtsSqx3kHWPyQlky2d_vEO9xUkrcRFf8OXvCBmRfC_M3JM3KnDZ25I9a2LHi2o5ovLNk16RR09Q5cNiMCc",
+   "p256dh": "BC0VLbY29rG4fabU1gF0lXqbUv1dUkOXLBzqbJ1lDt9Z4nZKqHBWZna_eqffBBjdQloosnZlqqnByWwPITd1yIQ",
+   "auth": "-LZCogkbAIUGPprhqKSGMw",
+   "label": "Android · Chrome",
+   "created": "2026-11-06 17:47",
+   "last_ok": null,
+   "fails": 0
+  }
+ ],
  "notif_log": []
 }
