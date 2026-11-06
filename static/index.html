@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#12201c">
+<title>Finanças</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<div id="login" class="login" hidden>
+  <form id="loginform">
+    <div class="eyebrow">Finanças · uso pessoal</div>
+    <h1>Entrar</h1>
+    <label><span>Senha</span><input id="pw" type="password" autocomplete="current-password" required></label>
+    <button type="submit" class="primary">Entrar</button>
+    <div id="loginerr" class="err"></div>
+  </form>
+</div>
+<main id="app"><div id="view"></div></main>
+<nav id="tabs"></nav>
+<div id="toast" role="status"></div>
+<script src="/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,20 @@
+# Use junto com o principal:  docker compose -f docker-compose.yml -f docker-compose.https.yml up -d
+# Precisa de um domínio apontando pra este servidor (um subdomínio grátis do DuckDNS serve)
+# e das portas 80 e 443 abertas no firewall da hospedagem.
+services:
+  financas:
+    ports: !reset []
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    command: caddy reverse-proxy --from ${DOMINIO} --to financas:8080
+    volumes:
+      - caddy-data:/data
+    depends_on:
+      - financas
+
+volumes:
+  caddy-data:

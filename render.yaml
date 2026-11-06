@@ -1,0 +1,19 @@
+# Render (plano grátis). Atenção: o disco do plano grátis NÃO é permanente.
+# Exporte o backup em Ajustes com frequência.
+services:
+  - type: web
+    name: financas
+    runtime: docker
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: APP_PASSWORD
+        sync: false        # você digita no painel do Render
+      - key: COOKIE_SECURE
+        value: "1"
+      - key: DATA_DIR
+        value: /data
+      - key: HOST
+        value: 0.0.0.0
+      - key: BANCO_MCP_KEY
+        sync: false        # opcional

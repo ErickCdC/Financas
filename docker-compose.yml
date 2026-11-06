@@ -1,0 +1,13 @@
+services:
+  financas:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - financas-data:/data
+    # Sem HTTPS na frente, publique só na máquina local e use o proxy (veja README):
+    ports:
+      - "127.0.0.1:8080:8080"
+
+volumes:
+  financas-data:
