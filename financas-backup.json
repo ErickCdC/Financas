@@ -125,7 +125,7 @@
   "last_auto_sync": "2026-11-06T18:52",
   "last_force": "2026-11-06T18:53",
   "last_sync": "2026-11-06 18:52",
-  "last_tick": "2026-11-06 18:53"
+  "last_tick": "2026-11-06 18:54"
  },
  "recurring": [
   {
@@ -406,6 +406,12 @@
   {
    "month": "2026-08",
    "key": "rec:1",
+   "paid": 1,
+   "amount": null
+  },
+  {
+   "month": "2026-11",
+   "key": "rec:8",
    "paid": 1,
    "amount": null
   }
