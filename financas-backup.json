@@ -418,12 +418,6 @@
  ],
  "overrides": [
   {
-   "card": "PicPay",
-   "month": "2026-11",
-   "amount": 1338.0,
-   "note": "Valor do cartão em 05/11 (inclui a 1ª parcela do pix crédito do aluguel). Confira na fatura."
-  },
-  {
    "card": "Mercado Pago",
    "month": "2026-10",
    "amount": 1062.98,
@@ -636,10 +630,10 @@
    "date": "2026-10-31",
    "description": "RecargaPay  *EPARC01/03",
    "amount": 344.62,
-   "category": "outros",
+   "category": "parcela",
    "source": "banco",
    "ext_id": "6d7341ae-373e-4d3b-b53b-f28126fded99:46298fc8-9e3e-45cc-910c-832d3860ea87",
-   "ignored": 0
+   "ignored": 1
   },
   {
    "id": 19,
@@ -783,7 +777,7 @@
   },
   {
    "id": 33,
-   "date": "2026-11-04",
+   "date": "2026-11-05",
    "description": "Estorno de Uber - NuPay",
    "amount": -19.91,
    "category": "estornado",
@@ -793,7 +787,7 @@
   },
   {
    "id": 34,
-   "date": "2026-11-04",
+   "date": "2026-11-05",
    "description": "Estorno de Uber - NuPay",
    "amount": -18.16,
    "category": "estornado",
@@ -803,7 +797,7 @@
   },
   {
    "id": 35,
-   "date": "2026-11-04",
+   "date": "2026-11-05",
    "description": "Estorno de Uber - NuPay",
    "amount": -11.84,
    "category": "estornado",
@@ -823,7 +817,7 @@
   },
   {
    "id": 37,
-   "date": "2026-10-29",
+   "date": "2026-10-30",
    "description": "Estorno de Uber - NuPay",
    "amount": -10.95,
    "category": "estornado",
