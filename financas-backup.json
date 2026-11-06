@@ -125,7 +125,7 @@
   "last_auto_sync": "2026-11-06T18:14",
   "last_force": "2026-11-06T17:48",
   "last_sync": "2026-11-06 18:14",
-  "last_tick": "2026-11-06 18:14"
+  "last_tick": "2026-11-06 18:52"
  },
  "recurring": [
   {
@@ -835,6 +835,16 @@
    "category": "transporte",
    "source": "banco",
    "ext_id": "27be5f3e-7a39-4e21-b734-1d4439c35288:a2ec9377-dd06-4ab0-89c0-75f02c27e1c9",
+   "ignored": 0
+  },
+  {
+   "id": 40,
+   "date": "2026-12-01",
+   "description": "Academia",
+   "amount": 100.0,
+   "category": "saude",
+   "source": "manual",
+   "ext_id": null,
    "ignored": 0
   }
  ],
