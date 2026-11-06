@@ -162,6 +162,7 @@ def reconcile_refunds(conn):
         if cands:
             c = cands[0]
             conn.execute("UPDATE spends SET ignored=1, category='estornado' WHERE id IN (?,?)", (r["id"], c["id"]))
+            conn.execute("UPDATE spends SET date=? WHERE id=?", (c["date"], r["id"]))  # estorno no dia da compra
             n += 1
     return n
 

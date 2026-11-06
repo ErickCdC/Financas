@@ -26,6 +26,13 @@ def main():
                                                         "compras", "saude", "outros", "estornado"):
                 conn.execute("UPDATE spends SET category=? WHERE id=?", (bank.map_category(r["category"]), r["id"]))
         bank.reconcile_refunds(conn)
+        # estornos já casados antes: põe no mesmo dia da compra
+        for r in db.rows(conn, "SELECT id, amount, date FROM spends WHERE category='estornado' AND amount < 0"):
+            c = conn.execute("SELECT date FROM spends WHERE category='estornado' AND amount > 0 AND ABS(amount + ?) < 0.005 "
+                             "AND julianday(date) BETWEEN julianday(?) - 10 AND julianday(?) + 10 ORDER BY date LIMIT 1",
+                             (r["amount"], r["date"], r["date"])).fetchone()
+            if c and c["date"] != r["date"]:
+                conn.execute("UPDATE spends SET date=? WHERE id=?", (c["date"], r["id"]))
         # parcelas que entraram como gasto saem do teto
         for r in db.rows(conn, "SELECT id, description FROM spends WHERE source='banco' AND ignored=0"):
             if bank.PARC_RE.search(r["description"]):
