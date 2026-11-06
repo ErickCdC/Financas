@@ -6,7 +6,7 @@
   "decimo2": 1100.0,
   "decimo1_mes": 11,
   "decimo2_mes": 12,
-  "aumento_on": true,
+  "aumento_on": false,
   "aumento_pct": 25.0,
   "aumento_from": "2027-01",
   "teto_semanal": 50.0,
