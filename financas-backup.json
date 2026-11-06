@@ -125,7 +125,7 @@
   "last_auto_sync": "2026-11-06T20:16",
   "last_force": "2026-11-06T18:53",
   "last_sync": "2026-11-06 18:52",
-  "last_tick": "2026-11-06 20:20"
+  "last_tick": "2026-11-06 20:30"
  },
  "recurring": [
   {
@@ -854,7 +854,7 @@
    "auth": "-LZCogkbAIUGPprhqKSGMw",
    "label": "Android · Chrome",
    "created": "2026-11-06 17:47",
-   "last_ok": "2026-11-06 17:48",
+   "last_ok": "2026-11-06 20:30",
    "fails": 0
   }
  ],
@@ -888,6 +888,12 @@
    "sent_at": "2026-11-06 17:48",
    "title": "Fatura Nubank paga",
    "body": "R$ 440,76 confirmado pelo banco."
+  },
+  {
+   "key": "daily:2026-11-06",
+   "sent_at": "2026-11-06 20:30",
+   "title": "Lançou seus gastos de hoje?",
+   "body": "Nada lançado hoje. Restam R$ 0,00 na semana."
   }
  ]
 }
