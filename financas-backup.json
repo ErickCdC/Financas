@@ -121,33 +121,11 @@
     ]
    }
   },
-  "eventos_pendentes": [
-   [
-    "paid:2026-10:bill:Mercado Pago",
-    "Fatura Mercado Pago paga",
-    "R$ 859,54 confirmado pelo banco.",
-    "/#contas",
-    "2026-11-06 17:48"
-   ],
-   [
-    "paid:2026-10:bill:PicPay",
-    "Fatura PicPay paga",
-    "R$ 873,37 confirmado pelo banco.",
-    "/#contas",
-    "2026-11-06 17:48"
-   ],
-   [
-    "paid:2026-10:bill:Nubank",
-    "Fatura Nubank paga",
-    "R$ 440,76 confirmado pelo banco.",
-    "/#contas",
-    "2026-11-06 17:48"
-   ]
-  ],
+  "eventos_pendentes": [],
   "last_auto_sync": "2026-11-06T17:47",
   "last_force": "2026-11-06T17:48",
   "last_sync": "2026-11-06 17:48",
-  "last_tick": "2026-11-06 17:47"
+  "last_tick": "2026-11-06 17:49"
  },
  "recurring": [
   {
