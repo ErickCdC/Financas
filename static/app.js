@@ -109,8 +109,12 @@ function render() {
   const v = $("#view");
   v.classList.remove("view"); void v.offsetWidth; v.classList.add("view");
   v.innerHTML = VIEWS[S.view](S.d) + `<p class="foot">Estimativa pessoal · confira sempre com o extrato</p>`;
-  $$("[data-w]").forEach(el => { el.style.width = Math.max(0, Math.min(100, Number(el.dataset.w))) + "%"; });
-  $$("[data-h]").forEach(el => { el.style.height = Math.max(3, Math.min(100, Number(el.dataset.h))) + "%"; });
+  applySizes(document);
+}
+
+function applySizes(root) {
+  root.querySelectorAll("[data-w]").forEach(el => { el.style.width = Math.max(0, Math.min(100, Number(el.dataset.w))) + "%"; });
+  root.querySelectorAll("[data-h]").forEach(el => { el.style.height = Math.max(3, Math.min(100, Number(el.dataset.h))) + "%"; });
 }
 
 // ---------- componentes ----------
@@ -142,7 +146,7 @@ function weekBars(w) {
   const max = Math.max(...w.dias.map(d => d.total), w.teto / 7, 1);
   return `<div class="daybars">${w.dias.map(d => {
     const cls = d.date === w.hoje ? "today" : d.date > w.hoje ? "future" : "";
-    return `<div class="d ${cls}" title="${ddmm(d.date)}: ${brl(d.total)}"><div class="b" data-h="${(d.total / max) * 100}"></div><div class="l">${DSEM[parse(d.date).getDay()]}</div></div>`;
+    return `<button type="button" class="d ${cls}" data-act="day" data-date="${d.date}" aria-label="${DSEM_LONG[parse(d.date).getDay()]} ${ddmm(d.date)}: ${brl(d.total)}"><div class="b" data-h="${(d.total / max) * 100}"></div><div class="l">${DSEM[parse(d.date).getDay()]}</div></button>`;
   }).join("")}</div>`;
 }
 function notice(kind, ic, html, action) {
@@ -187,7 +191,7 @@ VIEWS.inicio = d => {
       </div>
     </div>
     <div class="stack">
-      <section class="card"><div class="card-head"><h3>Gastos da semana</h3><span class="chip ${over ? "neg" : pct > 80 ? "warn" : "blue"}">${Math.round(pct)}% do teto</span></div>${weekBars(w)}</section>
+      <section class="card"><div class="card-head"><h3>Gastos da semana</h3><span class="chip ${over ? "neg" : pct > 80 ? "warn" : "blue"}">${Math.round(pct)}% do teto</span></div>${weekBars(w)}<div class="tap-hint">Toque num dia para ver os gastos</div></section>
       <section class="card flush"><div class="card-head"><h3>Próximos vencimentos</h3></div>
         <div class="list">${venc.length ? venc.map(i => `<a class="item tap" href="#contas"><span class="ic ${i.group === "fatura" ? "blue" : ""}">${icon(i.group === "fatura" ? "card" : "bills")}</span>
           <span class="body"><span class="t">${esc(i.name)}</span><span class="sub">${ddmm(i.due)}${i.estimated ? " · previsto" : ""}</span></span>
@@ -253,7 +257,7 @@ VIEWS.gastos = d => {
         ${weekBars(w)}
       </section>
       <section class="card"><div class="card-head"><h3>Por categoria</h3><span class="muted num">desde ${ddmm(w.desde)}</span></div>
-        ${w.categorias.length ? w.categorias.map(c => `<div class="catrow"><span class="n">${esc(c.cat)}</span><div class="bar"><i data-w="${(c.total / maxCat) * 100}"></i></div><span class="num">${brl0(c.total)}</span></div>`).join("") : `<div class="muted">Sem gastos ainda.</div>`}
+        ${w.categorias.length ? w.categorias.map(c => `<button type="button" class="catrow" data-act="cat" data-cat="${esc(c.cat)}"><span class="n">${esc(c.cat)}</span><div class="bar"><i data-w="${(c.total / maxCat) * 100}"></i></div><span class="num">${brl0(c.total)}</span></button>`).join("") : `<div class="muted">Sem gastos ainda.</div>`}
       </section>
     </div>
     <section class="card flush">
@@ -279,6 +283,7 @@ function projChart(months, simTeto, teto) {
     const cx = P + step * i + step / 2, v = vals[i], h = Math.abs(v) * scale;
     const y = v >= 0 ? zero - h : zero;
     svg += `<rect class="${v >= 0 ? "barp" : "barn"}" x="${cx - bw / 2}" y="${y}" width="${bw}" height="${Math.max(h, 2)}" rx="6"/>`;
+    svg += `<rect class="hit" x="${cx - step / 2}" y="0" width="${step}" height="${H}" data-act="month" data-ym="${m.ym}"><title>${esc(monthName(m.ym))}</title></rect>`;
     svg += `<text class="val" x="${cx}" y="${v >= 0 ? y - 6 : y + h + 13}" text-anchor="middle">${esc(brl0(v).replace("R$", "").trim())}</text>`;
     svg += `<text class="lbl" x="${cx}" y="${H - 8}" text-anchor="middle">${esc(m.label)}</text>`;
     pts.push([cx, zero - accs[i] * scale]);
@@ -317,7 +322,7 @@ VIEWS.plano = d => {
         <div class="card-head"><div><div class="eyebrow">Caixinha em ${d.proj.months.length} meses</div><h3 class="num" id="simacc">${P.acc}</h3></div>
           <span class="chip ${c.aumento_on ? "blue" : ""}">${c.aumento_on ? "com aumento" : "sem aumento"}</span></div>
         <div class="chart" id="simchart">${P.chart}</div>
-        <div class="legend"><span><i class="lg-bar"></i>Caixinha do mês</span><span><i class="lg-acc"></i>Acumulado</span></div>
+        <div class="legend"><span><i class="lg-bar"></i>Caixinha do mês</span><span><i class="lg-acc"></i>Acumulado</span><span>Toque num mês</span></div>
       </section>
       <section class="card">
         <div class="card-head"><h3>Simular teto semanal</h3><b class="num" id="simlabel">${brl0(sim)}/sem</b></div>
@@ -528,6 +533,24 @@ function openSheet({ title, desc, fields, values = {}, onSave, onDelete, saveLab
   else if (first && fields[0] && fields[0].big) first.focus();
 }
 
+function openDetail({ eyebrow, title, sub, body, actions = "" }) {
+  const ov = document.createElement("div"); ov.className = "overlay detail";
+  ov.innerHTML = `<div class="sheet" role="dialog" aria-modal="true" aria-label="${esc(title)}"><div class="grab"></div>
+    ${eyebrow ? `<div class="eyebrow">${esc(eyebrow)}</div>` : ""}<h3 class="num">${title}</h3>${sub ? `<p class="desc">${sub}</p>` : ""}
+    <div class="detail-body">${body}</div>
+    <div class="actions">${actions}<button type="button" class="btn secondary" data-x="close">Fechar</button></div></div>`;
+  const close = () => { ov.remove(); document.removeEventListener("keydown", onKey); };
+  const onKey = e => { if (e.key === "Escape") close(); };
+  document.addEventListener("keydown", onKey);
+  ov.addEventListener("click", e => { if (e.target === ov || e.target.closest('[data-x="close"]')) close(); });
+  document.body.append(ov); applySizes(ov);
+  return ov;
+}
+const sumSp = list => list.filter(s => !s.ignored).reduce((a, s) => a + s.amount, 0);
+function spendList(list, empty) {
+  return list.length ? `<div class="list card flush">${list.map(spendRow).join("")}</div>` : `<div class="empty">${icon("wallet")}<div>${empty}</div></div>`;
+}
+
 function confirmSheet(msg, ok = "Confirmar") {
   return new Promise(res => {
     const ov = document.createElement("div"); ov.className = "overlay";
@@ -609,12 +632,56 @@ const recFields = () => [
 
 const A = {
   refresh: () => load(),
+  day: el => {
+    const w = S.d.semana, date = el.dataset.date, dt = parse(date);
+    const list = w.lista.filter(s => s.date === date);
+    const total = sumSp(list), media = w.teto / 7;
+    const future = date > w.hoje;
+    const ratio = media ? (total / media) * 100 : 0;
+    const sub = future ? "Dia ainda não chegou." :
+      `${list.filter(s => !s.ignored).length} lançamento(s) · média do teto por dia ${brl(media)}`;
+    const bar = future ? "" : `<div class="bar ${ratio > 100 ? "over" : ratio > 80 ? "warn" : ""}"><i data-w="${ratio}"></i></div>
+      <p class="lead">${total > media ? `${brl(total - media)} acima da média diária` : `${brl(media - total)} abaixo da média diária`}</p>`;
+    openDetail({
+      eyebrow: `${DSEM_LONG[dt.getDay()]}, ${dt.getDate()} de ${MES[dt.getMonth()]}`, title: brl(total), sub,
+      body: bar + spendList(list, "Nenhum gasto neste dia."),
+      actions: `<button type="button" class="btn" data-act="addspend" data-date="${date}">${icon("plus")}Lançar neste dia</button>`,
+    });
+  },
+  cat: el => {
+    const w = S.d.semana, cat = el.dataset.cat;
+    const list = w.lista.filter(s => s.date >= w.desde && !s.ignored && (s.category || "outros").toLowerCase() === cat.toLowerCase());
+    const total = sumSp(list), all = w.desde_total || 1;
+    openDetail({
+      eyebrow: `Categoria · desde ${ddmm(w.desde)}`, title: `${esc(cat[0].toUpperCase() + cat.slice(1))} · ${brl(total)}`,
+      sub: `${list.length} lançamento(s) · ${Math.round((total / all) * 100)}% do que você gastou desde o salário`,
+      body: spendList(list, "Nenhum gasto nesta categoria."),
+    });
+  },
+  month: el => {
+    const m = S.d.proj.months.find(x => x.ym === el.dataset.ym); if (!m) return;
+    const c = S.d.config, sim = S.simTeto ?? c.teto_semanal;
+    const weeks = c.teto_semanal ? m.livre / c.teto_semanal : m.semanas;
+    const cx = simCaixinha(m, sim, c.teto_semanal);
+    const parts = m.cartoes.map(k => `<div class="kv"><span class="muted">Fatura ${esc(k.card)}${k.source === "informado" ? " · informada" : ""}</span><span class="num">−${brl(k.total)}</span></div>
+      ${(k.parts || []).map(p => `<div class="kv sub"><span>${esc(p.name)}</span><span class="num">${brl(p.amount)}</span></div>`).join("")}`).join("");
+    openDetail({
+      eyebrow: monthName(m.ym), title: `<span class="${cx < 0 ? "neg" : "pos"}">${brl(cx)}</span>`, sub: "para a caixinha",
+      body: `<div class="card">
+        <div class="kv"><span>Entra${m.decimo ? " (inclui 13º)" : ""}${m.caixa ? " + caixa" : ""}${m.recebido ? " · salário já no caixa" : ""}</span><span class="num">${brl(m.entra)}</span></div>
+        ${parts}
+        <div class="kv"><span class="muted">Contas fixas</span><span class="num">−${brl(m.fixas)}</span></div>
+        <div class="kv"><span class="muted">Gasto livre (${weeks.toFixed(1)} sem × ${brl0(sim)})</span><span class="num">−${brl(sim * weeks)}</span></div>
+        <div class="kv total"><span>Caixinha</span><span class="num ${cx < 0 ? "neg" : "pos"}">${brl(cx)}</span></div></div>
+        <p class="lead">Teto máximo sem ficar negativo neste mês: <b class="num">${brl(m.teto_max)}/sem</b></p>`,
+    });
+  },
   mnav: async el => { S.month = addMonths(S.month, Number(el.dataset.d)); await load(); },
   filter: el => { S.filter = el.dataset.f; render(); },
   plantab: el => { S.planTab = el.dataset.t; render(); },
   resetsim: () => { S.simTeto = null; render(); },
   usesim: async () => { try { await api("/api/settings", { teto_semanal: S.simTeto }); toast("Teto atualizado"); S.simTeto = null; await load({ silent: true }); } catch (e) { toast(e.message); } },
-  addspend: () => openSheet({ title: "Lançar gasto", desc: "Entra no teto da semana.", fields: spendFields, values: { date: S.d.hoje }, saveLabel: "Lançar",
+  addspend: el => openSheet({ title: "Lançar gasto", desc: "Entra no teto da semana.", fields: spendFields, values: { date: (el && el.dataset && el.dataset.date) || S.d.hoje }, saveLabel: "Lançar",
     onSave: async v => { await api("/api/spends", v); return "Gasto lançado"; } }),
   editspend: el => {
     const s = S.d.semana.lista.find(x => x.id === Number(el.dataset.id)); if (!s) return;
@@ -680,7 +747,12 @@ const A = {
 
 document.addEventListener("click", e => {
   const el = e.target.closest("[data-act]");
-  if (el && A[el.dataset.act]) { e.preventDefault(); A[el.dataset.act](el); }
+  if (el && A[el.dataset.act]) {
+    e.preventDefault();
+    const det = el.closest(".overlay.detail");
+    if (det) det.remove();
+    A[el.dataset.act](el);
+  }
 });
 document.addEventListener("input", e => {
   if (e.target.dataset.actInput === "sim") {

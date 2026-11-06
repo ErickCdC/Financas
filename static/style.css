@@ -411,3 +411,20 @@ details.card[open] > summary svg.i { transform: rotate(90deg); }
 .chart .val { font-size: 15px; }
 .setting.stack .body { flex: none; }
 .setting.stack textarea { width: 100%; }
+
+/* ---------- gráficos tocáveis e detalhe ---------- */
+.daybars button.d { appearance: none; border: 0; background: transparent; padding: 0; font: inherit; color: inherit; cursor: pointer; border-radius: 10px; }
+.daybars button.d:hover .b, .daybars button.d:focus-visible .b { filter: brightness(1.15); }
+.daybars button.d:active .b { transform: scaleY(.96); transform-origin: bottom; }
+.daybars .b { background: color-mix(in srgb, var(--primary) 38%, var(--surface-3)); }
+.daybars .d.future .b { background: var(--surface-3); }
+button.catrow { appearance: none; width: 100%; border: 0; background: transparent; font: inherit; color: inherit; text-align: left; cursor: pointer; border-radius: 8px; }
+button.catrow:hover { background: var(--surface-2); }
+.chart .hit { fill: transparent; cursor: pointer; }
+.chart .hit:hover { fill: color-mix(in srgb, var(--primary) 8%, transparent); }
+.detail .detail-body { display: flex; flex-direction: column; gap: 12px; }
+.detail .detail-body .list.card { box-shadow: none; }
+.detail .kv.sub { font-size: 12.5px; color: var(--muted); padding: 3px 0 3px 12px; border-top: 0; }
+.detail h3 { font-size: 26px; letter-spacing: -.02em; margin-top: 2px; }
+.tap-hint { font-size: 12px; color: var(--muted); margin-top: 8px; }
+.chart text, .chart polyline, .chart circle, .chart .barp, .chart .barn { pointer-events: none; }
