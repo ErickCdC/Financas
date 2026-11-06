@@ -183,6 +183,14 @@
    "card": "PicPay",
    "due_day": null,
    "match": null
+  },
+  {
+   "id": 8,
+   "name": "Academia",
+   "amount": 100.0,
+   "card": null,
+   "due_day": 1,
+   "match": "Jussiara"
   }
  ],
  "installments": [
