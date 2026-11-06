@@ -125,7 +125,7 @@
   "last_auto_sync": "2026-11-06T17:47",
   "last_force": "2026-11-06T17:48",
   "last_sync": "2026-11-06 17:48",
-  "last_tick": "2026-11-06 17:49"
+  "last_tick": "2026-11-06 17:51"
  },
  "recurring": [
   {
@@ -464,7 +464,7 @@
    "date": "2026-11-02",
    "description": "Mercado Livre",
    "amount": 21.98,
-   "category": "casa",
+   "category": "outros",
    "source": "manual",
    "ext_id": "8b778a91-1057-4662-917f-e758a49b7c3b:20be4cd6-1430-4552-85d6-11398fbd6818",
    "ignored": 0
@@ -474,7 +474,7 @@
    "date": "2026-11-03",
    "description": "Help Drink",
    "amount": 7.5,
-   "category": "lazer",
+   "category": "mercado",
    "source": "manual",
    "ext_id": "6d7341ae-373e-4d3b-b53b-f28126fded99:0eca7490-974a-4913-aab3-40b54db9ac28",
    "ignored": 0
@@ -752,8 +752,8 @@
   {
    "key": "teto:2026-11-02:80",
    "sent_at": "2026-11-06 17:48",
-   "title": "",
-   "body": ""
+   "title": null,
+   "body": null
   },
   {
    "key": "paid:2026-10:bill:Mercado Pago",
