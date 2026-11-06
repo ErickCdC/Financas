@@ -10,7 +10,7 @@
   "aumento_pct": 25.0,
   "aumento_from": "2027-01",
   "teto_semanal": 50.0,
-  "caixa": 214.74,
+  "caixa": 212.6,
   "caixa_ref": "2026-11",
   "salario_dia": 30,
   "salario_data": "2026-10-30",
@@ -102,9 +102,52 @@
    "minimo_pct": 60,
    "termos": []
   },
-  "caixa_banco": null,
-  "cartao_usado": {},
-  "last_sync": null
+  "caixa_banco": 212.6,
+  "cartao_usado": {
+   "Mercado Pago": 1265.69,
+   "PicPay": 1345.0,
+   "Nubank": 206.27
+  },
+  "entradas": {
+   "2026-10": {
+    "total": 2372.0,
+    "itens": [
+     {
+      "date": "2026-10-30",
+      "desc": "Transferência recebida ERICK CAMARA DE CASTRO",
+      "amount": 2372.0,
+      "id": "40bb4be3-1095-40f0-92da-8c9f80c5767c:46b1a5f9-eeaa-4acc-bc65-c416f7833f57"
+     }
+    ]
+   }
+  },
+  "eventos_pendentes": [
+   [
+    "paid:2026-10:bill:Mercado Pago",
+    "Fatura Mercado Pago paga",
+    "R$ 859,54 confirmado pelo banco.",
+    "/#contas",
+    "2026-11-06 17:48"
+   ],
+   [
+    "paid:2026-10:bill:PicPay",
+    "Fatura PicPay paga",
+    "R$ 873,37 confirmado pelo banco.",
+    "/#contas",
+    "2026-11-06 17:48"
+   ],
+   [
+    "paid:2026-10:bill:Nubank",
+    "Fatura Nubank paga",
+    "R$ 440,76 confirmado pelo banco.",
+    "/#contas",
+    "2026-11-06 17:48"
+   ]
+  ],
+  "last_auto_sync": "2026-11-06T17:47",
+  "last_force": "2026-11-06T17:48",
+  "last_sync": "2026-11-06 17:48",
+  "last_tick": "2026-11-06 17:47"
  },
  "recurring": [
   {
@@ -253,6 +296,24 @@
    "key": "bill:PicPay",
    "paid": 1,
    "amount": 755.15
+  },
+  {
+   "month": "2026-10",
+   "key": "bill:Mercado Pago",
+   "paid": 1,
+   "amount": 859.54
+  },
+  {
+   "month": "2026-10",
+   "key": "bill:PicPay",
+   "paid": 1,
+   "amount": 873.37
+  },
+  {
+   "month": "2026-10",
+   "key": "bill:Nubank",
+   "paid": 1,
+   "amount": 440.76
   }
  ],
  "overrides": [
@@ -261,6 +322,42 @@
    "month": "2026-11",
    "amount": 1338.0,
    "note": "Valor do cartão em 05/11 (inclui a 1ª parcela do pix crédito do aluguel). Confira na fatura."
+  },
+  {
+   "card": "Mercado Pago",
+   "month": "2026-10",
+   "amount": 1062.98,
+   "note": "Banco: fatura fechada"
+  },
+  {
+   "card": "Mercado Pago",
+   "month": "2026-09",
+   "amount": 859.54,
+   "note": "Banco: fatura fechada"
+  },
+  {
+   "card": "PicPay",
+   "month": "2026-10",
+   "amount": 755.15,
+   "note": "Banco: fatura fechada"
+  },
+  {
+   "card": "PicPay",
+   "month": "2026-09",
+   "amount": 873.37,
+   "note": "Banco: fatura fechada"
+  },
+  {
+   "card": "Nubank",
+   "month": "2026-10",
+   "amount": 502.21,
+   "note": "Banco: fatura fechada"
+  },
+  {
+   "card": "Nubank",
+   "month": "2026-09",
+   "amount": 440.76,
+   "note": "Banco: fatura fechada"
   }
  ],
  "spends": [
@@ -271,7 +368,7 @@
    "amount": 8.94,
    "category": "transporte",
    "source": "manual",
-   "ext_id": null,
+   "ext_id": "27be5f3e-7a39-4e21-b734-1d4439c35288:1fd9145d-ddaa-4cce-aeec-6ff9d9009944",
    "ignored": 0
   },
   {
@@ -281,7 +378,7 @@
    "amount": 0.85,
    "category": "transporte",
    "source": "manual",
-   "ext_id": null,
+   "ext_id": "27be5f3e-7a39-4e21-b734-1d4439c35288:cc6ce492-732c-47d2-815f-83c5def36d37",
    "ignored": 0
   },
   {
@@ -291,7 +388,7 @@
    "amount": 12.55,
    "category": "mercado",
    "source": "manual",
-   "ext_id": null,
+   "ext_id": "6d7341ae-373e-4d3b-b53b-f28126fded99:0fd167ab-62c3-4384-84d2-a4b7ae0ee1de",
    "ignored": 0
   },
   {
@@ -301,7 +398,7 @@
    "amount": 12.0,
    "category": "mercado",
    "source": "manual",
-   "ext_id": null,
+   "ext_id": "40bb4be3-1095-40f0-92da-8c9f80c5767c:ca635a5d-1e0a-47df-9cf0-36c844c1e2a6",
    "ignored": 0
   },
   {
@@ -311,7 +408,7 @@
    "amount": 45.0,
    "category": "outros",
    "source": "manual",
-   "ext_id": null,
+   "ext_id": "8b778a91-1057-4662-917f-e758a49b7c3b:bfb97e64-4b16-40f6-8bd4-2f21c1d57b45",
    "ignored": 0
   },
   {
@@ -321,7 +418,7 @@
    "amount": 18.98,
    "category": "mercado",
    "source": "manual",
-   "ext_id": null,
+   "ext_id": "6d7341ae-373e-4d3b-b53b-f28126fded99:9aaf6e85-d220-4d07-a607-9f7798442628",
    "ignored": 0
   },
   {
@@ -331,7 +428,7 @@
    "amount": 152.0,
    "category": "casa",
    "source": "manual",
-   "ext_id": null,
+   "ext_id": "6d7341ae-373e-4d3b-b53b-f28126fded99:ed8a0068-d418-4868-a243-6e025204b2ec",
    "ignored": 0
   },
   {
@@ -341,7 +438,7 @@
    "amount": 14.5,
    "category": "mercado",
    "source": "manual",
-   "ext_id": null,
+   "ext_id": "40bb4be3-1095-40f0-92da-8c9f80c5767c:31934d1b-5199-4e11-90e3-0d069a86c564",
    "ignored": 0
   },
   {
@@ -351,7 +448,7 @@
    "amount": 13.89,
    "category": "mercado",
    "source": "manual",
-   "ext_id": null,
+   "ext_id": "6d7341ae-373e-4d3b-b53b-f28126fded99:0e1831ea-7f58-453d-b916-3b0e79848f8d",
    "ignored": 0
   },
   {
@@ -361,7 +458,7 @@
    "amount": 34.0,
    "category": "outros",
    "source": "manual",
-   "ext_id": null,
+   "ext_id": "6d7341ae-373e-4d3b-b53b-f28126fded99:e9672a5b-8136-42f9-aa88-3167b1ebe43c",
    "ignored": 0
   },
   {
@@ -371,7 +468,7 @@
    "amount": 32.0,
    "category": "outros",
    "source": "manual",
-   "ext_id": null,
+   "ext_id": "6d7341ae-373e-4d3b-b53b-f28126fded99:544e6bd9-5b54-4ca9-85a2-c2b5d6187e2b",
    "ignored": 0
   },
   {
@@ -381,7 +478,7 @@
    "amount": 20.0,
    "category": "mercado",
    "source": "manual",
-   "ext_id": null,
+   "ext_id": "6d7341ae-373e-4d3b-b53b-f28126fded99:ff7b33b5-446b-44e9-9aa3-5189bd3c4b20",
    "ignored": 0
   },
   {
@@ -391,7 +488,7 @@
    "amount": 21.98,
    "category": "casa",
    "source": "manual",
-   "ext_id": null,
+   "ext_id": "8b778a91-1057-4662-917f-e758a49b7c3b:20be4cd6-1430-4552-85d6-11398fbd6818",
    "ignored": 0
   },
   {
@@ -401,7 +498,257 @@
    "amount": 7.5,
    "category": "lazer",
    "source": "manual",
-   "ext_id": null,
+   "ext_id": "6d7341ae-373e-4d3b-b53b-f28126fded99:0eca7490-974a-4913-aab3-40b54db9ac28",
+   "ignored": 0
+  },
+  {
+   "id": 15,
+   "date": "2026-10-26",
+   "description": "Pix enviado Marcio Edgar dos Santos Sales",
+   "amount": 43.86,
+   "category": "outros",
+   "source": "banco",
+   "ext_id": "40bb4be3-1095-40f0-92da-8c9f80c5767c:3e157772-71e3-417b-a583-b4043d10863f",
+   "ignored": 0
+  },
+  {
+   "id": 16,
+   "date": "2026-10-25",
+   "description": "Pagamento com Pix M2 DE SOUZA DISTRIBUIDORA DE ALIMENTOS LTDA",
+   "amount": 18.6,
+   "category": "mercado",
+   "source": "banco",
+   "ext_id": "40bb4be3-1095-40f0-92da-8c9f80c5767c:7f37ac33-dd7c-4ad6-b940-c16cc5eb2124",
+   "ignored": 0
+  },
+  {
+   "id": 17,
+   "date": "2026-11-05",
+   "description": "99*",
+   "amount": 22.0,
+   "category": "transporte",
+   "source": "banco",
+   "ext_id": "8b778a91-1057-4662-917f-e758a49b7c3b:5eebd970-93a7-42a4-8bd3-2bd6c18a4ed8",
+   "ignored": 0
+  },
+  {
+   "id": 18,
+   "date": "2026-10-31",
+   "description": "RecargaPay  *EPARC01/03",
+   "amount": 344.62,
+   "category": "outros",
+   "source": "banco",
+   "ext_id": "6d7341ae-373e-4d3b-b53b-f28126fded99:46298fc8-9e3e-45cc-910c-832d3860ea87",
+   "ignored": 0
+  },
+  {
+   "id": 19,
+   "date": "2026-10-27",
+   "description": "MANSAO WAYNE             .RIO DE JAN BRA",
+   "amount": 62.59,
+   "category": "comida",
+   "source": "banco",
+   "ext_id": "6d7341ae-373e-4d3b-b53b-f28126fded99:aa1f2979-3d29-4369-a83d-2ec606888ccb",
+   "ignored": 0
+  },
+  {
+   "id": 20,
+   "date": "2026-10-26",
+   "description": "SeloDeOuro               .RIO DE JAN BRA",
+   "amount": 96.69,
+   "category": "outros",
+   "source": "banco",
+   "ext_id": "6d7341ae-373e-4d3b-b53b-f28126fded99:bdf6b0ba-dd5f-48e4-9ba9-77536004d36a",
+   "ignored": 0
+  },
+  {
+   "id": 21,
+   "date": "2026-10-26",
+   "description": "HOTEL PATROPI            .CASIMIRO D BRA",
+   "amount": 89.76,
+   "category": "outros",
+   "source": "banco",
+   "ext_id": "6d7341ae-373e-4d3b-b53b-f28126fded99:7c707cae-1f72-43da-850d-047f9dc68b80",
+   "ignored": 0
+  },
+  {
+   "id": 22,
+   "date": "2026-10-25",
+   "description": "HELP DRINK               .RIO DAS OS BRA",
+   "amount": 12.0,
+   "category": "comida",
+   "source": "banco",
+   "ext_id": "6d7341ae-373e-4d3b-b53b-f28126fded99:e2a2d4b1-9e73-4640-996a-4eeb9c01d848",
+   "ignored": 0
+  },
+  {
+   "id": 23,
+   "date": "2026-10-24",
+   "description": "ROUPA LIMPA*VMT*roupa    .CABO FRIO  BRA",
+   "amount": 19.9,
+   "category": "outros",
+   "source": "banco",
+   "ext_id": "6d7341ae-373e-4d3b-b53b-f28126fded99:885fddb9-9d74-41eb-b7df-56610f99561d",
+   "ignored": 0
+  },
+  {
+   "id": 24,
+   "date": "2026-10-24",
+   "description": "ROUPA LIMPA*VMT*roupa    .CABO FRIO  BRA",
+   "amount": 19.9,
+   "category": "outros",
+   "source": "banco",
+   "ext_id": "6d7341ae-373e-4d3b-b53b-f28126fded99:53429f9f-17c6-4ce4-beb3-0e969f719641",
+   "ignored": 0
+  },
+  {
+   "id": 25,
+   "date": "2026-10-24",
+   "description": "ROUPA LIMPA*VMT*roupa    .CABO FRIO  BRA",
+   "amount": 19.9,
+   "category": "outros",
+   "source": "banco",
+   "ext_id": "6d7341ae-373e-4d3b-b53b-f28126fded99:542e2ac2-1f76-48fa-b0f6-a9eaa962aaeb",
+   "ignored": 0
+  },
+  {
+   "id": 26,
+   "date": "2026-10-24",
+   "description": "PUB DO ACAI              .RIO DAS OS BRA",
+   "amount": 28.0,
+   "category": "comida",
+   "source": "banco",
+   "ext_id": "6d7341ae-373e-4d3b-b53b-f28126fded99:59041a29-cfe5-4db3-ac0c-1328e9c8534f",
+   "ignored": 0
+  },
+  {
+   "id": 27,
+   "date": "2026-10-24",
+   "description": "PASTELARIA DO MARCELO    .RIO DAS OS BRA",
+   "amount": 15.0,
+   "category": "comida",
+   "source": "banco",
+   "ext_id": "6d7341ae-373e-4d3b-b53b-f28126fded99:6475fc5b-3f70-4e95-93be-d4e7091459c7",
+   "ignored": 0
+  },
+  {
+   "id": 28,
+   "date": "2026-10-23",
+   "description": "BANCO MCP                .CAMPO GRAN MS",
+   "amount": 29.9,
+   "category": "outros",
+   "source": "banco",
+   "ext_id": "6d7341ae-373e-4d3b-b53b-f28126fded99:3bcac943-5cbd-49cc-9552-864c42f1912c",
+   "ignored": 0
+  },
+  {
+   "id": 29,
+   "date": "2026-10-22",
+   "description": "54666075Amanda           .MACAE      BRA",
+   "amount": 9.0,
+   "category": "mercado",
+   "source": "banco",
+   "ext_id": "6d7341ae-373e-4d3b-b53b-f28126fded99:8e508a81-361c-48ae-a9af-4a8dfe795c61",
+   "ignored": 0
+  },
+  {
+   "id": 30,
+   "date": "2026-11-05",
+   "description": "Uber",
+   "amount": 19.91,
+   "category": "estornado",
+   "source": "banco",
+   "ext_id": "27be5f3e-7a39-4e21-b734-1d4439c35288:b95d43b8-24a5-43b8-a07f-5301e9aba9ca",
+   "ignored": 1
+  },
+  {
+   "id": 31,
+   "date": "2026-11-05",
+   "description": "Uber",
+   "amount": 18.16,
+   "category": "estornado",
+   "source": "banco",
+   "ext_id": "27be5f3e-7a39-4e21-b734-1d4439c35288:e50c3262-9b1f-42a7-82e6-dfcbb43e0b3b",
+   "ignored": 1
+  },
+  {
+   "id": 32,
+   "date": "2026-11-05",
+   "description": "Uber",
+   "amount": 11.84,
+   "category": "estornado",
+   "source": "banco",
+   "ext_id": "27be5f3e-7a39-4e21-b734-1d4439c35288:7fff0b73-153e-4ec8-b726-8f90050f53c5",
+   "ignored": 1
+  },
+  {
+   "id": 33,
+   "date": "2026-11-04",
+   "description": "Estorno de Uber - NuPay",
+   "amount": -19.91,
+   "category": "estornado",
+   "source": "banco",
+   "ext_id": "27be5f3e-7a39-4e21-b734-1d4439c35288:815df3dc-f6ae-4919-9603-3a4c44454c90",
+   "ignored": 1
+  },
+  {
+   "id": 34,
+   "date": "2026-11-04",
+   "description": "Estorno de Uber - NuPay",
+   "amount": -18.16,
+   "category": "estornado",
+   "source": "banco",
+   "ext_id": "27be5f3e-7a39-4e21-b734-1d4439c35288:3b1e1ada-7a58-42ec-8ff1-6fc02099ad9b",
+   "ignored": 1
+  },
+  {
+   "id": 35,
+   "date": "2026-11-04",
+   "description": "Estorno de Uber - NuPay",
+   "amount": -11.84,
+   "category": "estornado",
+   "source": "banco",
+   "ext_id": "27be5f3e-7a39-4e21-b734-1d4439c35288:e6c580d0-4ed3-4c5b-bfb1-39b9b703bb5f",
+   "ignored": 1
+  },
+  {
+   "id": 36,
+   "date": "2026-10-30",
+   "description": "Uber",
+   "amount": 10.95,
+   "category": "estornado",
+   "source": "banco",
+   "ext_id": "27be5f3e-7a39-4e21-b734-1d4439c35288:2cd95917-4d34-4f02-ba72-3b9a33881519",
+   "ignored": 1
+  },
+  {
+   "id": 37,
+   "date": "2026-10-29",
+   "description": "Estorno de Uber - NuPay",
+   "amount": -10.95,
+   "category": "estornado",
+   "source": "banco",
+   "ext_id": "27be5f3e-7a39-4e21-b734-1d4439c35288:118f84be-b740-43b3-b493-8c6d12230ae6",
+   "ignored": 1
+  },
+  {
+   "id": 38,
+   "date": "2026-10-25",
+   "description": "Uber",
+   "amount": 18.15,
+   "category": "transporte",
+   "source": "banco",
+   "ext_id": "27be5f3e-7a39-4e21-b734-1d4439c35288:fa2f6f2c-935a-4501-908d-c7e4c8ae5245",
+   "ignored": 0
+  },
+  {
+   "id": 39,
+   "date": "2026-10-23",
+   "description": "Uber",
+   "amount": 7.79,
+   "category": "transporte",
+   "source": "banco",
+   "ext_id": "27be5f3e-7a39-4e21-b734-1d4439c35288:a2ec9377-dd06-4ab0-89c0-75f02c27e1c9",
    "ignored": 0
   }
  ],
@@ -413,9 +760,40 @@
    "auth": "-LZCogkbAIUGPprhqKSGMw",
    "label": "Android · Chrome",
    "created": "2026-11-06 17:47",
-   "last_ok": null,
+   "last_ok": "2026-11-06 17:48",
    "fails": 0
   }
  ],
- "notif_log": []
+ "notif_log": [
+  {
+   "key": "teto:2026-11-02:100",
+   "sent_at": "2026-11-06 17:48",
+   "title": "Teto da semana estourado",
+   "body": "Você gastou R$ 51,48 de R$ 50,00. Passou R$ 1,48."
+  },
+  {
+   "key": "teto:2026-11-02:80",
+   "sent_at": "2026-11-06 17:48",
+   "title": "",
+   "body": ""
+  },
+  {
+   "key": "paid:2026-10:bill:Mercado Pago",
+   "sent_at": "2026-11-06 17:48",
+   "title": "Fatura Mercado Pago paga",
+   "body": "R$ 859,54 confirmado pelo banco."
+  },
+  {
+   "key": "paid:2026-10:bill:PicPay",
+   "sent_at": "2026-11-06 17:48",
+   "title": "Fatura PicPay paga",
+   "body": "R$ 873,37 confirmado pelo banco."
+  },
+  {
+   "key": "paid:2026-10:bill:Nubank",
+   "sent_at": "2026-11-06 17:48",
+   "title": "Fatura Nubank paga",
+   "body": "R$ 440,76 confirmado pelo banco."
+  }
+ ]
 }
