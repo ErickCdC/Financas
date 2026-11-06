@@ -654,6 +654,7 @@ const A = {
     el.disabled = true; el.textContent = "Sincronizando…";
     try {
       const r = await api("/api/sync", {});
+      if (r.ocupado) { toast("Já está sincronizando, aguarde um instante"); el.disabled = false; el.textContent = "Sincronizar"; return; }
       const bits = [`${r.novos} gasto(s) novo(s)`];
       if (r.estornos) bits.push(`${r.estornos} estorno(s) casado(s)`);
       if (r.eventos) bits.push(`${r.eventos} atualização(ões) de contas`);

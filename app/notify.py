@@ -165,7 +165,21 @@ def tick(force_sync=False):
         now = C.now()
         result = {"ok": True, "enviadas": [], "sync": None, "hora": now.strftime("%Y-%m-%d %H:%M")}
         with db.connect() as conn:
-            changed = _run(conn, now, result, force_sync)
+            cfg = db.get_cfg(conn)
+            db.put_setting(conn, "last_tick", result["hora"])
+        synced = False
+        if C.BANCO_KEY and (force_sync or sync_due(cfg, now)):
+            from . import bank
+            try:  # rede fora de qualquer transação
+                result["sync"] = bank.run(force=bool((cfg.get("sync_auto") or {}).get("forcar", True)))
+                synced = True
+            except (RuntimeError, ValueError) as e:
+                result["sync"] = {"erro": str(e)}
+                C.log("sincronização automática: " + str(e))
+            with db.connect() as conn:
+                db.put_setting(conn, "last_auto_sync", now.strftime("%Y-%m-%dT%H:%M"))
+        with db.connect() as conn:
+            changed = _run(conn, now, result, synced) or synced
         if changed:  # só dispara o backup quando algo mudou de verdade
             for fn in db.on_write:
                 fn()
@@ -174,21 +188,11 @@ def tick(force_sync=False):
         _lock.release()
 
 
-def _run(conn, now, result, force_sync):
+def _run(conn, now, result, synced):
     cfg = db.get_cfg(conn)
-    db.put_setting(conn, "last_tick", result["hora"])
     changed = False
     n = cfg["notif"]
-    if C.BANCO_KEY and (force_sync or sync_due(cfg, now)):
-        from . import bank
-        try:
-            result["sync"] = bank.sync(conn, force=bool((cfg.get("sync_auto") or {}).get("forcar", True)))
-            changed = True
-        except (RuntimeError, ValueError) as e:
-            result["sync"] = {"erro": str(e)}
-            C.log("sincronização automática: " + str(e))
-        db.put_setting(conn, "last_auto_sync", now.strftime("%Y-%m-%dT%H:%M"))
-    elif (cfg.get("auto") or {}).get("parcelas", True):
+    if not synced and (cfg.get("auto") or {}).get("parcelas", True):
         from . import finance as F
         if F.advance_installments(conn, cfg, now.date()):
             changed = True

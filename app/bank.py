@@ -10,6 +10,7 @@ Depois disso, `finance.advance_installments` avança as parcelas das faturas ven
 Limites do provedor: ~2 requisições/s; forçar atualização no banco no máximo 1x por hora.
 """
 import json
+import threading
 import time
 import urllib.error
 import urllib.request
@@ -405,21 +406,33 @@ def brl(v):
     return ("−R$ " if v < 0 else "R$ ") + s
 
 
-def sync(conn, force=False):
-    """Sincroniza agora. Com `force`, também pede dados novos ao banco (respeitando 1x/hora)."""
+_sync_lock = threading.Lock()
+
+
+def run(force=False):
+    """Sincroniza agora. A leitura do banco (rede) acontece sem o SQLite travado;
+    a gravação é uma transação curta. Com `force`, pede dados novos (máx. 1x/hora)."""
     if not C.BANCO_KEY:
         raise ValueError("BANCO_MCP_KEY não está configurada no servidor")
-    t = C.today()
-    cfg = db.get_cfg(conn)
-    data = fetch(cfg, t)
-    result, events = apply(conn, data, t)
-    if force:
-        last = cfg.get("last_force")
-        if not last or (C.now() - datetime.fromisoformat(last).replace(tzinfo=C.TZ)) >= timedelta(minutes=61):
-            result["atualizacao"] = force_refresh(data["items"])
-            db.put_setting(conn, "last_force", C.now().strftime("%Y-%m-%dT%H:%M"))
-    if events:
-        stamp = C.now().strftime("%Y-%m-%d %H:%M")
-        pend = (db.get_cfg(conn).get("eventos_pendentes") or []) + [list(e) + [stamp] for e in events]
-        db.put_setting(conn, "eventos_pendentes", pend[-20:])
-    return result
+    if not _sync_lock.acquire(blocking=False):
+        return {"ok": True, "ocupado": True}
+    try:
+        t = C.today()
+        with db.connect() as conn:
+            cfg = db.get_cfg(conn)
+        data = fetch(cfg, t)
+        with db.connect(write=True) as conn:
+            result, events = apply(conn, data, t)
+            if events:
+                stamp = C.now().strftime("%Y-%m-%d %H:%M")
+                pend = (db.get_cfg(conn).get("eventos_pendentes") or []) + [list(e) + [stamp] for e in events]
+                db.put_setting(conn, "eventos_pendentes", pend[-20:])
+        if force:
+            last = cfg.get("last_force")
+            if not last or (C.now() - datetime.fromisoformat(last).replace(tzinfo=C.TZ)) >= timedelta(minutes=61):
+                result["atualizacao"] = force_refresh(data["items"])
+                with db.connect() as conn:
+                    db.put_setting(conn, "last_force", C.now().strftime("%Y-%m-%dT%H:%M"))
+        return result
+    finally:
+        _sync_lock.release()

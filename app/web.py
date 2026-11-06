@@ -177,7 +177,6 @@ POST_ROUTES = {
     "/api/recurring": lambda c, b: crud(c, "recurring", data.RECURRING_SPEC, b, optional=("card", "due_day")),
     "/api/installments": lambda c, b: act_installments(c, b),
     "/api/spends": act_spends,
-    "/api/sync": lambda c, b: bank.sync(c, force=True),
     "/api/import": data.restore,
     "/api/push/subscribe": act_subscribe,
     "/api/push/unsubscribe": act_unsubscribe,
@@ -306,6 +305,12 @@ class Handler(BaseHTTPRequestHandler):
                     raise ValueError("backup automático não configurado (GITHUB_TOKEN e GITHUB_REPO)")
                 ok = BACKUP.flush()
                 return self._json(200 if ok else 502, {"ok": ok, **BACKUP.status()})
+            if path == "/api/sync":
+                self._read_json(4096)
+                r = bank.run(force=True)
+                if r.get("ocupado"):
+                    r["mensagem"] = "Uma sincronização já está em andamento"
+                return self._json(200, r)
             fn = POST_ROUTES.get(path)
             if not fn:
                 return self._json(404, {"error": "não encontrado"})
@@ -319,7 +324,7 @@ class Handler(BaseHTTPRequestHandler):
             return self._json(502, {"error": str(e)})
         except sqlite3.Error as e:
             C.log("erro de banco: %s" % e)
-            return self._json(500, {"error": "erro no banco de dados"})
+            return self._json(500, {"error": "erro no banco de dados (%s)" % str(e)[:120]})
 
     def _login(self):
         ip = self.client_address[0]
