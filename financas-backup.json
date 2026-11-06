@@ -1,0 +1,410 @@
+{
+ "versao": 2,
+ "settings": {
+  "salario": 2372.0,
+  "decimo1": 1280.0,
+  "decimo2": 1100.0,
+  "decimo1_mes": 11,
+  "decimo2_mes": 12,
+  "aumento_on": false,
+  "aumento_pct": 25.0,
+  "aumento_from": "2027-01",
+  "teto_semanal": 50.0,
+  "caixa": 214.74,
+  "caixa_ref": "2026-11",
+  "salario_dia": 30,
+  "salario_data": "2026-10-30",
+  "ignore_terms": [
+   "pichau",
+   "activeaplus",
+   "damari",
+   "netinjection",
+   "claude",
+   "melimais",
+   "nu pagamentos",
+   "picpay instituicao",
+   "pagamento de fatura",
+   "pagamento recebido",
+   "erick camara",
+   "giga mais",
+   "principia",
+   "i-conecta"
+  ],
+  "pix_max": 200.0,
+  "ciclo_extra": {
+   "Nubank": 27.94,
+   "Mercado Pago": 66.98
+  },
+  "cartoes": [
+   "Nubank",
+   "Mercado Pago",
+   "PicPay"
+  ],
+  "cartao_venc": {
+   "Nubank": 3,
+   "Mercado Pago": 4,
+   "PicPay": 5
+  },
+  "notif": {
+   "enabled": true,
+   "quiet_start": "22:30",
+   "quiet_end": "07:30",
+   "rules": {
+    "daily_log": {
+     "on": true,
+     "time": "20:30"
+    },
+    "teto_alert": {
+     "on": true,
+     "pcts": [
+      80,
+      100
+     ]
+    },
+    "bills_due": {
+     "on": true,
+     "time": "09:00",
+     "days_before": 2
+    },
+    "weekly_summary": {
+     "on": true,
+     "time": "08:30",
+     "weekday": 0
+    },
+    "payday": {
+     "on": true,
+     "time": "10:00"
+    },
+    "auto_sync": {
+     "on": false,
+     "time": "12:30"
+    },
+    "bank_events": {
+     "on": true
+    }
+   }
+  },
+  "auto": {
+   "caixa": true,
+   "salario": true,
+   "pagamentos": true,
+   "faturas": true,
+   "parcelas": true
+  },
+  "sync_auto": {
+   "on": true,
+   "inicio": "07:30",
+   "fim": "23:00",
+   "intervalo": 30,
+   "forcar": true
+  },
+  "salario_regra": {
+   "minimo_pct": 60,
+   "termos": []
+  },
+  "caixa_banco": null,
+  "cartao_usado": {},
+  "last_sync": null
+ },
+ "recurring": [
+  {
+   "id": 1,
+   "name": "Aluguel",
+   "amount": 850.0,
+   "card": null,
+   "due_day": null,
+   "match": "isabela raissa"
+  },
+  {
+   "id": 2,
+   "name": "Faculdade",
+   "amount": 235.23,
+   "card": null,
+   "due_day": null,
+   "match": "principia"
+  },
+  {
+   "id": 3,
+   "name": "Luz",
+   "amount": 123.0,
+   "card": null,
+   "due_day": null,
+   "match": null
+  },
+  {
+   "id": 4,
+   "name": "Internet (Giga Mais)",
+   "amount": 93.33,
+   "card": null,
+   "due_day": null,
+   "match": "giga mais"
+  },
+  {
+   "id": 5,
+   "name": "Claude",
+   "amount": 113.85,
+   "card": "Mercado Pago",
+   "due_day": null,
+   "match": null
+  },
+  {
+   "id": 6,
+   "name": "Clube iFood",
+   "amount": 7.95,
+   "card": "PicPay",
+   "due_day": null,
+   "match": null
+  },
+  {
+   "id": 7,
+   "name": "Armazenamento Gigi",
+   "amount": 19.9,
+   "card": "PicPay",
+   "due_day": null,
+   "match": null
+  }
+ ],
+ "installments": [
+  {
+   "id": 1,
+   "name": "Kit PC (Pichau)",
+   "card": "Nubank",
+   "amount": 178.33,
+   "total": 6,
+   "paid_count": 5,
+   "last_bill": "2026-11"
+  },
+  {
+   "id": 2,
+   "name": "ActiveAplus",
+   "card": "Mercado Pago",
+   "amount": 428.02,
+   "total": 2,
+   "paid_count": 1,
+   "last_bill": "2026-11"
+  },
+  {
+   "id": 3,
+   "name": "NetInjection",
+   "card": "Mercado Pago",
+   "amount": 39.21,
+   "total": 3,
+   "paid_count": 2,
+   "last_bill": "2026-11"
+  },
+  {
+   "id": 4,
+   "name": "Presente Gigi (Damari)",
+   "card": "Mercado Pago",
+   "amount": 141.9,
+   "total": 12,
+   "paid_count": 7,
+   "last_bill": "2026-11"
+  },
+  {
+   "id": 5,
+   "name": "RecargaPay (pix crédito do aluguel)",
+   "card": "PicPay",
+   "amount": 344.62,
+   "total": 3,
+   "paid_count": 0,
+   "last_bill": "2026-11"
+  }
+ ],
+ "payments": [
+  {
+   "month": "2026-11",
+   "key": "rec:1",
+   "paid": 1,
+   "amount": 850.0
+  },
+  {
+   "month": "2026-11",
+   "key": "rec:2",
+   "paid": 1,
+   "amount": 235.23
+  },
+  {
+   "month": "2026-11",
+   "key": "rec:3",
+   "paid": 1,
+   "amount": 123.0
+  },
+  {
+   "month": "2026-11",
+   "key": "rec:4",
+   "paid": 1,
+   "amount": 93.33
+  },
+  {
+   "month": "2026-11",
+   "key": "bill:Nubank",
+   "paid": 1,
+   "amount": 502.21
+  },
+  {
+   "month": "2026-11",
+   "key": "bill:Mercado Pago",
+   "paid": 1,
+   "amount": 1062.98
+  },
+  {
+   "month": "2026-11",
+   "key": "bill:PicPay",
+   "paid": 1,
+   "amount": 755.15
+  }
+ ],
+ "overrides": [
+  {
+   "card": "PicPay",
+   "month": "2026-11",
+   "amount": 1338.0,
+   "note": "Valor do cartão em 05/11 (inclui a 1ª parcela do pix crédito do aluguel). Confira na fatura."
+  }
+ ],
+ "spends": [
+  {
+   "id": 1,
+   "date": "2026-10-30",
+   "description": "Uber",
+   "amount": 8.94,
+   "category": "transporte",
+   "source": "manual",
+   "ext_id": null,
+   "ignored": 0
+  },
+  {
+   "id": 2,
+   "date": "2026-10-30",
+   "description": "Uber",
+   "amount": 0.85,
+   "category": "transporte",
+   "source": "manual",
+   "ext_id": null,
+   "ignored": 0
+  },
+  {
+   "id": 3,
+   "date": "2026-10-30",
+   "description": "Supermercado Mancebo",
+   "amount": 12.55,
+   "category": "mercado",
+   "source": "manual",
+   "ext_id": null,
+   "ignored": 0
+  },
+  {
+   "id": 4,
+   "date": "2026-10-31",
+   "description": "Mercearia",
+   "amount": 12.0,
+   "category": "mercado",
+   "source": "manual",
+   "ext_id": null,
+   "ignored": 0
+  },
+  {
+   "id": 5,
+   "date": "2026-10-31",
+   "description": "MP*CarlosJoseDas",
+   "amount": 45.0,
+   "category": "outros",
+   "source": "manual",
+   "ext_id": null,
+   "ignored": 0
+  },
+  {
+   "id": 6,
+   "date": "2026-10-31",
+   "description": "Supermercado Aliança",
+   "amount": 18.98,
+   "category": "mercado",
+   "source": "manual",
+   "ext_id": null,
+   "ignored": 0
+  },
+  {
+   "id": 7,
+   "date": "2026-10-31",
+   "description": "Help Gas",
+   "amount": 152.0,
+   "category": "casa",
+   "source": "manual",
+   "ext_id": null,
+   "ignored": 0
+  },
+  {
+   "id": 8,
+   "date": "2026-11-01",
+   "description": "Conveniência Osorio's",
+   "amount": 14.5,
+   "category": "mercado",
+   "source": "manual",
+   "ext_id": null,
+   "ignored": 0
+  },
+  {
+   "id": 9,
+   "date": "2026-11-01",
+   "description": "Embapel",
+   "amount": 13.89,
+   "category": "mercado",
+   "source": "manual",
+   "ext_id": null,
+   "ignored": 0
+  },
+  {
+   "id": 10,
+   "date": "2026-11-01",
+   "description": "Lorena Duarte",
+   "amount": 34.0,
+   "category": "outros",
+   "source": "manual",
+   "ext_id": null,
+   "ignored": 0
+  },
+  {
+   "id": 11,
+   "date": "2026-11-01",
+   "description": "Lorena Duarte",
+   "amount": 32.0,
+   "category": "outros",
+   "source": "manual",
+   "ext_id": null,
+   "ignored": 0
+  },
+  {
+   "id": 12,
+   "date": "2026-11-01",
+   "description": "Catarina Oliveira",
+   "amount": 20.0,
+   "category": "mercado",
+   "source": "manual",
+   "ext_id": null,
+   "ignored": 0
+  },
+  {
+   "id": 13,
+   "date": "2026-11-02",
+   "description": "Mercado Livre",
+   "amount": 21.98,
+   "category": "casa",
+   "source": "manual",
+   "ext_id": null,
+   "ignored": 0
+  },
+  {
+   "id": 14,
+   "date": "2026-11-03",
+   "description": "Help Drink",
+   "amount": 7.5,
+   "category": "lazer",
+   "source": "manual",
+   "ext_id": null,
+   "ignored": 0
+  }
+ ],
+ "push_subs": [],
+ "notif_log": []
+}
