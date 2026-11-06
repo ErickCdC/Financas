@@ -12,10 +12,10 @@ SCHEMA = """
 CREATE TABLE IF NOT EXISTS settings(key TEXT PRIMARY KEY, value TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS recurring(
   id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, amount REAL NOT NULL, card TEXT,
-  due_day INTEGER);
+  due_day INTEGER, match TEXT);
 CREATE TABLE IF NOT EXISTS installments(
   id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, card TEXT NOT NULL,
-  amount REAL NOT NULL, total INTEGER NOT NULL, paid_count INTEGER NOT NULL DEFAULT 0);
+  amount REAL NOT NULL, total INTEGER NOT NULL, paid_count INTEGER NOT NULL DEFAULT 0, last_bill TEXT);
 CREATE TABLE IF NOT EXISTS payments(
   month TEXT NOT NULL, key TEXT NOT NULL, paid INTEGER NOT NULL DEFAULT 0, amount REAL,
   PRIMARY KEY(month, key));
@@ -66,6 +66,11 @@ def migrate(conn):
     cols = {r[1] for r in conn.execute("PRAGMA table_info(recurring)")}
     if "due_day" not in cols:
         conn.execute("ALTER TABLE recurring ADD COLUMN due_day INTEGER")
+    if "match" not in cols:
+        conn.execute("ALTER TABLE recurring ADD COLUMN match TEXT")
+    icols = {r[1] for r in conn.execute("PRAGMA table_info(installments)")}
+    if "last_bill" not in icols:
+        conn.execute("ALTER TABLE installments ADD COLUMN last_bill TEXT")
 
 
 def is_empty(conn):
@@ -100,7 +105,7 @@ def get_cfg(conn):
             val = json.loads(r["value"])
         except ValueError:
             continue
-        if isinstance(cfg.get(r["key"]), dict) and isinstance(val, dict) and r["key"] == "notif":
+        if isinstance(cfg.get(r["key"]), dict) and isinstance(val, dict) and r["key"] in ("notif", "auto", "sync_auto", "salario_regra"):
             cfg[r["key"]] = merge(cfg[r["key"]], val)
         else:
             cfg[r["key"]] = val

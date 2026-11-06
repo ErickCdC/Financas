@@ -86,6 +86,12 @@ def build(conn, now):
                         f"(≈ {brl(w['por_dia_restante'])} por dia).")
             out.append((key, title, body, "/#gastos", [f"teto:{w['inicio']}:{p}" for p in crossed]))
 
+    r = rules.get("bank_events") or {}
+    for ev in cfg.get("eventos_pendentes") or []:
+        fresh = len(ev) > 4 and ev[4] >= (now - timedelta(hours=24)).strftime("%Y-%m-%d %H:%M")
+        if r.get("on", True) and fresh:
+            out.append((ev[0], ev[1], ev[2], ev[3], []))
+
     r = rules["daily_log"]
     if r.get("on") and due(now, r["time"]):
         hoje = next((d["total"] for d in w["dias"] if d["date"] == t.isoformat()), 0)
@@ -134,6 +140,23 @@ def build(conn, now):
     return out
 
 
+def sync_due(cfg, now):
+    """Rotina de sincronização: a cada `intervalo` minutos entre `inicio` e `fim`."""
+    sa = cfg.get("sync_auto") or {}
+    if not sa.get("on"):
+        return False
+    if not (_at(now, sa.get("inicio", "07:30")) <= now <= _at(now, sa.get("fim", "23:00")) + timedelta(minutes=2)):
+        return False
+    last = cfg.get("last_auto_sync")
+    if not last:
+        return True
+    try:
+        prev = datetime.fromisoformat(last).replace(tzinfo=C.TZ)
+    except ValueError:
+        return True
+    return now - prev >= timedelta(minutes=max(15, int(sa.get("intervalo", 30))) - 3)
+
+
 def tick(force_sync=False):
     """Roda a rotina. Devolve um resumo do que fez."""
     if not _lock.acquire(blocking=False):
@@ -156,15 +179,19 @@ def _run(conn, now, result, force_sync):
     db.put_setting(conn, "last_tick", result["hora"])
     changed = False
     n = cfg["notif"]
-    rs = n["rules"]["auto_sync"]
-    if C.BANCO_KEY and (force_sync or (rs.get("on") and due(now, rs["time"]) and not sent(conn, f"sync:{now.date()}"))):
+    if C.BANCO_KEY and (force_sync or sync_due(cfg, now)):
         from . import bank
         try:
-            result["sync"] = bank.sync(conn)
-            mark(conn, f"sync:{now.date()}")
+            result["sync"] = bank.sync(conn, force=bool((cfg.get("sync_auto") or {}).get("forcar", True)))
             changed = True
         except (RuntimeError, ValueError) as e:
             result["sync"] = {"erro": str(e)}
+            C.log("sincronização automática: " + str(e))
+        db.put_setting(conn, "last_auto_sync", now.strftime("%Y-%m-%dT%H:%M"))
+    elif (cfg.get("auto") or {}).get("parcelas", True):
+        from . import finance as F
+        if F.advance_installments(conn, cfg, now.date()):
+            changed = True
     if not n.get("enabled"):
         return changed
     if in_quiet(now, n["quiet_start"], n["quiet_end"]):
@@ -181,6 +208,11 @@ def _run(conn, now, result, force_sync):
                 mark(conn, k)
             result["enviadas"].append(title)
             changed = True
+    if cfg.get("eventos_pendentes"):
+        keep = n["rules"].get("bank_events", {}).get("on", True)
+        left = [e for e in db.get_cfg(conn).get("eventos_pendentes") or [] if keep and not sent(conn, e[0])]
+        db.put_setting(conn, "eventos_pendentes", left)
+        changed = True
     return changed
 
 

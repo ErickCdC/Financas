@@ -37,6 +37,20 @@ O GitHub às vezes atrasa execuções agendadas em 10 a 30 minutos, e pausa agen
 1. Abra o app no Chrome › menu ⋮ › **Instalar app**.
 2. Abra pelo ícone › **Ajustes › Notificações › Ativar** › **Testar**.
 
+## Sincronização e automação
+
+Com `BANCO_MCP_KEY`, o app lê o banco a cada 30 minutos das 7:30 às 23:00 (dá para ajustar em **Ajustes › Banco**). Em cada leitura ele:
+
+- lança os gastos do cartão e os Pix pequenos, sem duplicar os lançados à mão;
+- junta compra e estorno do mesmo valor e tira os dois do teto ("estornado");
+- detecta o salário que caiu (crédito de pelo menos 60% do salário perto do dia do salário) e usa o valor real;
+- marca como pagas as faturas (pelo "Pagamento recebido" do cartão) e as contas fixas (pelas palavras em "Como aparece no extrato");
+- usa o valor real das faturas, fechadas e a aberta, no lugar da previsão (valores que você informa nunca são trocados);
+- calcula o caixa: saldo das contas menos as contas do mês ainda não pagas;
+- avança as parcelas quando a fatura é paga ou vence.
+
+Limites do provedor: cerca de 2 requisições por segundo, e pedir dados novos ao banco ("forçar atualização") no máximo 1 vez por hora por banco. O app respeita os dois.
+
 ## Variáveis de ambiente
 
 | Variável | Para quê |

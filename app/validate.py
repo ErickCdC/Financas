@@ -132,6 +132,7 @@ def notif(v):
         "weekly_summary": {"on": boolean, "time": hhmm, "weekday": posint(0, 6)},
         "payday": {"on": boolean, "time": hhmm},
         "auto_sync": {"on": boolean, "time": hhmm},
+        "bank_events": {"on": boolean},
     }
     out_rules = {}
     for name, fields in spec.items():
@@ -144,4 +145,41 @@ def notif(v):
         out_rules[name] = cleaned
     if out_rules:
         out["rules"] = out_rules
+    return out
+
+
+def _flags(keys):
+    def fn(v):
+        if not isinstance(v, dict):
+            raise ValueError("opções inválidas")
+        return {k: boolean(v[k]) for k in keys if k in v}
+    return fn
+
+
+auto = _flags(("caixa", "salario", "pagamentos", "faturas", "parcelas"))
+
+
+def sync_auto(v):
+    if not isinstance(v, dict):
+        raise ValueError("rotina inválida")
+    out = {}
+    for k in ("on", "forcar"):
+        if k in v:
+            out[k] = boolean(v[k])
+    for k in ("inicio", "fim"):
+        if k in v:
+            out[k] = hhmm(v[k])
+    if "intervalo" in v:
+        out["intervalo"] = posint(15, 240)(v["intervalo"])
+    return out
+
+
+def salario_regra(v):
+    if not isinstance(v, dict):
+        raise ValueError("regra inválida")
+    out = {}
+    if "minimo_pct" in v:
+        out["minimo_pct"] = posint(10, 150)(v["minimo_pct"])
+    if "termos" in v:
+        out["termos"] = str_list(v["termos"])
     return out

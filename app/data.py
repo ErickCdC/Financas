@@ -4,8 +4,8 @@ from . import validate as V
 
 VERSION = 2
 TABLES = {
-    "recurring": ["id", "name", "amount", "card", "due_day"],
-    "installments": ["id", "name", "card", "amount", "total", "paid_count"],
+    "recurring": ["id", "name", "amount", "card", "due_day", "match"],
+    "installments": ["id", "name", "card", "amount", "total", "paid_count", "last_bill"],
     "payments": ["month", "key", "paid", "amount"],
     "overrides": ["card", "month", "amount", "note"],
     "spends": ["id", "date", "description", "amount", "category", "source", "ext_id", "ignored"],
@@ -19,13 +19,16 @@ SETTING_FIELDS = {
     "teto_semanal": V.num, "caixa": V.num, "caixa_ref": V.year_month, "salario_dia": V.posint(1, 31),
     "salario_data": V.iso_date, "ignore_terms": V.str_list, "pix_max": V.num, "ciclo_extra": V.money_dict,
     "cartoes": V.card_list, "cartao_venc": V.day_dict, "notif": V.notif,
+    "auto": V.auto, "sync_auto": V.sync_auto, "salario_regra": V.salario_regra,
 }
 # Guardados pelo app (não editáveis pela tela), mas fazem parte do backup.
-INTERNAL_SETTINGS = {"last_sync", "caixa_banco", "cartao_usado", "last_tick"}
+INTERNAL_SETTINGS = {"last_sync", "caixa_banco", "cartao_usado", "last_tick", "entradas", "last_force",
+                     "eventos_pendentes", "last_auto_sync"}
 
-RECURRING_SPEC = {"name": V.text(60), "amount": V.num, "card": V.text(30, False), "due_day": V.opt(V.posint(1, 31))}
+RECURRING_SPEC = {"name": V.text(60), "amount": V.num, "card": V.text(30, False), "due_day": V.opt(V.posint(1, 31)),
+                  "match": V.text(120, False)}
 INSTALLMENT_SPEC = {"name": V.text(60), "card": V.text(30), "amount": V.num,
-                    "total": V.posint(1, 600), "paid_count": V.posint(0, 600)}
+                    "total": V.posint(1, 600), "paid_count": V.posint(0, 600), "last_bill": V.opt(V.year_month)}
 SPEND_SPEC = {"date": V.iso_date, "description": V.text(120), "amount": V.num,
               "category": V.text(30, False), "ignored": V.boolint}
 

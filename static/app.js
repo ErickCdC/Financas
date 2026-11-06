@@ -22,7 +22,8 @@ const store = {
   get(k) { try { return localStorage.getItem(k); } catch (_) { return null; } },
   set(k, v) { try { localStorage.setItem(k, v); } catch (_) { /* sem armazenamento */ } },
 };
-const CATS = [["mercado", "cart"], ["comida", "food"], ["transporte", "car"], ["casa", "house"], ["lazer", "sparkle"], ["compras", "tag"], ["outros", "tag"]];
+const CATS = [["mercado", "cart"], ["comida", "food"], ["transporte", "car"], ["casa", "house"], ["lazer", "sparkle"], ["compras", "tag"], ["saude", "tag"], ["outros", "tag"]];
+const CAT_ICON_EXTRA = { estornado: "refresh" };
 function parseMoney(v) {
   let s = String(v ?? "").trim().replace(/\s|R\$/g, "");
   if (s === "") return null;
@@ -31,7 +32,7 @@ function parseMoney(v) {
   const n = Number(s);
   return isNaN(n) ? NaN : n;
 }
-const catIcon = c => (CATS.find(x => x[0] === String(c || "").toLowerCase()) || [0, "tag"])[1];
+const catIcon = c => CAT_ICON_EXTRA[c] || (CATS.find(x => x[0] === String(c || "").toLowerCase()) || [0, "tag"])[1];
 
 const NAV = [
   ["inicio", "Início", "home"], ["contas", "Contas", "bills"], ["gastos", "Gastos", "wallet"],
@@ -134,7 +135,7 @@ function spendRow(s) {
   return `<button class="item ${s.ignored ? "off" : ""}" data-act="editspend" data-id="${s.id}">
     <span class="ic">${icon(catIcon(s.category))}</span>
     <span class="body"><span class="t">${esc(s.description)}</span>
-      <span class="sub">${esc(s.category || "sem categoria")}${s.source === "banco" ? " · banco" : ""}${s.ignored ? " · ignorado" : ""}</span></span>
+      <span class="sub">${esc(s.category || "sem categoria")}${s.source === "banco" ? " · banco" : ""}${s.ignored && s.category !== "estornado" ? " · ignorado" : ""}</span></span>
     <span class="amt num ${s.amount < 0 ? "pos" : ""}">${brl(s.amount)}</span></button>`;
 }
 function weekBars(w) {
@@ -304,7 +305,7 @@ VIEWS.plano = d => {
         <div class="sub">${esc(p.card)} · ${p.paid_count}/${p.total} pagas${p.restante > 0 ? ` · termina na fatura de ${esc(p.ultima_fatura)}` : " · quitada"}</div>
         <div class="bar ok"><i data-w="${(p.paid_count / p.total) * 100}"></i></div></div>
       <div class="ctrl"><div class="amt num">${brl(p.amount)}</div>
-        <div class="btn-row">${p.restante > 0 ? `<button class="btn sm secondary" data-act="instpay" data-id="${p.id}" data-n="${p.paid_count}">+1 paga</button>` : ""}<button class="btn sm ghost" data-act="editinst" data-id="${p.id}">Editar</button></div></div>
+        <div class="btn-row">${p.restante > 0 && (d.config.auto || {}).parcelas === false ? `<button class="btn sm secondary" data-act="instpay" data-id="${p.id}" data-n="${p.paid_count}">+1 paga</button>` : ""}<button class="btn sm ghost" data-act="editinst" data-id="${p.id}">Editar</button></div></div>
     </div>`).join("") : `<div class="empty">${icon("card")}<div>Nenhuma parcela.</div></div>`}</div></section>`;
   }
   const c = d.config, sim = S.simTeto ?? c.teto_semanal;
@@ -347,7 +348,7 @@ function simParts(d, sim) {
     btns: sim === c.teto_semanal ? "" : `<div class="btn-row"><button class="btn sm" data-act="usesim">Usar ${brl0(sim)} como teto</button><button class="btn sm ghost" data-act="resetsim">Voltar ao atual</button></div>`,
     months: M.map(m => { const cx = simCaixinha(m, sim, c.teto_semanal); return `<details class="card month" data-ym="${m.ym}" ${open.has(m.ym) ? "open" : ""}>
         <summary class="card-head"><div><div class="eyebrow">${esc(monthName(m.ym))}</div><b class="num ${cx < 0 ? "neg" : "pos"}">${brl(cx)}</b> <span class="muted">para a caixinha</span></div>${icon("right")}</summary>
-        <div class="kv"><span>Entra${m.decimo ? " (inclui 13º)" : ""}${m.caixa ? " + caixa" : ""}</span><span class="num">${brl(m.entra)}</span></div>
+        <div class="kv"><span>Entra${m.decimo ? " (inclui 13º)" : ""}${m.caixa ? " + caixa" : ""}${m.recebido ? " · salário já no caixa" : ""}</span><span class="num">${brl(m.entra)}</span></div>
         ${m.cartoes.map(k => `<div class="kv"><span class="muted">Fatura ${esc(k.card)}${k.source === "informado" ? " · informada" : ""}</span><span class="num">−${brl(k.total)}</span></div>`).join("")}
         <div class="kv"><span class="muted">Contas fixas</span><span class="num">−${brl(m.fixas)}</span></div>
         <div class="kv"><span class="muted">Gasto livre (${weeks(m).toFixed(1)} sem × ${brl0(sim)})</span><span class="num">−${brl(sim * weeks(m))}</span></div>
@@ -357,12 +358,17 @@ function simParts(d, sim) {
   };
 }
 
+function fmtStamp(st) { return st ? `${st.slice(8, 10)}/${st.slice(5, 7)} ${st.slice(11, 16)}` : ""; }
+function lastIncome(c) {
+  const e = c.entradas || {}; const k = Object.keys(e).sort().pop();
+  return k ? `Último: ${brl(e[k].total)} em ${ddmm(e[k].itens[0].date)}` : "";
+}
 function sw(path, on) { return `<label class="switch"><input type="checkbox" data-set="${path}" data-kind="bool" ${on ? "checked" : ""}><span></span></label>`; }
 function timeIn(path, v) { return `<input type="time" data-set="${path}" data-kind="text" value="${esc(v)}">`; }
 function moneyIn(path, v, label) { return `<label class="field"><span>${label}</span><div class="money"><input inputmode="decimal" data-set="${path}" data-kind="num" value="${esc(String(v ?? "").replace(".", ","))}"></div></label>`; }
 
 VIEWS.ajustes = d => {
-  const c = d.config, n = c.notif, r = n.rules;
+  const c = d.config, n = c.notif, r = n.rules, sa = c.sync_auto || {}, au = c.auto || {};
   const perm = "Notification" in window ? Notification.permission : "unsupported";
   const pushState = perm === "unsupported" ? "Este navegador não suporta notificações." :
     perm === "denied" ? "Bloqueadas no navegador. Libere em Configurações do site › Notificações." :
@@ -387,7 +393,7 @@ VIEWS.ajustes = d => {
       <div class="setting"><div class="body"><div class="t">Contas a vencer</div><div class="sub">Avisar com antecedência</div></div><div class="ctrl">${sel("notif.rules.bills_due.days_before", r.bills_due.days_before, [0, 1, 2, 3, 5, 7].map(x => `<option value="${x}">${x === 0 ? "no dia" : x + " dia(s) antes"}</option>`).join(""))}${timeIn("notif.rules.bills_due.time", r.bills_due.time)}${sw("notif.rules.bills_due.on", r.bills_due.on)}</div></div>
       <div class="setting"><div class="body"><div class="t">Resumo semanal</div><div class="sub">Como foi a semana anterior</div></div><div class="ctrl">${sel("notif.rules.weekly_summary.weekday", r.weekly_summary.weekday, DSEM_LONG.map((x, i) => `<option value="${(i + 6) % 7}">${x}</option>`).join(""))}${timeIn("notif.rules.weekly_summary.time", r.weekly_summary.time)}${sw("notif.rules.weekly_summary.on", r.weekly_summary.on)}</div></div>
       <div class="setting"><div class="body"><div class="t">Dia do salário</div><div class="sub">Quanto guardar e o que pagar</div></div><div class="ctrl">${timeIn("notif.rules.payday.time", r.payday.time)}${sw("notif.rules.payday.on", r.payday.on)}</div></div>
-      ${d.sync_disponivel ? `<div class="setting"><div class="body"><div class="t">Sincronizar banco todo dia</div><div class="sub">Puxa gastos e confere o teto</div></div><div class="ctrl">${timeIn("notif.rules.auto_sync.time", r.auto_sync.time)}${sw("notif.rules.auto_sync.on", r.auto_sync.on)}</div></div>` : ""}
+      ${d.sync_disponivel ? `<div class="setting"><div class="body"><div class="t">Eventos do banco</div><div class="sub">Salário recebido, fatura ou conta paga</div></div>${sw("notif.rules.bank_events.on", (r.bank_events || { on: true }).on)}</div>` : ""}
       <div class="setting"><div class="body"><div class="t">Agendador</div><div class="sub">${d.agendador ? `Configurado${lastTick ? ` · última verificação ${esc(lastTick.slice(8, 10) + "/" + lastTick.slice(5, 7) + " " + lastTick.slice(11))}` : ""}` : "Sem CRON_TOKEN: avisos só saem com o servidor acordado. Veja o README."}</div></div>
         <button class="btn sm secondary" data-act="notifrun">Verificar agora</button></div>
     </section>
@@ -416,13 +422,25 @@ VIEWS.ajustes = d => {
     <h2 class="sec">Contas fixas e assinaturas <button class="btn ghost sm" data-act="addrec">${icon("plus")}Nova</button></h2>
     <section class="card flush"><div class="list">${d.recorrentes.map(x => `<button class="item" data-act="editrec" data-id="${x.id}">
       <span class="ic ${x.card ? "blue" : ""}">${icon(x.card ? "card" : "bills")}</span>
-      <span class="body"><span class="t">${esc(x.name)}</span><span class="sub">${x.card ? "na fatura " + esc(x.card) : "paga direto"}${x.due_day ? ` · vence dia ${x.due_day}` : x.card ? "" : " · sem dia de vencimento"}</span></span>
+      <span class="body"><span class="t">${esc(x.name)}</span><span class="sub">${x.card ? "na fatura " + esc(x.card) : "paga direto"}${x.due_day ? ` · vence dia ${x.due_day}` : x.card ? "" : " · sem dia de vencimento"}${!x.card && x.match ? " · automático" : ""}</span></span>
       <span class="amt num">${brl(x.amount)}</span></button>`).join("")}</div></section>
 
     <h2 class="sec">Banco</h2>
     <section class="card flush">
-      <div class="setting"><span class="ic">${icon("bank")}</span><div class="body"><div class="t">Banco MCP</div><div class="sub">${d.sync_disponivel ? `Última sincronização: ${esc(c.last_sync || "nunca")}${c.caixa_banco != null ? ` · saldo ${brl(c.caixa_banco)}` : ""}` : "Sem BANCO_MCP_KEY no servidor. O app funciona só com lançamentos manuais."}</div></div>
+      <div class="setting"><span class="ic">${icon("bank")}</span><div class="body"><div class="t">Banco MCP</div><div class="sub">${d.sync_disponivel ? `Última sincronização: ${esc(fmtStamp(c.last_sync) || "nunca")}${c.caixa_banco != null ? ` · saldo ${brl(c.caixa_banco)}` : ""}` : "Sem BANCO_MCP_KEY no servidor. O app funciona só com lançamentos manuais."}</div></div>
         ${d.sync_disponivel ? `<button class="btn sm" data-act="sync">Sincronizar</button>` : ""}</div>
+      ${d.sync_disponivel ? `
+      <div class="group-label">Rotina automática</div>
+      <div class="setting"><div class="body"><div class="t">Sincronizar sozinho</div><div class="sub">Lê o banco a cada intervalo, dentro do horário</div></div>${sw("sync_auto.on", sa.on)}</div>
+      <div class="setting"><div class="body"><div class="t">Horário</div></div><div class="ctrl">${timeIn("sync_auto.inicio", sa.inicio)}<span class="muted">até</span>${timeIn("sync_auto.fim", sa.fim)}</div></div>
+      <div class="setting"><div class="body"><div class="t">Intervalo</div></div>${sel("sync_auto.intervalo", sa.intervalo, [15, 30, 60, 120].map(x => `<option value="${x}">a cada ${x} min</option>`).join(""))}</div>
+      <div class="setting"><div class="body"><div class="t">Pedir dados novos ao banco</div><div class="sub">O provedor permite no máximo 1 vez por hora por banco${c.last_force ? ` · último pedido ${esc(fmtStamp(c.last_force.replace("T", " ")))}` : ""}</div></div>${sw("sync_auto.forcar", sa.forcar)}</div>
+      <div class="group-label">O que fazer sozinho</div>
+      <div class="setting"><div class="body"><div class="t">Caixa pelo saldo das contas</div><div class="sub">Saldo menos as contas do mês ainda não pagas</div></div>${sw("auto.caixa", au.caixa)}</div>
+      <div class="setting"><div class="body"><div class="t">Salário real</div><div class="sub">${lastIncome(c) || "Detecta o crédito do salário perto do dia " + c.salario_dia}</div></div>${sw("auto.salario", au.salario)}</div>
+      <div class="setting"><div class="body"><div class="t">Marcar contas e faturas pagas</div><div class="sub">Pelo pagamento no extrato. Nas contas fixas, use “Como aparece no extrato”</div></div>${sw("auto.pagamentos", au.pagamentos)}</div>
+      <div class="setting"><div class="body"><div class="t">Valor real das faturas</div><div class="sub">Usa a fatura fechada e a aberta do banco no lugar da previsão</div></div>${sw("auto.faturas", au.faturas)}</div>
+      <div class="setting"><div class="body"><div class="t">Avançar parcelas</div><div class="sub">Conta a parcela quando a fatura é paga ou vence</div></div>${sw("auto.parcelas", au.parcelas)}</div>` : ""}
       <div class="setting stack"><div class="body"><div class="t">Ignorar na sincronização</div><div class="sub">Palavras separadas por vírgula</div></div><textarea class="input" rows="3" data-set="ignore_terms" data-kind="list">${esc(c.ignore_terms.join(", "))}</textarea></div>
       <div class="setting"><div class="body"><div class="t">Pix até este valor vira gasto</div><div class="sub">Acima disso é tratado como conta</div></div><div class="money"><input class="sm-in" inputmode="decimal" data-set="pix_max" data-kind="num" value="${c.pix_max}"></div></div>
     </section>
@@ -586,6 +604,7 @@ const recFields = () => [
   { name: "name", label: "Nome", required: true }, { name: "amount", label: "Valor mensal", type: "money", required: true },
   { name: "card", label: "Como paga", type: "select", options: [["", "Direto da conta (boleto, Pix, débito)"], ...S.d.config.cartoes.map(c => [c, "Na fatura " + c])] },
   { name: "due_day", label: "Dia de vencimento", type: "number", min: 1, max: 31, hint: "Usado nos lembretes de contas a vencer" },
+  { name: "match", label: "Como aparece no extrato", placeholder: "Ex.: enel, ampla", hint: "Palavras do boleto ou Pix (separe por vírgula). Marca a conta como paga sozinha" },
 ];
 
 const A = {
@@ -633,7 +652,13 @@ const A = {
   usebank: async () => { try { await api("/api/settings", { caixa: S.d.config.caixa_banco }); toast("Caixa atualizado"); await load({ silent: true }); } catch (e) { toast(e.message); } },
   sync: async el => {
     el.disabled = true; el.textContent = "Sincronizando…";
-    try { const r = await api("/api/sync", {}); toast(`${r.novos} novo(s) do banco` + (r.ja_lancados ? ` · ${r.ja_lancados} já lançados` : "")); await load({ silent: true }); }
+    try {
+      const r = await api("/api/sync", {});
+      const bits = [`${r.novos} gasto(s) novo(s)`];
+      if (r.estornos) bits.push(`${r.estornos} estorno(s) casado(s)`);
+      if (r.eventos) bits.push(`${r.eventos} atualização(ões) de contas`);
+      toast(bits.join(" · ")); await load({ silent: true });
+    }
     catch (e) { toast(e.message); el.disabled = false; el.textContent = "Sincronizar"; }
   },
   backupnow: async el => { el.disabled = true; try { await api("/api/backup/now", {}); toast("Backup salvo no GitHub"); await load({ silent: true }); } catch (e) { toast(e.message); el.disabled = false; } },

@@ -17,6 +17,15 @@ def main():
     state = db.init(restore=BACKUP.restore)
     C.log(f"banco: {state} · backup no GitHub: {'ativo' if BACKUP.enabled else 'desligado'}"
           f"{' (PAUSADO: ' + BACKUP.last_error + ')' if BACKUP.blocked else ''}")
+    with db.connect() as conn:  # ajustes de dados antigos
+        from app import bank, seed
+        for name, words in seed.MATCH.items():
+            conn.execute("UPDATE recurring SET match=? WHERE name=? AND (match IS NULL OR match='')", (words, name))
+        for r in db.rows(conn, "SELECT id, category FROM spends WHERE source='banco'"):
+            if r["category"] and r["category"] not in ("mercado", "comida", "transporte", "casa", "lazer",
+                                                        "compras", "saude", "outros", "estornado"):
+                conn.execute("UPDATE spends SET category=? WHERE id=?", (bank.map_category(r["category"]), r["id"]))
+        bank.reconcile_refunds(conn)
     if state == "novo" and BACKUP.enabled and not BACKUP.blocked:
         BACKUP.schedule()  # primeiro backup
 

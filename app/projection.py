@@ -49,9 +49,13 @@ def card_forecast(card, income_month, current_month, recurring, installments, ov
             parts.append({"name": r["name"], "amount": r["amount"], "kind": "assinatura"})
     if idx >= 0:
         for i in installments:
+            if i["card"] != card:
+                continue
             restante = i["total"] - i["paid_count"]
-            if i["card"] == card and restante > idx:
-                n = i["paid_count"] + idx + 1
+            # offset = quantas faturas depois da última já contada (fatura vence em income_month + 1)
+            offset = months_between(i.get("last_bill") or current_month, income_month) + 1
+            if 1 <= offset <= restante:
+                n = i["paid_count"] + offset
                 parts.append({"name": f"{i['name']} ({n}/{i['total']})",
                               "amount": i["amount"], "kind": "parcela"})
     if idx == 0:
@@ -79,6 +83,12 @@ def project(cfg, recurring, installments, overrides, today, n=3):
         if m == cfg["decimo2_mes"]:
             decimo += cfg["decimo2"]
         caixa = cfg["caixa"] if k == 0 else 0.0
+        recebido = 0.0
+        if k == 0:
+            # Se o salário deste mês já caiu, ele já está no caixa: só entra o que falta receber.
+            recebido = float(((cfg.get("entradas") or {}).get(ym) or {}).get("total") or 0)
+            falta = max(salario + decimo - recebido, 0.0)
+            salario, decimo = (min(salario, falta), max(falta - salario, 0.0)) if recebido else (salario, decimo)
         entra = salario + decimo + caixa
         cards = [card_forecast(c, ym, cur, recurring, installments, overrides, cfg["ciclo_extra"])
                  for c in cfg["cartoes"]]
@@ -93,7 +103,7 @@ def project(cfg, recurring, installments, overrides, today, n=3):
         months.append({
             "ym": ym, "label": label(ym),
             "entra": round(entra, 2), "salario": round(salario, 2), "decimo": round(decimo, 2),
-            "caixa": round(caixa, 2),
+            "caixa": round(caixa, 2), "recebido": round(recebido, 2),
             "cartoes": cards, "cart_total": cart, "fixas": fixas,
             "sobra": round(sobra, 2), "semanas": round(semanas, 1),
             "livre": round(livre, 2), "caixinha": round(caixinha, 2),

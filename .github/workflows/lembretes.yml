@@ -1,9 +1,9 @@
-# Acorda o app no Render e roda a rotina de notificações a cada 30 minutos.
+# Acorda o app no Render a cada 30 min (7h às 23h30) e roda a sincronização e as notificações.
 # Precisa dos Secrets APP_URL e CRON_TOKEN (Settings › Secrets and variables › Actions).
 name: Lembretes
 on:
   schedule:
-    - cron: "5,35 * * * *"
+    - cron: "2,32 10-23,0-2 * * *"   # 07:02 a 23:32 no horário de Brasília (UTC-3)
   workflow_dispatch:
 permissions: {}
 jobs:

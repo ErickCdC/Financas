@@ -80,8 +80,8 @@ def act_settings(conn, body):
         if k not in data.SETTING_FIELDS:
             continue
         val = data.SETTING_FIELDS[k](v)
-        if k == "notif":
-            val = db.merge(db.get_cfg(conn)["notif"], val)
+        if k in ("notif", "auto", "sync_auto", "salario_regra"):
+            val = db.merge(db.get_cfg(conn)[k], val)
         db.put_setting(conn, k, val)
         if k == "caixa":
             db.put_setting(conn, "caixa_ref", finance.P.ym_of(C.today()))
@@ -116,6 +116,18 @@ def act_overrides(conn, body):
                      "ON CONFLICT(card,month) DO UPDATE SET amount=excluded.amount, note=excluded.note",
                      (card, month, V.num(body.get("amount")), V.text(120, False)(body.get("note"))))
     return {"ok": True}
+
+
+def act_installments(conn, body):
+    r = crud(conn, "installments", data.INSTALLMENT_SPEC, body, optional=("paid_count", "last_bill"))
+    if not body.get("delete") and "paid_count" in body:
+        # O número que você digitou vale "até a última fatura já resolvida" desse cartão.
+        iid = body.get("id") or r.get("id")
+        row = conn.execute("SELECT card FROM installments WHERE id=?", (iid,)).fetchone()
+        if row:
+            x = finance.settled_month(conn, db.get_cfg(conn), row["card"], C.today()) or finance.P.ym_of(C.today())
+            conn.execute("UPDATE installments SET last_bill=? WHERE id=?", (x, iid))
+    return r
 
 
 def act_spends(conn, body):
@@ -163,9 +175,9 @@ POST_ROUTES = {
     "/api/payments": act_payments,
     "/api/overrides": act_overrides,
     "/api/recurring": lambda c, b: crud(c, "recurring", data.RECURRING_SPEC, b, optional=("card", "due_day")),
-    "/api/installments": lambda c, b: crud(c, "installments", data.INSTALLMENT_SPEC, b, optional=("paid_count",)),
+    "/api/installments": lambda c, b: act_installments(c, b),
     "/api/spends": act_spends,
-    "/api/sync": lambda c, b: bank.sync(c),
+    "/api/sync": lambda c, b: bank.sync(c, force=True),
     "/api/import": data.restore,
     "/api/push/subscribe": act_subscribe,
     "/api/push/unsubscribe": act_unsubscribe,

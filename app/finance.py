@@ -113,9 +113,42 @@ def parcelas(conn, t):
     out = []
     for i in db.rows(conn, "SELECT * FROM installments ORDER BY id"):
         rest = i["total"] - i["paid_count"]
+        base = i.get("last_bill") or cur
         out.append({**i, "restante": rest, "restante_valor": round(rest * i["amount"], 2),
-                    "ultima_fatura": P.label(P.add_months(cur, rest)) if rest > 0 else None})
+                    "ultima_fatura": P.label(P.add_months(base, rest)) if rest > 0 else None})
     return out
+
+
+def settled_month(conn, cfg, card, t):
+    """Mês de vencimento da fatura mais recente já resolvida (paga ou vencida há 3+ dias)."""
+    day = (cfg.get("cartao_venc") or {}).get(card) or 10
+    best = None
+    for k in range(-3, 2):
+        ym = P.add_months(P.ym_of(t), k)
+        due = clamp_day(int(ym[:4]), int(ym[5:]), int(day))
+        row = conn.execute("SELECT paid FROM payments WHERE month=? AND key=?", (ym, f"bill:{card}")).fetchone()
+        if (row and row["paid"]) or (t - due).days >= 3:
+            best = ym
+    return best
+
+
+def advance_installments(conn, cfg, t):
+    """Conta as parcelas das faturas que já foram pagas ou venceram. Devolve quantas avançaram."""
+    moved = 0
+    for card in cfg["cartoes"]:
+        x = settled_month(conn, cfg, card, t)
+        if not x:
+            continue
+        for i in db.rows(conn, "SELECT * FROM installments WHERE card=? AND paid_count < total", (card,)):
+            last = i.get("last_bill") or x
+            add = P.months_between(last, x)
+            if add > 0:
+                conn.execute("UPDATE installments SET paid_count=?, last_bill=? WHERE id=?",
+                             (min(i["total"], i["paid_count"] + add), x, i["id"]))
+                moved += 1
+            elif not i.get("last_bill"):
+                conn.execute("UPDATE installments SET last_bill=? WHERE id=?", (x, i["id"]))
+    return moved
 
 
 def upcoming(conn, cfg, t, days=10):
@@ -159,7 +192,8 @@ def summary(conn, month=None, extra=None):
     public_cfg = {k: raw.get(k) for k in (
         "salario", "decimo1", "decimo2", "decimo1_mes", "decimo2_mes", "aumento_on", "aumento_pct",
         "aumento_from", "teto_semanal", "caixa", "caixa_ref", "salario_dia", "ignore_terms", "pix_max",
-        "ciclo_extra", "cartoes", "cartao_venc", "last_sync", "caixa_banco", "cartao_usado", "notif")}
+        "ciclo_extra", "cartoes", "cartao_venc", "last_sync", "caixa_banco", "cartao_usado", "notif",
+        "auto", "sync_auto", "salario_regra", "entradas", "last_force", "last_tick")}
     public_cfg["caixa_desatualizado"] = bool(raw.get("caixa_ref") and raw["caixa_ref"] != P.ym_of(t))
     out = {
         "hoje": t.isoformat(), "mes": month_panel(conn, cfg, month, t),

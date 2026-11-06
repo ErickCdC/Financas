@@ -139,7 +139,15 @@ class GitHubBackup:
                     except (urllib.error.URLError, OSError):
                         pass
                     continue
-                self.last_error = f"GitHub respondeu HTTP {e.code}"
+                try:
+                    gm = json.loads(msg).get("message", "")
+                except ValueError:
+                    gm = msg
+                hint = {401: "token inválido ou expirado",
+                        403: "o token não tem permissão de escrita: no GitHub, dê 'Contents: Read and write' "
+                             "e acesso ao repositório Financas",
+                        404: "repositório não encontrado para este token (confira o acesso ao repositório Financas)"}
+                self.last_error = f"GitHub HTTP {e.code} — {hint.get(e.code, gm[:120] or 'erro')}"
                 break
             except (urllib.error.URLError, TimeoutError, OSError) as e:
                 self.last_error = f"sem conexão com o GitHub ({e.__class__.__name__})"

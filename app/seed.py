@@ -25,6 +25,10 @@ DEFAULT_SETTINGS = {
     "last_sync": None,
     "caixa_banco": None,
     "cartao_usado": {},
+    # Automação a cada sincronização com o banco
+    "auto": {"caixa": True, "salario": True, "pagamentos": True, "faturas": True, "parcelas": True},
+    "salario_regra": {"minimo_pct": 60, "termos": []},  # crédito >= 60% do salário perto do dia do salário
+    "sync_auto": {"on": True, "inicio": "07:30", "fim": "23:00", "intervalo": 30, "forcar": True},
     "notif": {
         "enabled": True,
         "quiet_start": "22:30",
@@ -36,6 +40,7 @@ DEFAULT_SETTINGS = {
             "weekly_summary": {"on": True, "time": "08:30", "weekday": 0},
             "payday": {"on": True, "time": "10:00"},
             "auto_sync": {"on": False, "time": "12:30"},
+            "bank_events": {"on": True},
         },
     },
 }
@@ -86,13 +91,19 @@ SPENDS = [  # desde o salário (30/10), conferido com o banco em 05/11. Uber com
 ]
 
 
+# Palavras que identificam o pagamento de cada conta fixa no extrato (editável no app).
+MATCH = {"Aluguel": "isabela raissa", "Faculdade": "principia", "Internet (Giga Mais)": "giga mais"}
+
+
 def seed(conn):
     for k, v in DEFAULT_SETTINGS.items():
         conn.execute("INSERT OR IGNORE INTO settings(key,value) VALUES(?,?)", (k, json.dumps(v)))
     for name, amount, card in RECURRING:
-        conn.execute("INSERT INTO recurring(name,amount,card,due_day) VALUES(?,?,?,NULL)", (name, amount, card))
+        conn.execute("INSERT INTO recurring(name,amount,card,due_day,match) VALUES(?,?,?,NULL,?)",
+                     (name, amount, card, MATCH.get(name)))
     for name, card, amount, total, paid in INSTALLMENTS:
-        conn.execute("INSERT INTO installments(name,card,amount,total,paid_count) VALUES(?,?,?,?,?)",
+        # last_bill: mês de vencimento da última fatura já contada em "paid_count" (nov/26 já foi paga)
+        conn.execute("INSERT INTO installments(name,card,amount,total,paid_count,last_bill) VALUES(?,?,?,?,?,'2026-11')",
                      (name, card, amount, total, paid))
     for key, amount in PAYMENTS_NOV.items():
         conn.execute("INSERT INTO payments(month,key,paid,amount) VALUES('2026-11',?,1,?)", (key, amount))
