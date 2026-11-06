@@ -26,7 +26,7 @@ class Projection(unittest.TestCase):
         cards = {c["card"]: c["total"] for c in nov["cartoes"]}
         self.assertAlmostEqual(cards["Nubank"], 206.27, places=2)
         self.assertAlmostEqual(cards["Mercado Pago"], 789.96, places=2)
-        self.assertAlmostEqual(cards["PicPay"], 1338.00, places=2)
+        self.assertAlmostEqual(cards["PicPay"], 7.95 + 19.90 + 344.62, places=2)  # assinaturas + RecargaPay 1/3
         self.assertAlmostEqual(nov["fixas"], 1301.56, places=2)
         self.assertAlmostEqual(nov["entra"], 2372 + 1280 + 214.74, places=2)
 
@@ -77,6 +77,14 @@ class BankRules(unittest.TestCase):
         par = {"description": "Parcela 6/6 PICHAU INFORMATICA", "amount": "178.33", "type": "DEBIT", "date": "2026-10-29T10:00:00Z"}
         self.assertIsNone(bank.to_spend("CREDIT", pay, self.ign, 200))
         self.assertIsNone(bank.to_spend("CREDIT", par, self.ign, 200))
+
+    def test_card_installment_is_not_daily_spend(self):
+        meta = {"description": "RecargaPay  *EPARC01/03", "amount": "344.62", "type": "DEBIT", "date": "2026-10-31T12:14:42Z",
+                "creditCardMetadata": {"installmentNumber": 1, "totalInstallments": 3}}
+        self.assertIsNone(bank.to_spend("CREDIT", meta, self.ign, 200))
+        self.assertIsNone(bank.to_spend("CREDIT", {**meta, "creditCardMetadata": {}}, self.ign, 200))  # pelo texto
+        burger = {"description": "BB BURGER                .CASIMIRO D BRA", "amount": "12.50", "type": "DEBIT", "date": "2026-11-04T18:12:12Z"}
+        self.assertEqual(bank.to_spend("CREDIT", burger, self.ign, 200)[2], 12.5)
 
     def test_bank_pix_small_only(self):
         small = {"description": "Pix enviado MERCEARIA", "amount": "-12.00", "type": "DEBIT", "operationType": "PIX", "date": "2026-10-31T15:26:13Z"}

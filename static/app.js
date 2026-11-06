@@ -421,7 +421,7 @@ VIEWS.ajustes = d => {
   </div>
   <div class="stack">
     <h2 class="sec">Cartões <button class="btn ghost sm" data-act="addcard">${icon("plus")}Cartão</button></h2>
-    <section class="card flush">${c.cartoes.map(k => `<div class="setting"><span class="ic blue">${icon("card")}</span><div class="body"><div class="t">${esc(k)}</div><div class="sub">Vence dia ${esc((c.cartao_venc || {})[k] ?? "—")} · compras do ciclo ${brl((c.ciclo_extra || {})[k] || 0)}</div></div>
+    <section class="card flush">${c.cartoes.map(k => `<div class="setting"><span class="ic blue">${icon("card")}</span><div class="body"><div class="t">${esc(k)}</div><div class="sub">Vence dia ${esc((c.cartao_venc || {})[k] ?? "—")} · compras desde o fechamento${((c.ciclo_info || {})[k] || {}).fechou ? ` (${ddmm(c.ciclo_info[k].fechou)})` : ""}: ${brl((c.ciclo_extra || {})[k] || 0)}</div></div>
       <button class="btn sm ghost" data-act="editcard" data-card="${esc(k)}">Editar</button></div>`).join("")}</section>
 
     <h2 class="sec">Contas fixas e assinaturas <button class="btn ghost sm" data-act="addrec">${icon("plus")}Nova</button></h2>
@@ -434,6 +434,7 @@ VIEWS.ajustes = d => {
     <section class="card flush">
       <div class="setting"><span class="ic">${icon("bank")}</span><div class="body"><div class="t">Banco MCP</div><div class="sub">${d.sync_disponivel ? `Última sincronização: ${esc(fmtStamp(c.last_sync) || "nunca")}${c.caixa_banco != null ? ` · saldo ${brl(c.caixa_banco)}` : ""}` : "Sem BANCO_MCP_KEY no servidor. O app funciona só com lançamentos manuais."}</div></div>
         ${d.sync_disponivel ? `<button class="btn sm" data-act="sync">Sincronizar</button>` : ""}</div>
+      ${d.sync_disponivel && (c.sync_detalhe || []).length ? `<div class="setting"><div class="body"><div class="t">Lido na última sincronização</div><div class="sub">${c.sync_detalhe.map(x => `${esc(x.banco)} ${esc(x.tipo)}: ${x.lidas} lidas, ${x.no_app} no app`).join(" · ")}</div></div></div>` : ""}
       ${d.sync_disponivel ? `
       <div class="group-label">Rotina automática</div>
       <div class="setting"><div class="body"><div class="t">Sincronizar sozinho</div><div class="sub">Lê o banco a cada intervalo, dentro do horário</div></div>${sw("sync_auto.on", sa.on)}</div>

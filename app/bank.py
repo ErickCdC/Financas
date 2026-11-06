@@ -10,6 +10,7 @@ Depois disso, `finance.advance_installments` avança as parcelas das faturas ven
 Limites do provedor: ~2 requisições/s; forçar atualização no banco no máximo 1x por hora.
 """
 import json
+import re
 import threading
 import time
 import urllib.error
@@ -78,6 +79,19 @@ def _explain(e, path):
     return "Banco MCP: HTTP %d%s — %s" % (e.code, f" ({code})" if code else "", hint)
 
 
+PARC_RE = re.compile(r"(parc\w*\s*\d{1,2}\s*/\s*\d{1,2})|(\b\d{1,2}/\d{1,2}\b\s*$)", re.I)
+
+
+def is_installment(x):
+    meta = x.get("creditCardMetadata") or {}
+    try:
+        if int(meta.get("totalInstallments") or 0) > 1:
+            return True
+    except (TypeError, ValueError):
+        pass
+    return bool(PARC_RE.search(str(x.get("description") or "")))
+
+
 def local_date(s):
     try:
         dt = datetime.fromisoformat(str(s).replace("Z", "+00:00"))
@@ -102,6 +116,8 @@ def to_spend(acct_type, x, ignore, pix_max):
     except (TypeError, ValueError):
         return None
     kind = x.get("type")
+    if acct_type == "CREDIT" and is_installment(x):
+        return None
     if acct_type == "CREDIT":
         if kind == "DEBIT" and amount > 0:
             return d, desc, round(amount, 2)
@@ -290,6 +306,7 @@ def apply(conn, data, t):
                 db.put_setting(conn, "salario", sal)
 
     # 3) e 4) faturas: valor real e pagamento
+    ciclo = {}
     for a in data["accounts"]:
         if a["type"] != "CREDIT":
             continue
@@ -297,6 +314,8 @@ def apply(conn, data, t):
         if not card:
             continue
         bills = a["bills"] or {}
+        closes = [str(b.get("billClosingDate") or "")[:10] for b in bills.get("results") or [] if b.get("billClosingDate")]
+        ciclo[card] = {"conta": a["id"], "fechou": max(closes) if closes else None}
         if auto.get("faturas", True):
             for b in bills.get("results") or []:
                 due = str(b.get("dueDate") or "")[:10]
@@ -344,6 +363,27 @@ def apply(conn, data, t):
                     m = _match_fixed(conn, r, d)
                     if m and set_paid(conn, m, f"rec:{r['id']}", amt):
                         events.append((f"paid:{m}:rec:{r['id']}", f"{r['name']} paga", f"{brl(amt)} em {d[8:]}/{d[5:7]}.", "/#contas"))
+
+    # compras do ciclo aberto de cada cartão entram na próxima fatura (substitui o "compras do ciclo" manual)
+    if auto.get("faturas", True) and ciclo:
+        extra = dict(cfg.get("ciclo_extra") or {})
+        for card, info in ciclo.items():
+            day = int((cfg.get("cartao_venc") or {}).get(card) or 10)
+            since_close = info["fechou"] or (finance.clamp_day(t.year, t.month, day) - timedelta(days=7)).isoformat()
+            row = conn.execute("SELECT COALESCE(SUM(amount),0) FROM spends WHERE ignored=0 AND ext_id LIKE ? AND date > ?",
+                               (info["conta"] + ":%", since_close)).fetchone()
+            extra[card] = round(row[0], 2)
+            info["compras"] = extra[card]
+        db.put_setting(conn, "ciclo_extra", extra)
+        db.put_setting(conn, "ciclo_info", ciclo)
+
+    # diagnóstico por conta (mostrado em Ajustes)
+    detalhe = []
+    for a in data["accounts"]:
+        n = conn.execute("SELECT COUNT(*) FROM spends WHERE ext_id LIKE ?", (a["id"] + ":%",)).fetchone()[0]
+        detalhe.append({"banco": a["bank"], "tipo": "cartão" if a["type"] == "CREDIT" else "conta",
+                        "lidas": len(a["tx"]), "no_app": n})
+    db.put_setting(conn, "sync_detalhe", detalhe)
 
     # 5) caixa = saldo das contas − contas do mês já cobertas por esse dinheiro e ainda não pagas
     db.put_setting(conn, "caixa_banco", round(caixa_banco, 2))

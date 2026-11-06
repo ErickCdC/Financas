@@ -26,6 +26,12 @@ def main():
                                                         "compras", "saude", "outros", "estornado"):
                 conn.execute("UPDATE spends SET category=? WHERE id=?", (bank.map_category(r["category"]), r["id"]))
         bank.reconcile_refunds(conn)
+        # parcelas que entraram como gasto saem do teto
+        for r in db.rows(conn, "SELECT id, description FROM spends WHERE source='banco' AND ignored=0"):
+            if bank.PARC_RE.search(r["description"]):
+                conn.execute("UPDATE spends SET ignored=1, category='parcela' WHERE id=?", (r["id"],))
+        # valor fixo antigo do PicPay (limite usado, não a fatura)
+        conn.execute("DELETE FROM overrides WHERE note LIKE 'Valor do cartão em 05/11%' OR note LIKE 'Valor que o app mostra%'")
     if state == "novo" and BACKUP.enabled and not BACKUP.blocked:
         BACKUP.schedule()  # primeiro backup
 

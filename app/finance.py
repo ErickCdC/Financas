@@ -193,7 +193,7 @@ def summary(conn, month=None, extra=None):
         "salario", "decimo1", "decimo2", "decimo1_mes", "decimo2_mes", "aumento_on", "aumento_pct",
         "aumento_from", "teto_semanal", "caixa", "caixa_ref", "salario_dia", "ignore_terms", "pix_max",
         "ciclo_extra", "cartoes", "cartao_venc", "last_sync", "caixa_banco", "cartao_usado", "notif",
-        "auto", "sync_auto", "salario_regra", "entradas", "last_force", "last_tick")}
+        "auto", "sync_auto", "salario_regra", "entradas", "last_force", "last_tick", "sync_detalhe", "ciclo_info")}
     public_cfg["caixa_desatualizado"] = bool(raw.get("caixa_ref") and raw["caixa_ref"] != P.ym_of(t))
     out = {
         "hoje": t.isoformat(), "mes": month_panel(conn, cfg, month, t),

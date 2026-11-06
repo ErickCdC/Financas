@@ -68,10 +68,7 @@ PAYMENTS_NOV = {  # contas de novembro, todas já pagas
     "bill:Nubank": 502.21, "bill:Mercado Pago": 1062.98, "bill:PicPay": 755.15,
 }
 
-OVERRIDES = [
-    ("PicPay", "2026-11", 1338.00,
-     "Valor do cartão em 05/11 (inclui a 1ª parcela do pix crédito do aluguel). Confira na fatura."),
-]
+OVERRIDES = []  # faturas reais vêm do banco; informe à mão em Planejamento se precisar
 
 SPENDS = [  # desde o salário (30/10), conferido com o banco em 05/11. Uber com estorno não entra.
     ("2026-10-30", "Uber", 8.94, "transporte", "manual"),
