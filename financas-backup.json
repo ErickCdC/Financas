@@ -10,7 +10,7 @@
   "aumento_pct": 25.0,
   "aumento_from": "2027-01",
   "teto_semanal": 50.0,
-  "caixa": -10.4,
+  "caixa": 89.6,
   "caixa_ref": "2026-11",
   "salario_dia": 30,
   "salario_data": "2026-10-30",
@@ -108,6 +108,7 @@
   "teto_auto": false,
   "salario_tipo": "util",
   "caixa_banco": 212.6,
+  "caixa_data": "2026-11-07",
   "cartao_usado": {
    "Nubank": 206.27,
    "Mercado Pago": 1265.69,
@@ -146,10 +147,18 @@
     ]
    }
   },
-  "eventos_pendentes": [],
+  "eventos_pendentes": [
+   [
+    "paid:2026-11:rec:4",
+    "Internet (Giga Mais) paga",
+    "R$ 93,33 em 30/10.",
+    "/#contas",
+    "2026-11-07 12:29"
+   ]
+  ],
   "last_auto_sync": "2026-11-07T12:00",
   "last_force": "2026-11-07T10:40",
-  "last_sync": "2026-11-07 11:35",
+  "last_sync": "2026-11-07 12:29",
   "last_tick": "2026-11-07 12:27",
   "sync_detalhe": [
    {
@@ -332,7 +341,7 @@
   {
    "month": "2026-11",
    "key": "rec:4",
-   "paid": 0,
+   "paid": 1,
    "amount": 93.33
   },
   {
