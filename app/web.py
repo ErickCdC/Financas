@@ -185,7 +185,7 @@ POST_ROUTES = {
 
 
 def summary_extra():
-    return {"sync_disponivel": bool(C.BANCO_KEY), "backup": BACKUP.status(),
+    return {"sync_disponivel": bool(C.BANCO_KEY), "sync_rodando": bank.PROGRESS["rodando"], "backup": BACKUP.status(),
             "agendador": bool(C.CRON_TOKEN), "push_key": push.vapid_public_b64()}
 
 
@@ -270,6 +270,8 @@ class Handler(BaseHTTPRequestHandler):
                 if path == "/api/summary":
                     month = (parse_qs(url.query).get("month") or [None])[0]
                     return self._json(200, finance.summary(conn, V.year_month(month) if month else None, summary_extra()))
+                if path == "/api/sync/status":
+                    return self._json(200, bank.progress())
                 if path == "/api/export":
                     name = "financas-backup-%s.json" % C.today().isoformat()
                     return self._json(200, data.export(conn), {"Content-Disposition": 'attachment; filename="%s"' % name})

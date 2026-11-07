@@ -178,29 +178,53 @@ def _num(v):
         return 0.0
 
 
+# Progresso da sincronização em andamento (lido pela barra de status do app).
+PROGRESS = {"rodando": False, "etapa": "", "feito": 0, "total": 1, "inicio": None, "fim": None,
+            "origem": None, "resultado": None, "erro": None}
+
+
+def _step(label, done=None, total=None):
+    PROGRESS["etapa"] = label
+    if total is not None:
+        PROGRESS["total"] = max(total, 1)
+    PROGRESS["feito"] = PROGRESS["feito"] + 1 if done is None else done
+
+
+def progress():
+    p = dict(PROGRESS)
+    p["pct"] = round(min(p["feito"] / max(p["total"], 1), 1) * 100)
+    return p
+
+
 def fetch(cfg, t):
     """Lê contas, transações e faturas. Devolve um dicionário com tudo (sem tocar no banco local)."""
     pay = last_payday(t, int(cfg.get("salario_dia") or 30))
     since = max(pay - timedelta(days=8), t - timedelta(days=45)).isoformat()
+    _step("Conectando ao banco", done=0, total=8)
     acc = banco_post("/accounts/list", {})
-    accounts = acc.get("results") or acc.get("accounts") or []
+    accounts = [a for a in (acc.get("results") or acc.get("accounts") or []) if a.get("type") in ("BANK", "CREDIT")]
+    n_credit = sum(1 for a in accounts if a.get("type") == "CREDIT")
+    _step("Contas encontradas", done=1, total=1 + len(accounts) + n_credit + 2)
     out = {"accounts": [], "since": since, "items": set()}
     for a in accounts:
         typ = a.get("type")
-        if typ not in ("BANK", "CREDIT"):
-            continue
         aid = a.get("account_id") or a.get("id")
         if a.get("item_id"):
             out["items"].add(a["item_id"])
+        nome = f"{a.get('bank') or a.get('name') or '?'} {'cartão' if typ == 'CREDIT' else 'conta'}"
+        PROGRESS["etapa"] = f"Lendo {nome}"
         tx = banco_post("/transactions/list", {"account_id": aid, "from": since, "to": t.isoformat(), "page_size": 500})
         entry = {"id": aid, "type": typ, "bank": str(a.get("bank") or a.get("name") or "?"),
                  "balance": _num(a.get("balance")), "credit": a.get("creditData") or {},
                  "tx": [x for x in (tx.get("results") or []) if not x.get("scheduled")], "bills": None}
+        _step(f"Lendo {nome}")
         if typ == "CREDIT":
+            PROGRESS["etapa"] = f"Faturas {entry['bank']}"
             try:
                 entry["bills"] = banco_post("/credit-card-bills/list", {"account_id": aid, "include_open_bill": True, "page_size": 6})
             except RuntimeError as e:
                 C.log("faturas %s: %s" % (entry["bank"], e))
+            _step(f"Faturas {entry['bank']}")
         out["accounts"].append(entry)
     return out
 
@@ -450,30 +474,40 @@ def brl(v):
 _sync_lock = threading.Lock()
 
 
-def run(force=False):
+def run(force=False, origem="manual"):
     """Sincroniza agora. A leitura do banco (rede) acontece sem o SQLite travado;
     a gravação é uma transação curta. Com `force`, pede dados novos (máx. 1x/hora)."""
     if not C.BANCO_KEY:
         raise ValueError("BANCO_MCP_KEY não está configurada no servidor")
     if not _sync_lock.acquire(blocking=False):
         return {"ok": True, "ocupado": True}
+    PROGRESS.update(rodando=True, etapa="Começando", feito=0, total=8, inicio=C.now().strftime("%Y-%m-%dT%H:%M:%S"),
+                    fim=None, origem=origem, resultado=None, erro=None)
     try:
         t = C.today()
         with db.connect() as conn:
             cfg = db.get_cfg(conn)
         data = fetch(cfg, t)
+        PROGRESS["etapa"] = "Atualizando contas, faturas e parcelas"
         with db.connect(write=True) as conn:
             result, events = apply(conn, data, t)
             if events:
                 stamp = C.now().strftime("%Y-%m-%d %H:%M")
                 pend = (db.get_cfg(conn).get("eventos_pendentes") or []) + [list(e) + [stamp] for e in events]
                 db.put_setting(conn, "eventos_pendentes", pend[-20:])
+        _step("Gravado")
         if force:
             last = cfg.get("last_force")
             if not last or (C.now() - datetime.fromisoformat(last).replace(tzinfo=C.TZ)) >= timedelta(minutes=61):
+                PROGRESS["etapa"] = "Pedindo dados novos ao banco"
                 result["atualizacao"] = force_refresh(data["items"])
                 with db.connect() as conn:
                     db.put_setting(conn, "last_force", C.now().strftime("%Y-%m-%dT%H:%M"))
+        PROGRESS.update(feito=PROGRESS["total"], etapa="Concluído", resultado=result)
         return result
+    except Exception as e:
+        PROGRESS.update(erro=str(e)[:200], etapa="Falhou")
+        raise
     finally:
+        PROGRESS.update(rodando=False, fim=C.now().strftime("%Y-%m-%dT%H:%M:%S"))
         _sync_lock.release()

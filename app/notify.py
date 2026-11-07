@@ -171,7 +171,7 @@ def tick(force_sync=False):
         if C.BANCO_KEY and (force_sync or sync_due(cfg, now)):
             from . import bank
             try:  # rede fora de qualquer transação
-                result["sync"] = bank.run(force=bool((cfg.get("sync_auto") or {}).get("forcar", True)))
+                result["sync"] = bank.run(force=bool((cfg.get("sync_auto") or {}).get("forcar", True)), origem="automatica")
                 synced = True
             except (RuntimeError, ValueError) as e:
                 result["sync"] = {"erro": str(e)}

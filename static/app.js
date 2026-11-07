@@ -71,6 +71,7 @@ async function load({ silent = false } = {}) {
   try {
     const d = await api("/api/summary" + (S.month ? "?month=" + S.month : ""));
     S.d = d; S.month = d.mes.ym; S.offline = false;
+    if (d.sync_rodando && !SB.polling) setTimeout(pollSync, 50);
     if (!location.search.includes("month")) cacheSummary(d);
     render();
     syncPush();
@@ -562,6 +563,39 @@ function confirmSheet(msg, ok = "Confirmar") {
   });
 }
 
+// ---------- barra de status da sincronização ----------
+const SB = { polling: false, hideT: null };
+function syncBar(p) {
+  const bar = $("#syncbar"); clearTimeout(SB.hideT);
+  bar.hidden = false; bar.className = "syncbar" + (p.erro ? " err" : !p.rodando && p.resultado ? " ok" : " run");
+  let text;
+  if (p.erro) text = "Falhou: " + p.erro;
+  else if (!p.rodando && p.resultado) {
+    const r = p.resultado, bits = [`${r.novos || 0} gasto(s) novo(s)`];
+    if (r.estornos) bits.push(`${r.estornos} estorno(s)`);
+    if (r.eventos) bits.push(`${r.eventos} conta(s) atualizada(s)`);
+    text = "Sincronizado · " + bits.join(" · ");
+  } else text = (p.origem === "automatica" ? "Sincronização automática · " : "Sincronizando · ") + (p.etapa || "…");
+  $("#sbtext").textContent = text;
+  $("#sbpct").textContent = p.rodando ? `${p.pct || 0}%` : "";
+  $("#sbfill").style.width = (p.rodando ? Math.max(4, p.pct || 0) : 100) + "%";
+  if (!p.rodando) SB.hideT = setTimeout(() => { bar.hidden = true; }, p.erro ? 7000 : 3500);
+}
+async function pollSync() {
+  if (SB.polling) return;
+  SB.polling = true;
+  try {
+    for (;;) {
+      let p;
+      try { p = await api("/api/sync/status"); } catch (_) { break; }
+      if (!p.inicio) break;
+      syncBar(p);
+      if (!p.rodando) { await load({ silent: true }); break; }
+      await new Promise(r => setTimeout(r, 700));
+    }
+  } finally { SB.polling = false; }
+}
+
 // ---------- notificações (Web Push) ----------
 const pushSupported = () => "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
 function keyBytes(b64) {
@@ -720,15 +754,17 @@ const A = {
   usebank: async () => { try { await api("/api/settings", { caixa: S.d.config.caixa_banco }); toast("Caixa atualizado"); await load({ silent: true }); } catch (e) { toast(e.message); } },
   sync: async el => {
     el.disabled = true; el.textContent = "Sincronizando…";
+    syncBar({ rodando: true, etapa: "Começando", pct: 2, origem: "manual" });
+    const req = api("/api/sync", {});
+    setTimeout(pollSync, 300);
     try {
-      const r = await api("/api/sync", {});
-      if (r.ocupado) { toast("Já está sincronizando, aguarde um instante"); el.disabled = false; el.textContent = "Sincronizar"; return; }
-      const bits = [`${r.novos} gasto(s) novo(s)`];
-      if (r.estornos) bits.push(`${r.estornos} estorno(s) casado(s)`);
-      if (r.eventos) bits.push(`${r.eventos} atualização(ões) de contas`);
-      toast(bits.join(" · ")); await load({ silent: true });
+      const r = await req;
+      if (r.ocupado) toast("Já está sincronizando — acompanhe na barra");
+      else if (!SB.polling) { syncBar({ rodando: false, resultado: r }); await load({ silent: true }); }
+    } catch (e) {
+      syncBar({ rodando: false, erro: e.message });
     }
-    catch (e) { toast(e.message); el.disabled = false; el.textContent = "Sincronizar"; }
+    el.disabled = false; el.textContent = "Sincronizar";
   },
   backupnow: async el => { el.disabled = true; try { await api("/api/backup/now", {}); toast("Backup salvo no GitHub"); await load({ silent: true }); } catch (e) { toast(e.message); el.disabled = false; } },
   import: () => $("#impfile").click(),

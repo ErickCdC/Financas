@@ -428,3 +428,25 @@ button.catrow:hover { background: var(--surface-2); }
 .detail h3 { font-size: 26px; letter-spacing: -.02em; margin-top: 2px; }
 .tap-hint { font-size: 12px; color: var(--muted); margin-top: 8px; }
 .chart text, .chart polyline, .chart circle, .chart .barp, .chart .barn { pointer-events: none; }
+
+/* ---------- barra de status da sincronização ---------- */
+.topbar { position: sticky; }
+.syncbar { position: absolute; left: 0; right: 0; top: 100%; padding: 8px 16px 0; background: color-mix(in srgb, var(--surface) 96%, transparent);
+  border-bottom: 1px solid var(--line); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); animation: sbIn .2s ease-out; }
+@keyframes sbIn { from { opacity: 0; transform: translateY(-6px); } }
+.syncbar .sb-row { display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 600; min-height: 22px; }
+.syncbar .sb-ic { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 8px; background: var(--primary-weak); color: var(--primary-text); flex: none; }
+.syncbar .sb-ic svg.i { width: 15px; height: 15px; }
+.syncbar .sb-t { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-2); }
+.syncbar .sb-p { font-size: 12px; color: var(--muted); }
+.syncbar .sb-bar { height: 3px; margin: 8px -16px 0; background: var(--surface-3); overflow: hidden; }
+.syncbar .sb-bar i { display: block; height: 100%; width: 0; background: var(--primary); transition: width .45s cubic-bezier(.2,.8,.2,1); }
+.syncbar.run .sb-bar i { background-image: linear-gradient(90deg, transparent, rgb(255 255 255 / .35), transparent); background-size: 200% 100%; animation: sbShine 1.1s linear infinite; background-color: var(--primary); }
+@keyframes sbShine { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+.syncbar.run .sb-ic svg.i { animation: pulse 1.2s ease-in-out infinite; }
+.syncbar.ok .sb-ic { background: var(--pos-weak); color: var(--pos); }
+.syncbar.ok .sb-bar i { background: var(--pos); }
+.syncbar.err .sb-ic { background: var(--neg-weak); color: var(--neg); }
+.syncbar.err .sb-bar i { background: var(--neg); }
+.syncbar.err .sb-t { white-space: normal; }
+@media (min-width: 960px) { .syncbar { padding: 8px 32px 0; } .syncbar .sb-bar { margin: 8px -32px 0; } }

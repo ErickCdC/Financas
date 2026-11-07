@@ -44,6 +44,10 @@
       <div class="title" id="pagetitle"></div>
       <div class="spacer"></div>
       <button class="iconbtn" data-act="refresh" id="refreshbtn" aria-label="Atualizar"><svg class="i"><use href="#i-refresh"/></svg></button>
+      <div id="syncbar" class="syncbar" hidden role="status" aria-live="polite">
+        <div class="sb-row"><span class="sb-ic"><svg class="i"><use href="#i-bank"/></svg></span><span class="sb-t" id="sbtext">Sincronizando…</span><span class="sb-p num" id="sbpct"></span></div>
+        <div class="sb-bar"><i id="sbfill"></i></div>
+      </div>
     </header>
     <main id="view" class="view" aria-live="polite">
       <div class="boot"><div><img src="/logo.svg" alt=""><div id="bootmsg">Carregando…</div></div></div>
