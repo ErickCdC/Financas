@@ -149,7 +149,7 @@
   "last_auto_sync": "2026-11-07T08:51",
   "last_force": "2026-11-07T07:57",
   "last_sync": "2026-11-07 08:51",
-  "last_tick": "2026-11-07 08:51",
+  "last_tick": "2026-11-07 09:00",
   "sync_detalhe": [
    {
     "banco": "Mercado Pago",
@@ -933,7 +933,7 @@
    "auth": "-LZCogkbAIUGPprhqKSGMw",
    "label": "Android · Chrome",
    "created": "2026-11-06 17:47",
-   "last_ok": "2026-11-07 07:57",
+   "last_ok": "2026-11-07 09:00",
    "fails": 0
   }
  ],
@@ -1009,6 +1009,12 @@
    "sent_at": "2026-11-07 07:57",
    "title": "Internet (Giga Mais) paga",
    "body": "R$ 93,33 em 30/10."
+  },
+  {
+   "key": "bills:2026-11-07",
+   "sent_at": "2026-11-07 09:00",
+   "title": "Academia vence atrasada",
+   "body": "R$ 100,00 (previsto). Toque para marcar como paga."
   }
  ]
 }
