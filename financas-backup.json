@@ -145,52 +145,9 @@
     ]
    }
   },
-  "eventos_pendentes": [
-   [
-    "paid:2026-11:bill:PicPay",
-    "Fatura PicPay paga",
-    "R$ 755,15 confirmado pelo banco.",
-    "/#contas",
-    "2026-11-07 07:57"
-   ],
-   [
-    "paid:2026-11:bill:Mercado Pago",
-    "Fatura Mercado Pago paga",
-    "R$ 1.062,98 confirmado pelo banco.",
-    "/#contas",
-    "2026-11-07 07:57"
-   ],
-   [
-    "paid:2026-11:bill:Nubank",
-    "Fatura Nubank paga",
-    "R$ 502,21 confirmado pelo banco.",
-    "/#contas",
-    "2026-11-07 07:57"
-   ],
-   [
-    "paid:2026-11:rec:2",
-    "Faculdade paga",
-    "R$ 235,23 em 04/11.",
-    "/#contas",
-    "2026-11-07 07:57"
-   ],
-   [
-    "paid:2026-11:rec:1",
-    "Aluguel paga",
-    "R$ 850,00 em 31/10.",
-    "/#contas",
-    "2026-11-07 07:57"
-   ],
-   [
-    "paid:2026-11:rec:4",
-    "Internet (Giga Mais) paga",
-    "R$ 93,33 em 30/10.",
-    "/#contas",
-    "2026-11-07 07:57"
-   ]
-  ],
-  "last_auto_sync": "2026-11-07T07:30",
-  "last_force": "2026-11-07T00:19",
+  "eventos_pendentes": [],
+  "last_auto_sync": "2026-11-07T07:57",
+  "last_force": "2026-11-07T07:57",
   "last_sync": "2026-11-07 07:57",
   "last_tick": "2026-11-07 07:57",
   "sync_detalhe": [
@@ -976,7 +933,7 @@
    "auth": "-LZCogkbAIUGPprhqKSGMw",
    "label": "Android · Chrome",
    "created": "2026-11-06 17:47",
-   "last_ok": "2026-11-06 20:30",
+   "last_ok": "2026-11-07 07:57",
    "fails": 0
   }
  ],
@@ -1016,6 +973,42 @@
    "sent_at": "2026-11-06 20:30",
    "title": "Lançou seus gastos de hoje?",
    "body": "Nada lançado hoje. Restam R$ 0,00 na semana."
+  },
+  {
+   "key": "paid:2026-11:bill:PicPay",
+   "sent_at": "2026-11-07 07:57",
+   "title": "Fatura PicPay paga",
+   "body": "R$ 755,15 confirmado pelo banco."
+  },
+  {
+   "key": "paid:2026-11:bill:Mercado Pago",
+   "sent_at": "2026-11-07 07:57",
+   "title": "Fatura Mercado Pago paga",
+   "body": "R$ 1.062,98 confirmado pelo banco."
+  },
+  {
+   "key": "paid:2026-11:bill:Nubank",
+   "sent_at": "2026-11-07 07:57",
+   "title": "Fatura Nubank paga",
+   "body": "R$ 502,21 confirmado pelo banco."
+  },
+  {
+   "key": "paid:2026-11:rec:2",
+   "sent_at": "2026-11-07 07:57",
+   "title": "Faculdade paga",
+   "body": "R$ 235,23 em 04/11."
+  },
+  {
+   "key": "paid:2026-11:rec:1",
+   "sent_at": "2026-11-07 07:57",
+   "title": "Aluguel paga",
+   "body": "R$ 850,00 em 31/10."
+  },
+  {
+   "key": "paid:2026-11:rec:4",
+   "sent_at": "2026-11-07 07:57",
+   "title": "Internet (Giga Mais) paga",
+   "body": "R$ 93,33 em 30/10."
   }
  ]
 }
