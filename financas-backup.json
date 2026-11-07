@@ -32,8 +32,9 @@
   ],
   "pix_max": 200.0,
   "ciclo_extra": {
-   "Nubank": 27.94,
-   "Mercado Pago": 66.98
+   "Nubank": 9.79,
+   "Mercado Pago": 88.98,
+   "PicPay": 303.42
   },
   "cartoes": [
    "Nubank",
@@ -105,8 +106,25 @@
   "caixa_banco": 212.6,
   "cartao_usado": {
    "Mercado Pago": 1265.69,
-   "PicPay": 1345.0,
-   "Nubank": 206.27
+   "Nubank": 206.27,
+   "PicPay": 1345.0
+  },
+  "ciclo_info": {
+   "Mercado Pago": {
+    "conta": "8b778a91-1057-4662-917f-e758a49b7c3b",
+    "fechou": "2026-10-29",
+    "compras": 88.98
+   },
+   "Nubank": {
+    "conta": "27be5f3e-7a39-4e21-b734-1d4439c35288",
+    "fechou": "2026-10-25",
+    "compras": 9.79
+   },
+   "PicPay": {
+    "conta": "6d7341ae-373e-4d3b-b53b-f28126fded99",
+    "fechou": "2026-10-29",
+    "compras": 303.42
+   }
   },
   "entradas": {
    "2026-10": {
@@ -124,8 +142,46 @@
   "eventos_pendentes": [],
   "last_auto_sync": "2026-11-06T20:16",
   "last_force": "2026-11-06T18:53",
-  "last_sync": "2026-11-06 18:52",
-  "last_tick": "2026-11-06 20:30"
+  "last_sync": "2026-11-06 22:18",
+  "last_tick": "2026-11-06 22:16",
+  "sync_detalhe": [
+   {
+    "banco": "Mercado Pago",
+    "tipo": "conta",
+    "lidas": 28,
+    "no_app": 4
+   },
+   {
+    "banco": "Mercado Pago",
+    "tipo": "cartão",
+    "lidas": 6,
+    "no_app": 3
+   },
+   {
+    "banco": "Nubank",
+    "tipo": "conta",
+    "lidas": 0,
+    "no_app": 0
+   },
+   {
+    "banco": "Nubank",
+    "tipo": "cartão",
+    "lidas": 14,
+    "no_app": 12
+   },
+   {
+    "banco": "PicPay",
+    "tipo": "conta",
+    "lidas": 0,
+    "no_app": 0
+   },
+   {
+    "banco": "PicPay",
+    "tipo": "cartão",
+    "lidas": 23,
+    "no_app": 21
+   }
+  ]
  },
  "recurring": [
   {
@@ -630,7 +686,7 @@
    "date": "2026-10-31",
    "description": "RecargaPay  *EPARC01/03",
    "amount": 344.62,
-   "category": "parcela",
+   "category": "outros",
    "source": "banco",
    "ext_id": "6d7341ae-373e-4d3b-b53b-f28126fded99:46298fc8-9e3e-45cc-910c-832d3860ea87",
    "ignored": 1
@@ -843,6 +899,16 @@
    "category": "transporte",
    "source": "banco",
    "ext_id": "27be5f3e-7a39-4e21-b734-1d4439c35288:a2ec9377-dd06-4ab0-89c0-75f02c27e1c9",
+   "ignored": 0
+  },
+  {
+   "id": 40,
+   "date": "2026-11-04",
+   "description": "BB BURGER                .CASIMIRO D BRA",
+   "amount": 12.5,
+   "category": "comida",
+   "source": "banco",
+   "ext_id": "6d7341ae-373e-4d3b-b53b-f28126fded99:2822d89d-ad4b-4df5-a108-02b42ed07367",
    "ignored": 0
   }
  ],
