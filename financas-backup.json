@@ -141,9 +141,9 @@
   },
   "eventos_pendentes": [],
   "last_auto_sync": "2026-11-06T22:16",
-  "last_force": "2026-11-06T22:18",
+  "last_force": "2026-11-07T00:19",
   "last_sync": "2026-11-07 00:19",
-  "last_tick": "2026-11-07 00:19",
+  "last_tick": "2026-11-07 00:20",
   "sync_detalhe": [
    {
     "banco": "PicPay",
@@ -300,43 +300,43 @@
   {
    "month": "2026-11",
    "key": "rec:1",
-   "paid": 1,
+   "paid": 0,
    "amount": 850.0
   },
   {
    "month": "2026-11",
    "key": "rec:2",
-   "paid": 1,
+   "paid": 0,
    "amount": 235.23
   },
   {
    "month": "2026-11",
    "key": "rec:3",
-   "paid": 1,
+   "paid": 0,
    "amount": 123.0
   },
   {
    "month": "2026-11",
    "key": "rec:4",
-   "paid": 1,
+   "paid": 0,
    "amount": 93.33
   },
   {
    "month": "2026-11",
    "key": "bill:Nubank",
-   "paid": 1,
+   "paid": 0,
    "amount": 502.21
   },
   {
    "month": "2026-11",
    "key": "bill:Mercado Pago",
-   "paid": 1,
+   "paid": 0,
    "amount": 1062.98
   },
   {
    "month": "2026-11",
    "key": "bill:PicPay",
-   "paid": 1,
+   "paid": 0,
    "amount": 755.15
   },
   {
@@ -468,7 +468,7 @@
   {
    "month": "2026-11",
    "key": "rec:8",
-   "paid": 1,
+   "paid": 0,
    "amount": null
   }
  ],
