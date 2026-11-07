@@ -340,7 +340,14 @@ def apply(conn, data, t):
             continue
         bills = a["bills"] or {}
         closes = [str(b.get("billClosingDate") or "")[:10] for b in bills.get("results") or [] if b.get("billClosingDate")]
-        ciclo[card] = {"conta": a["id"], "fechou": max(closes) if closes else None}
+        offs = []
+        for b in bills.get("results") or []:
+            try:
+                offs.append((date.fromisoformat(str(b["dueDate"])[:10]) - date.fromisoformat(str(b["billClosingDate"])[:10])).days)
+            except (KeyError, ValueError, TypeError):
+                pass
+        ciclo[card] = {"conta": a["id"], "fechou": max(closes) if closes else None,
+                       "fecha_antes": max(set(offs), key=offs.count) if offs else None}
         if auto.get("faturas", True):
             for b in bills.get("results") or []:
                 due = str(b.get("dueDate") or "")[:10]

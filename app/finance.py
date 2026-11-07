@@ -36,6 +36,19 @@ def effective_cfg(cfg, t):
     return c
 
 
+def bill_period(cfg, card, y, m):
+    """Período de compras da fatura que vence no mês (y, m): do fechamento anterior +1 até o fechamento."""
+    day = (cfg.get("cartao_venc") or {}).get(card)
+    if not day:
+        return {}
+    off = ((cfg.get("ciclo_info") or {}).get(card) or {}).get("fecha_antes") or 7
+    due = clamp_day(y, m, int(day))
+    py, pm = (y, m - 1) if m > 1 else (y - 1, 12)
+    close = due - timedelta(days=int(off))
+    prev_close = clamp_day(py, pm, int(day)) - timedelta(days=int(off))
+    return {"compras_de": (prev_close + timedelta(days=1)).isoformat(), "fecha": close.isoformat()}
+
+
 def month_panel(conn, cfg, ym, t):
     cur = P.ym_of(t)
     y, m = map(int, ym.split("-"))
@@ -67,7 +80,8 @@ def month_panel(conn, cfg, ym, t):
         items.append({"key": f"bill:{c}", "group": "fatura", "name": f"Fatura {c}", "card": c,
                       "amount": amount, "estimated": not has, "paid": bool(p and p["paid"]),
                       "parts": (fc["parts"] if fc and not has else []),
-                      "used": (cfg.get("cartao_usado") or {}).get(c), "due": due(venc.get(c))})
+                      "used": (cfg.get("cartao_usado") or {}).get(c), "due": due(venc.get(c)),
+                      **bill_period(cfg, c, y, m)})
     items.sort(key=lambda i: (i["group"] != "fixa", i["due"] or "9999", i["name"]))
     falta = round(sum(i["amount"] for i in items if not i["paid"] and i["amount"] is not None), 2)
     pago = round(sum(i["amount"] for i in items if i["paid"] and i["amount"] is not None), 2)

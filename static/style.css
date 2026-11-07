@@ -450,3 +450,6 @@ button.catrow:hover { background: var(--surface-2); }
 .syncbar.err .sb-bar i { background: var(--neg); }
 .syncbar.err .sb-t { white-space: normal; }
 @media (min-width: 960px) { .syncbar { padding: 8px 32px 0; } .syncbar .sb-bar { margin: 8px -32px 0; } }
+.monthnav .m-wrap { text-align: center; }
+.monthnav .m-sub { font-size: 12.5px; color: var(--muted); margin-top: 1px; }
+.item .sub.period { color: var(--text-2); }
