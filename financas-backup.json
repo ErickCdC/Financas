@@ -111,8 +111,8 @@
   "caixa_data": "2026-11-07",
   "cartao_usado": {
    "Nubank": 206.27,
-   "Mercado Pago": 1265.69,
-   "PicPay": 1360.0
+   "PicPay": 1360.0,
+   "Mercado Pago": 1265.69
   },
   "ciclo_info": {
    "Nubank": {
@@ -121,17 +121,17 @@
     "fecha_antes": 7,
     "compras": 9.79
    },
-   "Mercado Pago": {
-    "conta": "8b778a91-1057-4662-917f-e758a49b7c3b",
-    "fechou": "2026-10-29",
-    "fecha_antes": 6,
-    "compras": 88.98
-   },
    "PicPay": {
     "conta": "6d7341ae-373e-4d3b-b53b-f28126fded99",
     "fechou": "2026-10-29",
     "fecha_antes": 9,
     "compras": 303.42
+   },
+   "Mercado Pago": {
+    "conta": "8b778a91-1057-4662-917f-e758a49b7c3b",
+    "fechou": "2026-10-29",
+    "fecha_antes": 6,
+    "compras": 88.98
    }
   },
   "entradas": {
@@ -148,10 +148,10 @@
    }
   },
   "eventos_pendentes": [],
-  "last_auto_sync": "2026-11-07T12:27",
+  "last_auto_sync": "2026-11-07T12:54",
   "last_force": "2026-11-07T12:29",
-  "last_sync": "2026-11-07 12:29",
-  "last_tick": "2026-11-07 12:43",
+  "last_sync": "2026-11-07 12:55",
+  "last_tick": "2026-11-07 12:54",
   "sync_detalhe": [
    {
     "banco": "Nubank",
@@ -166,18 +166,6 @@
     "no_app": 12
    },
    {
-    "banco": "Mercado Pago",
-    "tipo": "conta",
-    "lidas": 28,
-    "no_app": 4
-   },
-   {
-    "banco": "Mercado Pago",
-    "tipo": "cartão",
-    "lidas": 6,
-    "no_app": 3
-   },
-   {
     "banco": "PicPay",
     "tipo": "conta",
     "lidas": 0,
@@ -188,6 +176,18 @@
     "tipo": "cartão",
     "lidas": 23,
     "no_app": 21
+   },
+   {
+    "banco": "Mercado Pago",
+    "tipo": "conta",
+    "lidas": 28,
+    "no_app": 4
+   },
+   {
+    "banco": "Mercado Pago",
+    "tipo": "cartão",
+    "lidas": 6,
+    "no_app": 3
    }
   ]
  },
@@ -333,7 +333,7 @@
   {
    "month": "2026-11",
    "key": "rec:4",
-   "paid": 0,
+   "paid": 1,
    "amount": 93.33
   },
   {
@@ -535,7 +535,7 @@
    "source": "manual",
    "ext_id": "27be5f3e-7a39-4e21-b734-1d4439c35288:1fd9145d-ddaa-4cce-aeec-6ff9d9009944",
    "ignored": 0,
-   "card": null
+   "card": "Nubank"
   },
   {
    "id": 2,
@@ -546,7 +546,7 @@
    "source": "manual",
    "ext_id": "27be5f3e-7a39-4e21-b734-1d4439c35288:cc6ce492-732c-47d2-815f-83c5def36d37",
    "ignored": 0,
-   "card": null
+   "card": "Nubank"
   },
   {
    "id": 3,
@@ -557,7 +557,7 @@
    "source": "manual",
    "ext_id": "6d7341ae-373e-4d3b-b53b-f28126fded99:0fd167ab-62c3-4384-84d2-a4b7ae0ee1de",
    "ignored": 0,
-   "card": null
+   "card": "PicPay"
   },
   {
    "id": 4,
@@ -579,7 +579,7 @@
    "source": "manual",
    "ext_id": "8b778a91-1057-4662-917f-e758a49b7c3b:bfb97e64-4b16-40f6-8bd4-2f21c1d57b45",
    "ignored": 0,
-   "card": null
+   "card": "Mercado Pago"
   },
   {
    "id": 6,
@@ -590,7 +590,7 @@
    "source": "manual",
    "ext_id": "6d7341ae-373e-4d3b-b53b-f28126fded99:9aaf6e85-d220-4d07-a607-9f7798442628",
    "ignored": 0,
-   "card": null
+   "card": "PicPay"
   },
   {
    "id": 7,
@@ -601,7 +601,7 @@
    "source": "manual",
    "ext_id": "6d7341ae-373e-4d3b-b53b-f28126fded99:ed8a0068-d418-4868-a243-6e025204b2ec",
    "ignored": 0,
-   "card": null
+   "card": "PicPay"
   },
   {
    "id": 8,
@@ -623,7 +623,7 @@
    "source": "manual",
    "ext_id": "6d7341ae-373e-4d3b-b53b-f28126fded99:0e1831ea-7f58-453d-b916-3b0e79848f8d",
    "ignored": 0,
-   "card": null
+   "card": "PicPay"
   },
   {
    "id": 10,
@@ -634,7 +634,7 @@
    "source": "manual",
    "ext_id": "6d7341ae-373e-4d3b-b53b-f28126fded99:e9672a5b-8136-42f9-aa88-3167b1ebe43c",
    "ignored": 0,
-   "card": null
+   "card": "PicPay"
   },
   {
    "id": 11,
@@ -645,7 +645,7 @@
    "source": "manual",
    "ext_id": "6d7341ae-373e-4d3b-b53b-f28126fded99:544e6bd9-5b54-4ca9-85a2-c2b5d6187e2b",
    "ignored": 0,
-   "card": null
+   "card": "PicPay"
   },
   {
    "id": 12,
@@ -656,7 +656,7 @@
    "source": "manual",
    "ext_id": "6d7341ae-373e-4d3b-b53b-f28126fded99:ff7b33b5-446b-44e9-9aa3-5189bd3c4b20",
    "ignored": 0,
-   "card": null
+   "card": "PicPay"
   },
   {
    "id": 13,
@@ -667,7 +667,7 @@
    "source": "manual",
    "ext_id": "8b778a91-1057-4662-917f-e758a49b7c3b:20be4cd6-1430-4552-85d6-11398fbd6818",
    "ignored": 0,
-   "card": null
+   "card": "Mercado Pago"
   },
   {
    "id": 14,
@@ -678,7 +678,7 @@
    "source": "manual",
    "ext_id": "6d7341ae-373e-4d3b-b53b-f28126fded99:0eca7490-974a-4913-aab3-40b54db9ac28",
    "ignored": 0,
-   "card": null
+   "card": "PicPay"
   },
   {
    "id": 15,
@@ -711,7 +711,7 @@
    "source": "banco",
    "ext_id": "8b778a91-1057-4662-917f-e758a49b7c3b:5eebd970-93a7-42a4-8bd3-2bd6c18a4ed8",
    "ignored": 0,
-   "card": null
+   "card": "Mercado Pago"
   },
   {
    "id": 18,
@@ -722,7 +722,7 @@
    "source": "banco",
    "ext_id": "6d7341ae-373e-4d3b-b53b-f28126fded99:46298fc8-9e3e-45cc-910c-832d3860ea87",
    "ignored": 1,
-   "card": null
+   "card": "PicPay"
   },
   {
    "id": 19,
@@ -733,7 +733,7 @@
    "source": "banco",
    "ext_id": "6d7341ae-373e-4d3b-b53b-f28126fded99:aa1f2979-3d29-4369-a83d-2ec606888ccb",
    "ignored": 0,
-   "card": null
+   "card": "PicPay"
   },
   {
    "id": 20,
@@ -744,7 +744,7 @@
    "source": "banco",
    "ext_id": "6d7341ae-373e-4d3b-b53b-f28126fded99:bdf6b0ba-dd5f-48e4-9ba9-77536004d36a",
    "ignored": 0,
-   "card": null
+   "card": "PicPay"
   },
   {
    "id": 21,
@@ -755,7 +755,7 @@
    "source": "banco",
    "ext_id": "6d7341ae-373e-4d3b-b53b-f28126fded99:7c707cae-1f72-43da-850d-047f9dc68b80",
    "ignored": 0,
-   "card": null
+   "card": "PicPay"
   },
   {
    "id": 22,
@@ -766,40 +766,40 @@
    "source": "banco",
    "ext_id": "6d7341ae-373e-4d3b-b53b-f28126fded99:e2a2d4b1-9e73-4640-996a-4eeb9c01d848",
    "ignored": 0,
-   "card": null
+   "card": "PicPay"
   },
   {
    "id": 23,
    "date": "2026-10-24",
    "description": "ROUPA LIMPA*VMT*roupa    .CABO FRIO  BRA",
    "amount": 19.9,
-   "category": "outros",
+   "category": "assinatura",
    "source": "banco",
    "ext_id": "6d7341ae-373e-4d3b-b53b-f28126fded99:885fddb9-9d74-41eb-b7df-56610f99561d",
-   "ignored": 0,
-   "card": null
+   "ignored": 1,
+   "card": "PicPay"
   },
   {
    "id": 24,
    "date": "2026-10-24",
    "description": "ROUPA LIMPA*VMT*roupa    .CABO FRIO  BRA",
    "amount": 19.9,
-   "category": "outros",
+   "category": "assinatura",
    "source": "banco",
    "ext_id": "6d7341ae-373e-4d3b-b53b-f28126fded99:53429f9f-17c6-4ce4-beb3-0e969f719641",
-   "ignored": 0,
-   "card": null
+   "ignored": 1,
+   "card": "PicPay"
   },
   {
    "id": 25,
    "date": "2026-10-24",
    "description": "ROUPA LIMPA*VMT*roupa    .CABO FRIO  BRA",
    "amount": 19.9,
-   "category": "outros",
+   "category": "assinatura",
    "source": "banco",
    "ext_id": "6d7341ae-373e-4d3b-b53b-f28126fded99:542e2ac2-1f76-48fa-b0f6-a9eaa962aaeb",
-   "ignored": 0,
-   "card": null
+   "ignored": 1,
+   "card": "PicPay"
   },
   {
    "id": 26,
@@ -810,7 +810,7 @@
    "source": "banco",
    "ext_id": "6d7341ae-373e-4d3b-b53b-f28126fded99:59041a29-cfe5-4db3-ac0c-1328e9c8534f",
    "ignored": 0,
-   "card": null
+   "card": "PicPay"
   },
   {
    "id": 27,
@@ -821,7 +821,7 @@
    "source": "banco",
    "ext_id": "6d7341ae-373e-4d3b-b53b-f28126fded99:6475fc5b-3f70-4e95-93be-d4e7091459c7",
    "ignored": 0,
-   "card": null
+   "card": "PicPay"
   },
   {
    "id": 28,
@@ -832,7 +832,7 @@
    "source": "banco",
    "ext_id": "6d7341ae-373e-4d3b-b53b-f28126fded99:3bcac943-5cbd-49cc-9552-864c42f1912c",
    "ignored": 0,
-   "card": null
+   "card": "PicPay"
   },
   {
    "id": 29,
@@ -843,7 +843,7 @@
    "source": "banco",
    "ext_id": "6d7341ae-373e-4d3b-b53b-f28126fded99:8e508a81-361c-48ae-a9af-4a8dfe795c61",
    "ignored": 0,
-   "card": null
+   "card": "PicPay"
   },
   {
    "id": 30,
@@ -854,7 +854,7 @@
    "source": "banco",
    "ext_id": "27be5f3e-7a39-4e21-b734-1d4439c35288:b95d43b8-24a5-43b8-a07f-5301e9aba9ca",
    "ignored": 1,
-   "card": null
+   "card": "Nubank"
   },
   {
    "id": 31,
@@ -865,7 +865,7 @@
    "source": "banco",
    "ext_id": "27be5f3e-7a39-4e21-b734-1d4439c35288:e50c3262-9b1f-42a7-82e6-dfcbb43e0b3b",
    "ignored": 1,
-   "card": null
+   "card": "Nubank"
   },
   {
    "id": 32,
@@ -876,7 +876,7 @@
    "source": "banco",
    "ext_id": "27be5f3e-7a39-4e21-b734-1d4439c35288:7fff0b73-153e-4ec8-b726-8f90050f53c5",
    "ignored": 1,
-   "card": null
+   "card": "Nubank"
   },
   {
    "id": 33,
@@ -887,7 +887,7 @@
    "source": "banco",
    "ext_id": "27be5f3e-7a39-4e21-b734-1d4439c35288:815df3dc-f6ae-4919-9603-3a4c44454c90",
    "ignored": 1,
-   "card": null
+   "card": "Nubank"
   },
   {
    "id": 34,
@@ -898,7 +898,7 @@
    "source": "banco",
    "ext_id": "27be5f3e-7a39-4e21-b734-1d4439c35288:3b1e1ada-7a58-42ec-8ff1-6fc02099ad9b",
    "ignored": 1,
-   "card": null
+   "card": "Nubank"
   },
   {
    "id": 35,
@@ -909,7 +909,7 @@
    "source": "banco",
    "ext_id": "27be5f3e-7a39-4e21-b734-1d4439c35288:e6c580d0-4ed3-4c5b-bfb1-39b9b703bb5f",
    "ignored": 1,
-   "card": null
+   "card": "Nubank"
   },
   {
    "id": 36,
@@ -920,7 +920,7 @@
    "source": "banco",
    "ext_id": "27be5f3e-7a39-4e21-b734-1d4439c35288:2cd95917-4d34-4f02-ba72-3b9a33881519",
    "ignored": 1,
-   "card": null
+   "card": "Nubank"
   },
   {
    "id": 37,
@@ -931,7 +931,7 @@
    "source": "banco",
    "ext_id": "27be5f3e-7a39-4e21-b734-1d4439c35288:118f84be-b740-43b3-b493-8c6d12230ae6",
    "ignored": 1,
-   "card": null
+   "card": "Nubank"
   },
   {
    "id": 38,
@@ -942,7 +942,7 @@
    "source": "banco",
    "ext_id": "27be5f3e-7a39-4e21-b734-1d4439c35288:fa2f6f2c-935a-4501-908d-c7e4c8ae5245",
    "ignored": 0,
-   "card": null
+   "card": "Nubank"
   },
   {
    "id": 39,
@@ -953,7 +953,7 @@
    "source": "banco",
    "ext_id": "27be5f3e-7a39-4e21-b734-1d4439c35288:a2ec9377-dd06-4ab0-89c0-75f02c27e1c9",
    "ignored": 0,
-   "card": null
+   "card": "Nubank"
   },
   {
    "id": 40,
@@ -964,7 +964,7 @@
    "source": "banco",
    "ext_id": "6d7341ae-373e-4d3b-b53b-f28126fded99:2822d89d-ad4b-4df5-a108-02b42ed07367",
    "ignored": 0,
-   "card": null
+   "card": "PicPay"
   }
  ],
  "push_subs": [
