@@ -38,6 +38,14 @@ def main():
         for r in db.rows(conn, "SELECT id, description FROM spends WHERE source='banco' AND ignored=0"):
             if bank.PARC_RE.search(r["description"]):
                 conn.execute("UPDATE spends SET ignored=1, category='parcela' WHERE id=?", (r["id"],))
+        # migrações que rodam uma vez só
+        feitas = set(db.get_cfg(conn).get("migracoes") or [])
+        if "salario_minimo_50" not in feitas:
+            regra = db.get_cfg(conn).get("salario_regra") or {}
+            if regra.get("minimo_pct") == 60:  # set/26 caiu R$ 1.390 (59% do salário) e passaria batido
+                db.put_setting(conn, "salario_regra", {**regra, "minimo_pct": 50})
+            feitas.add("salario_minimo_50")
+        db.put_setting(conn, "migracoes", sorted(feitas))
         # valor fixo antigo do PicPay (limite usado, não a fatura)
         conn.execute("DELETE FROM overrides WHERE note LIKE 'Valor do cartão em 05/11%' OR note LIKE 'Valor que o app mostra%'")
     if state == "novo" and BACKUP.enabled and not BACKUP.blocked:

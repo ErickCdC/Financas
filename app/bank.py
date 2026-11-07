@@ -21,7 +21,7 @@ from . import config as C
 from . import db
 from . import finance
 from . import projection as P
-from .finance import last_payday
+from .finance import last_payday, next_payday
 
 
 def banco_post(path, body):
@@ -106,7 +106,9 @@ def to_spend(acct_type, x, ignore, pix_max):
     """Decide se uma transação do banco vira 'gasto livre'. Devolve (data, descrição, valor) ou None."""
     desc = str(x.get("description") or "").strip()[:120]
     low = desc.lower()
-    if not desc or any(term in low for term in ignore):
+    squash = re.sub(r"\s+", "", low)  # o PicPay escreve "ERICKCAMARA", sem espaço
+    if not desc or any(term in low or (len(term.replace(" ", "")) >= 6 and term.replace(" ", "") in squash)
+                       for term in ignore):
         return None
     d = local_date(x.get("date"))
     if not d:
@@ -131,6 +133,17 @@ def to_spend(acct_type, x, ignore, pix_max):
         if 0 < v <= pix_max:
             return d, desc, round(v, 2)
     return None
+
+
+CARD_TRANSFER_CATS = ("transfers", "same person transfer", "transfer - pix", "transfer - ted")
+
+
+def card_transfer(acct_type, x, pix_max):
+    """Pix/transferência grande paga com o cartão (ex.: Pix no crédito de R$ 1.235,88 em 31/07/26).
+    Não é gasto do dia a dia (o dinheiro foi para outra conta), mas entra na fatura."""
+    if acct_type != "CREDIT" or x.get("type") != "DEBIT":
+        return False
+    return str(x.get("category") or "").lower() in CARD_TRANSFER_CATS and _num(x.get("amount")) > pix_max
 
 
 CAT_MAP = (("taxi", "transporte"), ("ride", "transporte"), ("transport", "transporte"), ("fuel", "transporte"),
@@ -167,13 +180,50 @@ def reconcile_refunds(conn):
     return n
 
 
+def _desc_key(desc):
+    """Descrição sem cidade/país e espaços repetidos: 'IFD*IFOOD CLUB   .Osasco BRA' -> 'ifd*ifood club'."""
+    return re.sub(r"\s+", " ", str(desc or "").lower().split(" .")[0]).strip()[:28]
+
+
 def ignore_subscription_charges(conn):
-    """A cobrança de uma assinatura no cartão já está na previsão da fatura: não conta de novo como gasto."""
+    """A cobrança de uma assinatura no cartão já está na previsão da fatura: não conta de novo como gasto.
+
+    Só o valor não basta (três lavagens de R$ 19,90 em 24/10/26 viraram "assinatura"). Vale a cobrança que
+    tem uma das palavras da assinatura; sem palavras, a que se repete com a mesma descrição em meses
+    diferentes, no máximo uma por mês. O que foi marcado antes e não passa mais volta a contar."""
+    keep, cands = set(), {}
+    for r in db.rows(conn, "SELECT amount, card, match FROM recurring WHERE card IS NOT NULL AND card != ''"):
+        words = [w.strip().lower() for w in (r.get("match") or "").split(",") if w.strip()]
+        rows = db.rows(conn, "SELECT id, date, description, ignored, category FROM spends WHERE card=? "
+                             "AND source='banco' AND ABS(amount - ?) < 0.02 AND (ignored=0 OR category='assinatura') "
+                             "ORDER BY date, id", (r["card"], r["amount"]))
+        for c in rows:
+            cands[c["id"]] = c
+        if words:
+            keep |= {c["id"] for c in rows if any(w in c["description"].lower() for w in words)}
+            continue
+        by_desc = {}
+        for c in rows:
+            by_desc.setdefault(_desc_key(c["description"]), []).append(c)
+        for lst in by_desc.values():
+            if len({c["date"][:7] for c in lst}) < 2:
+                continue
+            months = set()
+            for c in lst:
+                if c["date"][:7] not in months:
+                    months.add(c["date"][:7])
+                    keep.add(c["id"])
     n = 0
-    for r in db.rows(conn, "SELECT name, amount, card FROM recurring WHERE card IS NOT NULL AND card != ''"):
-        cur = conn.execute("UPDATE spends SET ignored=1, category='assinatura' WHERE ignored=0 AND card=? "
-                           "AND ABS(amount - ?) < 0.02 AND source='banco'", (r["card"], r["amount"]))
-        n += cur.rowcount
+    for cid, c in cands.items():
+        if cid in keep and not c["ignored"]:
+            conn.execute("UPDATE spends SET ignored=1, category='assinatura' WHERE id=?", (cid,))
+            n += 1
+        elif cid not in keep and c["ignored"] and c["category"] == "assinatura":
+            conn.execute("UPDATE spends SET ignored=0, category=NULL WHERE id=?", (cid,))
+    # sobra de regras antigas: marcadas como assinatura sem nenhuma assinatura daquele valor/cartão
+    for c in db.rows(conn, "SELECT id FROM spends WHERE category='assinatura' AND ignored=1 AND source='banco'"):
+        if c["id"] not in cands:
+            conn.execute("UPDATE spends SET ignored=0, category=NULL WHERE id=?", (c["id"],))
     return n
 
 
@@ -209,7 +259,8 @@ def progress():
 def fetch(cfg, t):
     """Lê contas, transações e faturas. Devolve um dicionário com tudo (sem tocar no banco local)."""
     pay = last_payday(t, cfg)
-    since = max(pay - timedelta(days=8), t - timedelta(days=45)).isoformat()
+    # 16 dias antes do último salário: pega o 13º, que cai antes do salário de dezembro
+    since = max(pay - timedelta(days=16), t - timedelta(days=45)).isoformat()
     _step("Conectando ao banco", done=0, total=8)
     acc = banco_post("/accounts/list", {})
     accounts = [a for a in (acc.get("results") or acc.get("accounts") or []) if a.get("type") in ("BANK", "CREDIT")]
@@ -291,7 +342,13 @@ def apply(conn, data, t):
                 continue
             ext = f"{a['id']}:{x['id']}"
             if conn.execute("SELECT 1 FROM spends WHERE ext_id=?", (ext,)).fetchone():
+                # categoria apagada (ex.: deixou de ser tratada como assinatura): volta a do banco
+                conn.execute("UPDATE spends SET category=? WHERE ext_id=? AND category IS NULL",
+                             (map_category(x.get("category")), ext))
                 continue
+            cat, ign_flag = map_category(x.get("category")), 0
+            if card_transfer(a["type"], x, cfg["pix_max"]):
+                cat, ign_flag = "pix_credito", 1
             manual = conn.execute("SELECT id FROM spends WHERE source='manual' AND ext_id IS NULL "
                                   "AND date=? AND ABS(amount-?)<0.005 ORDER BY id LIMIT 1", (sp[0], sp[2])).fetchone()
             if manual:
@@ -299,42 +356,62 @@ def apply(conn, data, t):
                              (ext, card_name(cfg, a["bank"]) if a["type"] == "CREDIT" else None, manual["id"]))
                 adopted += 1
                 continue
-            cur = conn.execute("INSERT OR IGNORE INTO spends(date,description,amount,category,source,ext_id,card) "
-                               "VALUES(?,?,?,?,?,?,?)",
-                               (sp[0], sp[1], sp[2], map_category(x.get("category")), "banco", ext,
-                                card_name(cfg, a["bank"]) if a["type"] == "CREDIT" else None))
+            cur = conn.execute("INSERT OR IGNORE INTO spends(date,description,amount,category,source,ext_id,card,ignored) "
+                               "VALUES(?,?,?,?,?,?,?,?)",
+                               (sp[0], sp[1], sp[2], cat, "banco", ext,
+                                card_name(cfg, a["bank"]) if a["type"] == "CREDIT" else None, ign_flag))
             added += cur.rowcount
     estornos = reconcile_refunds(conn)
 
     # 2) salário e 13º
     pay = last_payday(t, cfg)
     income_ym = P.ym_of(pay)
-    lo, hi = (pay - timedelta(days=7)).isoformat(), (pay + timedelta(days=4)).isoformat()
-    minimo = float(cfg["salario"]) * (float((cfg.get("salario_regra") or {}).get("minimo_pct", 60)) / 100)
-    termos = [s.lower() for s in (cfg.get("salario_regra") or {}).get("termos", [])]
-    incomes = []
-    for a in data["accounts"]:
-        if a["type"] != "BANK":
-            continue
-        for x in a["tx"]:
-            d = local_date(x.get("date"))
-            desc = str(x.get("description") or "")
-            amt = _num(x.get("amount"))
-            if x.get("type") != "CREDIT" or not d or not lo <= d <= hi or amt < minimo:
-                continue
-            low = desc.lower()
-            if any(w in low for w in EXCLUDE_INCOME) or (termos and not any(w in low for w in termos)):
-                continue
-            incomes.append({"date": d, "desc": desc[:80], "amount": round(amt, 2), "id": f"{a['id']}:{x.get('id')}"})
+    decimo_meses = (int(cfg.get("decimo1_mes") or 11), int(cfg.get("decimo2_mes") or 12))
+    regra = cfg.get("salario_regra") or {}
+    minimo = float(cfg["salario"]) * (float(regra.get("minimo_pct", 50)) / 100)
+    termos = [s.lower() for s in regra.get("termos", [])]
+    # Janelas: em volta do último salário e, em mês de 13º, os dias antes do próximo salário
+    # (em 2025 a 2ª parcela caiu em 19/12, 11 dias antes do salário de 30/12).
+    janelas = [(income_ym, pay - timedelta(days=15 if pay.month in decimo_meses else 7), pay + timedelta(days=4),
+                pay.month in decimo_meses)]
+    nxt = next_payday(t + timedelta(days=1), cfg)
+    if nxt.month in decimo_meses and nxt - timedelta(days=15) <= t:
+        janelas.append((P.ym_of(nxt), nxt - timedelta(days=15), t, True))
     entradas = cfg.get("entradas") or {}
+    incomes = []
+    for ym_j, lo_d, hi_d, decimo in janelas:
+        lo, hi = lo_d.isoformat(), hi_d.isoformat()
+        achados = []
+        for a in data["accounts"]:
+            if a["type"] != "BANK":
+                continue
+            for x in a["tx"]:
+                d = local_date(x.get("date"))
+                desc = str(x.get("description") or "")
+                amt = _num(x.get("amount"))
+                if x.get("type") != "CREDIT" or not d or not lo <= d <= hi:
+                    continue
+                low = desc.lower()
+                if any(w in low for w in EXCLUDE_INCOME) or (termos and not any(w in low for w in termos)):
+                    continue
+                proprio = str(x.get("category") or "").lower() in ("same person transfer", "salary", "salário")
+                if amt < minimo and not (decimo and proprio and amt >= 0.25 * float(cfg["salario"])):
+                    continue
+                achados.append({"date": d, "desc": desc[:80], "amount": round(amt, 2), "id": f"{a['id']}:{x.get('id')}"})
+        if not achados:
+            continue
+        total = round(sum(i["amount"] for i in achados), 2)
+        prev = (entradas.get(ym_j) or {}).get("total")
+        entradas[ym_j] = {"total": total, "itens": achados[:6]}
+        if ym_j == income_ym:
+            incomes = achados
+            if prev != total and (t - pay).days <= 3:  # não avisa salário antigo na primeira leitura
+                events.append((f"salario:{income_ym}:{total}", "Salário recebido", f"Caiu {brl(total)} na conta.", "/#inicio"))
+        elif prev != total:
+            events.append((f"decimo:{ym_j}:{total}", "13º recebido", f"Caiu {brl(total)} na conta.", "/#inicio"))
+    if entradas:
+        db.put_setting(conn, "entradas", {k: entradas[k] for k in sorted(entradas)[-6:]})
     if incomes:
-        total = round(sum(i["amount"] for i in incomes), 2)
-        prev = (entradas.get(income_ym) or {}).get("total")
-        entradas[income_ym] = {"total": total, "itens": incomes[:6]}
-        entradas = {k: entradas[k] for k in sorted(entradas)[-6:]}
-        db.put_setting(conn, "entradas", entradas)
-        if prev != total and (t - pay).days <= 3:  # não avisa salário antigo na primeira leitura
-            events.append((f"salario:{income_ym}:{total}", "Salário recebido", f"Caiu {brl(total)} na conta.", "/#inicio"))
         sal = max(incomes, key=lambda i: i["amount"])["amount"]
         cfg_month = int(income_ym[5:])
         if auto.get("salario", True) and cfg_month not in (cfg["decimo1_mes"], cfg["decimo2_mes"]) and len(incomes) == 1:
@@ -344,6 +421,7 @@ def apply(conn, data, t):
 
     # 3) e 4) faturas: valor real e pagamento
     ciclo = {}
+    venc_novo = dict(cfg.get("cartao_venc") or {})
     for a in data["accounts"]:
         if a["type"] != "CREDIT":
             continue
@@ -360,20 +438,36 @@ def apply(conn, data, t):
                 pass
         ciclo[card] = {"conta": a["id"], "fechou": max(closes) if closes else None,
                        "fecha_antes": max(set(offs), key=offs.count) if offs else None}
+        results = sorted([b for b in bills.get("results") or [] if len(str(b.get("dueDate") or "")) >= 10],
+                         key=lambda b: str(b["dueDate"]))
         if auto.get("faturas", True):
-            for b in bills.get("results") or []:
-                due = str(b.get("dueDate") or "")[:10]
-                if len(due) != 10 or due < (t - timedelta(days=40)).isoformat():
+            # dia de vencimento pelo que o banco mostra (o Nubank vence no dia 1, não no 3)
+            dias = [int(str(b["dueDate"])[8:10]) for b in results[-6:]]
+            if len(dias) >= 2:
+                dia = max(set(dias), key=lambda d: (dias.count(d), -d))
+                if venc_novo.get(card) != dia:
+                    venc_novo[card] = dia
+            for i, b in enumerate(results):
+                due = str(b["dueDate"])[:10]
+                if due < (t - timedelta(days=40)).isoformat():
                     continue
                 total = _num(b.get("totalAmount"))
-                _auto_override(conn, card, P.add_months(due[:7], -1), total, "fatura fechada")
-                if b.get("payment_status") == "PAID" and set_paid(conn, due[:7], f"bill:{card}", total):
-                    events.append((f"paid:{due[:7]}:bill:{card}", f"Fatura {card} paga", f"{brl(total)} confirmado pelo banco.", "/#contas"))
+                pre = _prepaid(results, i)
+                real = round(total + pre, 2)
+                _auto_override(conn, card, P.add_months(due[:7], -1), real,
+                               "fatura fechada" + (f" + {brl(pre)} pagos antes de fechar" if pre else ""))
+                quitada = b.get("payment_status") == "PAID" or (pre > 0 and total <= 0.5)
+                if quitada and set_paid(conn, due[:7], f"bill:{card}", real):
+                    events.append((f"paid:{due[:7]}:bill:{card}", f"Fatura {card} paga", f"{brl(real)} confirmado pelo banco.", "/#contas"))
             ob = bills.get("open_bill") or {}
             if ob.get("available") and ob.get("method") == "cycle_dates" and ob.get("due_date"):
                 due = str(ob["due_date"])[:10]
                 _auto_override(conn, card, P.add_months(due[:7], -1), _num(ob.get("total_amount")), "fatura aberta até agora")
         if auto.get("pagamentos", True):
+            # o Mercado Pago repete cada estorno como "Pagamento recebido" do mesmo valor e dia
+            estornos_dia = {(local_date(x.get("date")), round(abs(_num(x.get("amount"))), 2)) for x in a["tx"]
+                            if x.get("type") == "CREDIT" and (x.get("operationType") == "ESTORNO"
+                                                              or "estorno" in str(x.get("description") or "").lower())}
             for x in a["tx"]:
                 low = str(x.get("description") or "").lower()
                 is_pay = x.get("operationType") == "PAGAMENTO_FATURA" or x.get("category") == "Credit card payment" \
@@ -382,9 +476,15 @@ def apply(conn, data, t):
                 d = local_date(x.get("date"))
                 if not is_pay or x.get("type") != "CREDIT" or not d or amt <= 0:
                     continue
+                if x.get("operationType") != "ESTORNO" and (d, round(amt, 2)) in estornos_dia:
+                    continue
                 m = _match_bill(conn, cfg, card, d, t)
                 if m and set_paid(conn, m, f"bill:{card}", amt):
                     events.append((f"paid:{m}:bill:{card}", f"Fatura {card} paga", f"Pagamento de {brl(amt)} em {d[8:]}/{d[5:7]}.", "/#contas"))
+
+    if venc_novo != (cfg.get("cartao_venc") or {}):
+        db.put_setting(conn, "cartao_venc", venc_novo)
+        cfg = db.get_cfg(conn)
 
     # 3) contas fixas pelo extrato (palavras de cada conta)
     if auto.get("pagamentos", True):
@@ -414,8 +514,9 @@ def apply(conn, data, t):
         for card, info in ciclo.items():
             day = int((cfg.get("cartao_venc") or {}).get(card) or 10)
             since_close = info["fechou"] or (finance.clamp_day(t.year, t.month, day) - timedelta(days=7)).isoformat()
-            row = conn.execute("SELECT COALESCE(SUM(amount),0) FROM spends WHERE ignored=0 AND ext_id LIKE ? AND date > ?",
-                               (info["conta"] + ":%", since_close)).fetchone()
+            # compra no dia do fechamento já é da fatura seguinte
+            row = conn.execute(f"SELECT COALESCE(SUM(amount),0) FROM spends WHERE {finance.NA_FATURA} "
+                               "AND ext_id LIKE ? AND date >= ?", (info["conta"] + ":%", since_close)).fetchone()
             extra[card] = round(row[0], 2)
             info["compras"] = extra[card]
         db.put_setting(conn, "ciclo_extra", extra)
@@ -460,6 +561,37 @@ def _auto_override(conn, card, income_ym, total, label):
     conn.execute("INSERT INTO overrides(card,month,amount,note) VALUES(?,?,?,?) "
                  "ON CONFLICT(card,month) DO UPDATE SET amount=excluded.amount, note=excluded.note",
                  (card, income_ym, round(total, 2), AUTO_NOTE + label))
+
+
+def _prepaid(results, i):
+    """Quanto foi pago da fatura `results[i]` antes de ela fechar (entre o vencimento anterior e o fechamento).
+    O Mercado Pago informa a fatura como R$ 0,00 (ou só o resto) quando o salário cai antes do dia 29 e você paga
+    o ciclo ainda aberto: em mar/26 veio R$ 148,98 de R$ 1.634,43. Estornos repetidos como pagamento (OTHER_PAYMENT)
+    e o pagamento atrasado da fatura anterior não contam."""
+    if i == 0:
+        return 0.0
+    b, prev = results[i], results[i - 1]
+    fecha = str(b.get("billClosingDate") or "")[:10]
+    antes = str(prev.get("dueDate") or "")[:10]
+    if len(fecha) != 10 or len(antes) != 10:
+        return 0.0
+    pags = {}
+    for r in results:
+        for p in r.get("payments") or []:
+            pags[p.get("id") or f"{p.get('paymentDate')}:{p.get('amount')}"] = p
+    prev_total = _num(prev.get("totalAmount"))
+    em_dia = any(str(p.get("paymentDate") or "")[:10] <= antes and abs(_num(p.get("amount")) - prev_total) <= 0.5
+                 for p in pags.values())
+    total, resolvida = 0.0, em_dia or prev_total <= 0.5
+    for p in sorted(pags.values(), key=lambda p: str(p.get("paymentDate") or "")):
+        d = str(p.get("paymentDate") or "")[:10]
+        if p.get("valueType") == "OTHER_PAYMENT" or not antes < d <= fecha:
+            continue
+        if not resolvida and abs(_num(p.get("amount")) - prev_total) <= 0.5:
+            resolvida = True  # era a fatura anterior, paga depois do vencimento
+            continue
+        total += _num(p.get("amount"))
+    return round(total, 2)
 
 
 def _match_bill(conn, cfg, card, d, t):

@@ -512,11 +512,22 @@ button.catrow:hover { background: var(--surface-2); }
 .monthnav .m { text-transform: none; }
 .cal-d .n.sm { font-size: 10.5px; letter-spacing: -.02em; }
 .card.nextbills { display: block; }
-.nextbills .v-big { margin: 2px 0 6px; }
-.nb-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 9px 0; border-top: 1px solid var(--line); }
+.nextbills .v-big { margin: 2px 0 6px; display: block; }
+.nextbills .eyebrow { display: block; }
+.nb-head { display: block; width: 100%; padding: 0; margin: 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; border-radius: 10px; }
+.nb-head .card-head { display: flex; }
+.nb-row { display: flex; width: 100%; justify-content: space-between; align-items: center; gap: 10px; padding: 9px 4px 9px 0; margin: 0;
+  border: 0; border-top: 1px solid var(--line); background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.nb-row:active, .nb-head:active { background: var(--surface-2); }
+@media (hover: hover) { .nb-row:hover { background: var(--surface-2); } }
+.nb-l { display: flex; flex-direction: column; min-width: 0; }
 .nb-row .t { font-weight: 600; font-size: 14px; }
 .nb-row .sub { font-size: 12px; color: var(--muted); margin-top: 1px; }
+.nb-r { display: flex; align-items: center; gap: 4px; flex: none; }
+.nb-r .i { width: 16px; height: 16px; color: var(--muted); }
 .nb-row b { font-size: 14.5px; white-space: nowrap; }
 .nb-row.paid { opacity: .55; }
 .nb-row.paid b { text-decoration: line-through; }
+.detail h2.sec { margin: 4px 2px 0; gap: 8px; }
+.detail h3 .chip { vertical-align: middle; margin-left: 6px; position: relative; top: -3px; }
 .nb-foot { font-size: 12px; color: var(--muted); margin-top: 8px; }

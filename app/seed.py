@@ -31,7 +31,7 @@ DEFAULT_SETTINGS = {
     "teto_auto": False,     # se ligado, o teto semanal se ajusta para sobrar a meta
     # Automação a cada sincronização com o banco
     "auto": {"caixa": True, "salario": True, "pagamentos": True, "faturas": True, "parcelas": True},
-    "salario_regra": {"minimo_pct": 60, "termos": []},  # crédito >= 60% do salário perto do dia do salário
+    "salario_regra": {"minimo_pct": 50, "termos": []},  # crédito >= 50% do salário perto do dia do salário
     "sync_auto": {"on": True, "inicio": "07:30", "fim": "23:00", "intervalo": 30, "forcar": True},
     "notif": {
         "enabled": True,
@@ -93,7 +93,8 @@ SPENDS = [  # desde o salário (30/10), conferido com o banco em 05/11. Uber com
 
 
 # Palavras que identificam o pagamento de cada conta fixa no extrato (editável no app).
-MATCH = {"Aluguel": "isabela raissa", "Faculdade": "principia", "Internet (Giga Mais)": "giga mais"}
+MATCH = {"Aluguel": "isabela raissa", "Faculdade": "principia", "Internet (Giga Mais)": "giga mais", "Luz": "ampla",
+         "Claude": "anthropic,claude", "Clube iFood": "ifood club,clube ifood"}
 
 
 # Valor original de compras parceladas com juros (para mostrar quanto custou o crédito).

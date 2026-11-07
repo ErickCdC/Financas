@@ -170,17 +170,36 @@ function nextBills(d) {
   const fixas = p.items.filter(i => i.group === "fixa"), avulsas = p.items.filter(i => i.group === "avulsa");
   const sum = l => l.reduce((a, i) => a + (i.amount || 0), 0);
   const compras = faturas.reduce((a, i) => a + (i.compras || 0), 0);
-  const row = (label, val, sub, paid) => `<div class="nb-row ${paid ? "paid" : ""}"><div><div class="t">${label}</div>${sub ? `<div class="sub">${sub}</div>` : ""}</div><b class="num">${val}</b></div>`;
-  return `<a class="card nextbills" href="#contas" data-act="goto-proximas">
-    <div class="card-head"><div><div class="eyebrow">A pagar com o salário de ${ddmm(p.salario)}</div>
-      <div class="v-big num">${brl(p.total)}</div></div>
-      ${compras ? `<span class="chip blue num">+${brl0(compras)} em compras</span>` : ""}</div>
+  const row = (label, val, sub, paid, act, card) => `<button type="button" class="nb-row ${paid ? "paid" : ""}" data-act="${act}"${card ? ` data-card="${esc(card)}"` : ""}>
+    <span class="nb-l"><span class="t">${label}</span>${sub ? `<span class="sub">${sub}</span>` : ""}</span>
+    <span class="nb-r"><b class="num">${val}</b>${icon("right")}</span></button>`;
+  return `<section class="card nextbills">
+    <button type="button" class="nb-head" data-act="goto-proximas" aria-label="Ver contas a pagar">
+      <span class="card-head"><span><span class="eyebrow">A pagar com o salário de ${ddmm(p.salario)}</span>
+        <span class="v-big num">${brl(p.total)}</span></span>
+        ${compras ? `<span class="chip blue num">+${brl0(compras)} em compras</span>` : ""}</span></button>
     ${faturas.map(i => row(esc(i.name), i.amount == null ? "—" : brl(i.amount),
-      `${i.compras ? `compras ${brl(i.compras)} · ` : ""}${i.compras_de ? `até ${ddmm(i.fecha)} · ` : ""}vence ${i.due ? ddmm(i.due) : "—"}`, i.paid)).join("")}
-    ${row("Contas fixas", brl(sum(fixas)), `${fixas.length} conta(s) de ${esc(monthOnly(p.ref))}`, fixas.length && fixas.every(i => i.paid))}
-    ${avulsas.length ? row("Avulsas", brl(sum(avulsas)), avulsas.map(i => esc(i.name)).join(", "), avulsas.every(i => i.paid)) : ""}
+      `${i.compras ? `compras ${brl(i.compras)} · ` : ""}${i.compras_de ? `até ${ddmm(i.ate || i.fecha)} · ` : ""}vence ${i.due ? ddmm(i.due) : "—"}`, i.paid, "fatura", i.card)).join("")}
+    ${row("Contas fixas", brl(sum(fixas)), `${fixas.length} conta(s) de ${esc(monthOnly(p.ref))}`, fixas.length && fixas.every(i => i.paid), "goto-proximas")}
+    ${avulsas.length ? row("Avulsas", brl(sum(avulsas)), avulsas.map(i => esc(i.name)).join(", "), avulsas.every(i => i.paid), "goto-proximas") : ""}
     <div class="nb-foot">${p.pago ? `Já pago ${brl(p.pago)} · ` : ""}Cada compra no cartão soma aqui na hora.</div>
-  </a>`;
+  </section>`;
+}
+function faturaDetail(i, panel) {
+  const parts = (i.parts && i.parts.length ? i.parts : i.parts_prev) || [];
+  const lista = i.lista || [];
+  const status = i.paid ? `<span class="chip pos">paga</span>` : i.estimated ? `<span class="chip">previsto</span>` : `<span class="chip blue">a pagar</span>`;
+  const comp = parts.length ? `<div class="card">${parts.map(p => `<div class="kv"><span class="muted">${esc(p.name)}</span><span class="num">${brl(p.amount)}</span></div>`).join("")}
+      <div class="kv total"><span>${i.estimated ? "Previsto" : "Valor da fatura"}</span><span class="num">${i.amount == null ? "—" : brl(i.amount)}</span></div></div>` : "";
+  const nota = i.nota && String(i.nota).startsWith("Banco: ") ? `<p class="lead">${esc(i.nota.replace("Banco: ", "Valor do banco: "))}.</p>` : "";
+  const per = i.compras_de ? `Compras de ${ddmm(i.compras_de)} a ${ddmm(i.ate || i.fecha)} · fecha ${ddmm(i.fecha)} · vence ${ddmm(i.due)}` : (i.due ? `Vence ${ddmm(i.due)}` : "");
+  const head = `<h2 class="sec">Compras deste ciclo${lista.length ? ` · ${lista.length}` : ""}<span class="num">${brl(lista.reduce((a, s) => a + s.amount, 0))}</span></h2>`;
+  openDetail({
+    eyebrow: `${i.name} · contas de ${monthOnly(panel.ref)}`,
+    title: `${i.amount == null ? "—" : brl(i.amount)} ${status}`, sub: per,
+    body: `${comp}${nota}${i.compras_de ? head + spendList(lista, "Nenhuma compra neste cartão desde o fechamento.") : ""}`,
+    actions: `<button type="button" class="btn secondary" data-act="goto-proximas">Contas a pagar</button>`,
+  });
 }
 function etaText(g) {
   if (g.eta === "pronta") return "Meta alcançada!";
@@ -265,7 +284,7 @@ VIEWS.contas = d => {
     return `<div class="group-label">${title}</div>` + its.map(i => `<div class="item">
       <input type="checkbox" class="check" data-chg="paid" data-key="${esc(i.key)}" ${i.paid ? "checked" : ""} aria-label="Marcar ${esc(i.name)} como paga">
       <div class="body"><div class="t">${esc(i.name)}</div>
-        ${i.compras_de ? `<div class="sub period">Compras de ${ddmm(i.compras_de)} a ${ddmm(i.fecha)} · vence ${ddmm(i.due)}${i.compras ? ` · até agora ${brl(i.compras)}` : ""}</div>` : ""}
+        ${i.compras_de ? `<div class="sub period">Compras de ${ddmm(i.compras_de)} a ${ddmm(i.ate || i.fecha)} · vence ${ddmm(i.due)}${i.compras ? ` · até agora ${brl(i.compras)}` : ""}</div>` : ""}
         <div class="sub">${dueChip(i, t)}${i.estimated && i.amount != null ? ` <span class="chip">previsto</span>` : ""}${i.used != null && !i.paid ? ` <span class="muted">· usado no cartão ${brl(i.used)}</span>` : ""}</div>
         ${i.parts && i.parts.length ? `<details class="parts"><summary>Ver composição (${i.parts.length})</summary><div class="pl">${i.parts.map(p => `<div><span>${esc(p.name)}</span><span class="num">${brl(p.amount)}</span></div>`).join("")}</div></details>` : ""}
       </div>
@@ -838,6 +857,10 @@ const A = {
   refresh: () => load(),
   "goto-metas": () => { S.planTab = "metas"; location.hash = "#plano"; },
   "goto-proximas": () => { S.month = S.d.proximas.ym; location.hash = "#contas"; load({ silent: true }); },
+  fatura: el => {
+    const p = S.d.proximas, i = p && p.items.find(x => x.group === "fatura" && x.card === el.dataset.card);
+    if (i) faturaDetail(i, p);
+  },
   contasview: el => { S.contasView = el.dataset.v; store.set("fin-contas", S.contasView); render(); },
   calday: el => {
     const iso = el.dataset.date, dt = parse(iso), m = S.d.mes;
@@ -918,7 +941,9 @@ const A = {
   addspend: el => openSheet({ title: "Lançar gasto", desc: "Entra no teto da semana.", fields: spendFields(), values: { date: (el && el.dataset && el.dataset.date) || S.d.hoje, card: lastCard() }, saveLabel: "Lançar", onMount: suggestSpends,
     onSave: async v => { store.set("fin-card", v.card || ""); await api("/api/spends", { ...v, card: v.card || null }); return v.card ? `Lançado · soma na fatura ${v.card}` : "Gasto lançado"; } }),
   editspend: el => {
-    const s = S.d.semana.lista.find(x => x.id === Number(el.dataset.id)); if (!s) return;
+    const id = Number(el.dataset.id);
+    const fat = [S.d.proximas, S.d.mes].flatMap(p => (p ? p.items : []).flatMap(i => i.lista || []));
+    const s = S.d.semana.lista.find(x => x.id === id) || fat.find(x => x.id === id); if (!s) return;
     openSheet({ title: "Editar gasto", fields: [...spendFields(), { name: "ignored", label: "Ignorar no teto", type: "checkbox", hint: "Ex.: reembolso ou gasto que já é conta fixa" }],
       values: { ...s, card: s.card || "" }, onSave: v => api("/api/spends", { ...v, card: v.card || null, id: s.id }), onDelete: () => api("/api/spends", { id: s.id, delete: true }) });
   },

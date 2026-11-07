@@ -53,7 +53,9 @@ def effective_cfg(cfg, t):
 
 
 def bill_period(cfg, card, y, m):
-    """Período de compras da fatura que vence no mês (y, m): do fechamento anterior +1 até o fechamento."""
+    """Período de compras da fatura que vence no mês (y, m).
+    Nos três cartões, compra feita no dia do fechamento já cai na fatura seguinte (conferido nas faturas
+    de out e nov/26), então o período vai do fechamento anterior até a véspera do fechamento."""
     day = (cfg.get("cartao_venc") or {}).get(card)
     if not day:
         return {}
@@ -62,7 +64,12 @@ def bill_period(cfg, card, y, m):
     py, pm = (y, m - 1) if m > 1 else (y - 1, 12)
     close = due - timedelta(days=int(off))
     prev_close = clamp_day(py, pm, int(day)) - timedelta(days=int(off))
-    return {"compras_de": (prev_close + timedelta(days=1)).isoformat(), "fecha": close.isoformat()}
+    return {"compras_de": prev_close.isoformat(), "ate": (close - timedelta(days=1)).isoformat(),
+            "fecha": close.isoformat()}
+
+
+# Pix/transferência paga com o cartão: fora do teto (o dinheiro foi para outra conta), mas entra na fatura.
+NA_FATURA = "(ignored=0 OR category='pix_credito')"
 
 
 def card_purchases(conn, cfg, t, months):
@@ -76,13 +83,13 @@ def card_purchases(conn, cfg, t, months):
         for ym in months:
             due = due_date(P.add_months(ym, 1), venc[card], cfg)
             per = bill_period(cfg, card, *map(int, due[:7].split("-")))
-            row = conn.execute("SELECT COALESCE(SUM(amount),0) FROM spends WHERE ignored=0 AND card=? "
-                               "AND date BETWEEN ? AND ?", (card, per["compras_de"], per["fecha"])).fetchone()
+            row = conn.execute(f"SELECT COALESCE(SUM(amount),0) FROM spends WHERE {NA_FATURA} AND card=? "
+                               "AND date BETWEEN ? AND ?", (card, per["compras_de"], per["ate"])).fetchone()
             out[(card, ym)] = round(row[0], 2)
     return out
 
 
-def month_panel(conn, cfg, ym, t, purchases=None):
+def month_panel(conn, cfg, ym, t, purchases=None, listas=False):
     """Contas de referência `ym - 1` (pagas com o salário daquele mês). `ym` é a chave interna (mês seguinte)."""
     cur = income_month(t, cfg)
     ref = P.add_months(ym, -1)
@@ -114,12 +121,18 @@ def month_panel(conn, cfg, ym, t, purchases=None):
         has = bool(p and p["amount"] is not None)
         fc = P.card_forecast(c, inc, cur, recurring, inst, ov, cfg["ciclo_extra"], purchases) if can_forecast else None
         amount = p["amount"] if has else (fc["total"] if fc else None)
-        items.append({"key": f"bill:{c}", "group": "fatura", "name": f"Fatura {c}", "card": c,
-                      "amount": amount, "estimated": not has, "paid": bool(p and p["paid"]),
-                      "parts": (fc["parts"] if fc and not has else []),
-                      "used": (cfg.get("cartao_usado") or {}).get(c), "due": due(venc.get(c)),
-                      "compras": purchases.get((c, inc), 0),
-                      **(bill_period(cfg, c, *map(int, due(venc.get(c))[:7].split("-"))) if venc.get(c) else {})})
+        per = bill_period(cfg, c, *map(int, due(venc.get(c))[:7].split("-"))) if venc.get(c) else {}
+        item = {"key": f"bill:{c}", "group": "fatura", "name": f"Fatura {c}", "card": c,
+                "amount": amount, "estimated": not has, "paid": bool(p and p["paid"]),
+                "parts": (fc["parts"] if fc and not has else []), "parts_prev": (fc["parts"] if fc else []),
+                "used": (cfg.get("cartao_usado") or {}).get(c), "due": due(venc.get(c)),
+                "compras": purchases.get((c, inc), 0), "nota": (ov.get((c, inc)) or {}).get("note"), **per}
+        if listas and per:
+            # as compras que somam em "compras" (mesmo filtro de card_purchases)
+            item["lista"] = db.rows(conn, "SELECT id, date, description, amount, category, source, ignored, card "
+                                          f"FROM spends WHERE {NA_FATURA} AND card=? AND date BETWEEN ? AND ? "
+                                          "ORDER BY date DESC, id DESC LIMIT 300", (c, per["compras_de"], per["ate"]))
+        items.append(item)
     for p in db.rows(conn, "SELECT * FROM planned WHERE kind='saida' AND month=? ORDER BY day, id", (ref,)):
         items.append({"key": f"plan:{p['id']}", "group": "avulsa", "name": p["name"], "amount": p["amount"],
                       "estimated": False, "paid": bool(p["done"]), "parts": [], "due": due(p.get("day")),
@@ -412,14 +425,14 @@ def summary(conn, month=None, extra=None):
             k["due"] = due_date(P.add_months(mo["ym"], 1), venc.get(k["card"]), cfg)
     public_cfg["caixa_desatualizado"] = bool(raw.get("caixa_ref") and raw["caixa_ref"] != P.ym_of(t))
     out = {
-        "hoje": t.isoformat(), "mes": month_panel(conn, cfg, month, t),
+        "hoje": t.isoformat(), "mes": month_panel(conn, cfg, month, t, listas=True),
         "semana": week_info(conn, cfg, t), "parcelas": parc,
         "parcelas_total_restante": round(sum(p["restante_valor"] for p in parc), 2),
         "parcelas_mensal": round(sum(p["amount"] for p in parc if p["restante"] > 0), 2),
         "vencimentos": upcoming(conn, cfg, t),
         "recorrentes": recurring, "overrides": ov_rows, "proj": proj, "config": public_cfg,
         "ciclo": x, "paydays": paydays,
-        "proximas": month_panel(conn, cfg, P.add_months(x, 1), t),
+        "proximas": month_panel(conn, cfg, P.add_months(x, 1), t, listas=True),
         "livre": livre, "insights": insights(conn, cfg, t, proj, livre), **goals_plan(conn, proj),
         "avulsos": db.rows(conn, "SELECT * FROM planned ORDER BY month, day, id"),
         "notificacoes": db.rows(conn, "SELECT * FROM notif_log ORDER BY sent_at DESC LIMIT 20"),

@@ -27,7 +27,8 @@ SETTING_FIELDS = {
 }
 # Guardados pelo app (não editáveis pela tela), mas fazem parte do backup.
 INTERNAL_SETTINGS = {"last_sync", "caixa_banco", "cartao_usado", "last_tick", "entradas", "last_force",
-                     "eventos_pendentes", "last_auto_sync", "sync_detalhe", "ciclo_info", "caixa_data"}
+                     "eventos_pendentes", "last_auto_sync", "sync_detalhe", "ciclo_info", "caixa_data",
+                     "migracoes"}
 
 RECURRING_SPEC = {"name": V.text(60), "amount": V.num, "card": V.text(30, False), "due_day": V.opt(V.posint(1, 31)),
                   "match": V.text(120, False)}
