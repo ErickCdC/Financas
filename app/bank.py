@@ -327,7 +327,8 @@ def apply(conn, data, t):
         sal = max(incomes, key=lambda i: i["amount"])["amount"]
         cfg_month = int(income_ym[5:])
         if auto.get("salario", True) and cfg_month not in (cfg["decimo1_mes"], cfg["decimo2_mes"]) and len(incomes) == 1:
-            if abs(sal - cfg["salario"]) / max(cfg["salario"], 1) <= 0.6 and abs(sal - cfg["salario"]) >= 0.01:
+            # só aceita se estiver perto do salário atual (evita confundir com um Pix grande de alguém)
+            if abs(sal - cfg["salario"]) / max(cfg["salario"], 1) <= 0.3 and abs(sal - cfg["salario"]) >= 0.01:
                 db.put_setting(conn, "salario", sal)
 
     # 3) e 4) faturas: valor real e pagamento

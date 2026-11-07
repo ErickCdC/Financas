@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS recurring(
   due_day INTEGER, match TEXT);
 CREATE TABLE IF NOT EXISTS installments(
   id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, card TEXT NOT NULL,
-  amount REAL NOT NULL, total INTEGER NOT NULL, paid_count INTEGER NOT NULL DEFAULT 0, last_bill TEXT);
+  amount REAL NOT NULL, total INTEGER NOT NULL, paid_count INTEGER NOT NULL DEFAULT 0, last_bill TEXT, original REAL);
 CREATE TABLE IF NOT EXISTS payments(
   month TEXT NOT NULL, key TEXT NOT NULL, paid INTEGER NOT NULL DEFAULT 0, amount REAL,
   PRIMARY KEY(month, key));
@@ -30,6 +30,12 @@ CREATE INDEX IF NOT EXISTS spends_date ON spends(date);
 CREATE TABLE IF NOT EXISTS push_subs(
   id INTEGER PRIMARY KEY AUTOINCREMENT, endpoint TEXT NOT NULL UNIQUE, p256dh TEXT NOT NULL,
   auth TEXT NOT NULL, label TEXT, created TEXT NOT NULL, last_ok TEXT, fails INTEGER NOT NULL DEFAULT 0);
+CREATE TABLE IF NOT EXISTS planned(
+  id INTEGER PRIMARY KEY AUTOINCREMENT, kind TEXT NOT NULL CHECK(kind IN ('saida','entrada')), name TEXT NOT NULL,
+  amount REAL NOT NULL, month TEXT NOT NULL, day INTEGER, note TEXT, done INTEGER NOT NULL DEFAULT 0);
+CREATE TABLE IF NOT EXISTS goals(
+  id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, target REAL NOT NULL, saved REAL NOT NULL DEFAULT 0,
+  kind TEXT, note TEXT, ordem INTEGER NOT NULL DEFAULT 0, share INTEGER NOT NULL DEFAULT 100);
 CREATE TABLE IF NOT EXISTS notif_log(key TEXT PRIMARY KEY, sent_at TEXT NOT NULL, title TEXT, body TEXT);
 """
 
@@ -72,6 +78,8 @@ def migrate(conn):
     icols = {r[1] for r in conn.execute("PRAGMA table_info(installments)")}
     if "last_bill" not in icols:
         conn.execute("ALTER TABLE installments ADD COLUMN last_bill TEXT")
+    if "original" not in icols:
+        conn.execute("ALTER TABLE installments ADD COLUMN original REAL")
 
 
 def is_empty(conn):

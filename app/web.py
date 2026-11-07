@@ -91,8 +91,11 @@ def act_settings(conn, body):
 def act_payments(conn, body):
     month = V.year_month(body.get("month"))
     key = V.text(40)(body.get("key"))
-    if not re.fullmatch(r"(rec:\d+|bill:[^:]{1,30})", key):
+    if not re.fullmatch(r"(rec:\d+|bill:[^:]{1,30}|plan:\d+)", key):
         raise ValueError("chave inválida")
+    if key.startswith("plan:"):  # despesa avulsa: marcar como paga
+        conn.execute("UPDATE planned SET done=? WHERE id=?", (V.boolint(body.get("paid")), int(key[5:])))
+        return {"ok": True}
     cur = conn.execute("SELECT * FROM payments WHERE month=? AND key=?", (month, key)).fetchone()
     paid = cur["paid"] if cur else 0
     amount = cur["amount"] if cur else None
@@ -128,6 +131,14 @@ def act_installments(conn, body):
             x = finance.settled_month(conn, db.get_cfg(conn), row["card"], C.today()) or finance.P.ym_of(C.today())
             conn.execute("UPDATE installments SET last_bill=? WHERE id=?", (x, iid))
     return r
+
+
+def act_goals(conn, body):
+    if "add" in body and body.get("id"):  # "guardei R$ X" (ou retirei, com valor negativo)
+        add = V.num(body["add"])
+        conn.execute("UPDATE goals SET saved = MAX(0, saved + ?) WHERE id=?", (add, V.posint(1, 10**9)(body["id"])))
+        return {"ok": True}
+    return crud(conn, "goals", data.GOAL_SPEC, body, optional=("saved", "kind", "note", "ordem", "share"))
 
 
 def act_spends(conn, body):
@@ -177,6 +188,8 @@ POST_ROUTES = {
     "/api/recurring": lambda c, b: crud(c, "recurring", data.RECURRING_SPEC, b, optional=("card", "due_day")),
     "/api/installments": lambda c, b: act_installments(c, b),
     "/api/spends": act_spends,
+    "/api/planned": lambda c, b: crud(c, "planned", data.PLANNED_SPEC, b, optional=("day", "note", "done")),
+    "/api/goals": act_goals,
     "/api/import": data.restore,
     "/api/push/subscribe": act_subscribe,
     "/api/push/unsubscribe": act_unsubscribe,

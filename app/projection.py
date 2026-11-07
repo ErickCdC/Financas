@@ -66,9 +66,32 @@ def card_forecast(card, income_month, current_month, recurring, installments, ov
     return {"card": card, "total": total, "parts": parts, "source": "previsto"}
 
 
-def project(cfg, recurring, installments, overrides, today, n=3):
+def planned_for(planned, ym, k, cur):
+    """Avulsos que pesam no salário de `ym`.
+    Despesas: as do mês seguinte (como as contas fixas) e, no mês atual, as ainda não pagas até agora.
+    Entradas: as do próprio mês (no mês atual, só as que ainda não caíram)."""
+    nxt = add_months(ym, 1)
+    out_s, out_e = [], []
+    for p in planned or []:
+        if p.get("done"):
+            continue
+        if p["kind"] == "saida" and (p["month"] == nxt or (k == 0 and p["month"] <= cur)):
+            out_s.append(p)
+        elif p["kind"] == "entrada" and (p["month"] == ym or (k == 0 and p["month"] < cur)):
+            out_e.append(p)
+    return out_s, out_e
+
+
+def auto_teto(sobra, meta, semanas):
+    """Teto semanal que deixa exatamente a meta para a caixinha (arredondado para baixo de 5 em 5)."""
+    v = (sobra - meta) / max(semanas, 1 / 7)
+    return max(0.0, float(int(v // 5) * 5))
+
+
+def project(cfg, recurring, installments, overrides, today, n=3, planned=None):
     cur = ym_of(today)
     fixas = round(sum(r["amount"] for r in recurring if not r.get("card")), 2)
+    meta = float(cfg.get("meta_caixinha") or 0)
     months = []
     acc = 0.0
     for k in range(n):
@@ -89,15 +112,19 @@ def project(cfg, recurring, installments, overrides, today, n=3):
             recebido = float(((cfg.get("entradas") or {}).get(ym) or {}).get("total") or 0)
             falta = max(salario + decimo - recebido, 0.0)
             salario, decimo = (min(salario, falta), max(falta - salario, 0.0)) if recebido else (salario, decimo)
-        entra = salario + decimo + caixa
+        saidas, entradas = planned_for(planned, ym, k, cur)
+        extras = round(sum(p["amount"] for p in entradas), 2)
+        avulsas = round(sum(p["amount"] for p in saidas), 2)
+        entra = salario + decimo + caixa + extras
         cards = [card_forecast(c, ym, cur, recurring, installments, overrides, cfg["ciclo_extra"])
                  for c in cfg["cartoes"]]
         cart = round(sum(c["total"] for c in cards), 2)
         dim = calendar.monthrange(y, m)[1]
         dias = dim - today.day + 1 if k == 0 else dim
         semanas = max(dias, 1) / 7.0
-        sobra = entra - cart - fixas
-        livre = cfg["teto_semanal"] * semanas
+        sobra = entra - cart - fixas - avulsas
+        teto = auto_teto(sobra, meta, semanas) if cfg.get("teto_auto") else float(cfg["teto_semanal"])
+        livre = teto * semanas
         caixinha = sobra - livre
         acc += caixinha
         months.append({
@@ -105,7 +132,10 @@ def project(cfg, recurring, installments, overrides, today, n=3):
             "entra": round(entra, 2), "salario": round(salario, 2), "decimo": round(decimo, 2),
             "caixa": round(caixa, 2), "recebido": round(recebido, 2),
             "cartoes": cards, "cart_total": cart, "fixas": fixas,
-            "sobra": round(sobra, 2), "semanas": round(semanas, 1),
+            "sobra": round(sobra, 2), "semanas": round(semanas, 1), "semanas_x": semanas, "dias": dias,
+            "teto": teto, "meta": meta, "extras": extras, "avulsas": avulsas,
+            "extras_itens": [{"name": p["name"], "amount": p["amount"], "month": p["month"]} for p in entradas],
+            "avulsas_itens": [{"name": p["name"], "amount": p["amount"], "month": p["month"]} for p in saidas],
             "livre": round(livre, 2), "caixinha": round(caixinha, 2),
             "teto_max": round(max(0.0, sobra) / semanas, 2),
         })

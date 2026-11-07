@@ -25,6 +25,9 @@ DEFAULT_SETTINGS = {
     "last_sync": None,
     "caixa_banco": None,
     "cartao_usado": {},
+    "nome": "Erick",
+    "meta_caixinha": 0.0,   # quanto guardar por mês (usado pelo teto automático)
+    "teto_auto": False,     # se ligado, o teto semanal se ajusta para sobrar a meta
     # Automação a cada sincronização com o banco
     "auto": {"caixa": True, "salario": True, "pagamentos": True, "faturas": True, "parcelas": True},
     "salario_regra": {"minimo_pct": 60, "termos": []},  # crédito >= 60% do salário perto do dia do salário
@@ -92,6 +95,16 @@ SPENDS = [  # desde o salário (30/10), conferido com o banco em 05/11. Uber com
 MATCH = {"Aluguel": "isabela raissa", "Faculdade": "principia", "Internet (Giga Mais)": "giga mais"}
 
 
+# Valor original de compras parceladas com juros (para mostrar quanto custou o crédito).
+ORIGINAL = {"RecargaPay (pix crédito do aluguel)": 850.00}
+
+# Metas em potes separados: primeiro a reserva, depois a casa.
+GOALS = [
+    ("Reserva de emergência", 4400.00, "reserva", "≈ 3 meses de contas fixas e assinaturas"),
+    ("Casa própria (MCMV)", 45000.00, "casa", "Entrada + custos de fechamento + reserva pós-mudança (imóvel de R$ 250 mil)"),
+]
+
+
 def seed(conn):
     for k, v in DEFAULT_SETTINGS.items():
         conn.execute("INSERT OR IGNORE INTO settings(key,value) VALUES(?,?)", (k, json.dumps(v)))
@@ -100,8 +113,10 @@ def seed(conn):
                      (name, amount, card, MATCH.get(name)))
     for name, card, amount, total, paid in INSTALLMENTS:
         # last_bill: mês de vencimento da última fatura já contada em "paid_count" (nov/26 já foi paga)
-        conn.execute("INSERT INTO installments(name,card,amount,total,paid_count,last_bill) VALUES(?,?,?,?,?,'2026-11')",
-                     (name, card, amount, total, paid))
+        conn.execute("INSERT INTO installments(name,card,amount,total,paid_count,last_bill,original) "
+                     "VALUES(?,?,?,?,?,'2026-11',?)", (name, card, amount, total, paid, ORIGINAL.get(name)))
+    for i, (name, target, kind, note) in enumerate(GOALS):
+        conn.execute("INSERT INTO goals(name,target,saved,kind,note,ordem) VALUES(?,?,0,?,?,?)", (name, target, kind, note, i))
     for key, amount in PAYMENTS_NOV.items():
         conn.execute("INSERT INTO payments(month,key,paid,amount) VALUES('2026-11',?,1,?)", (key, amount))
     for card, month, amount, note in OVERRIDES:

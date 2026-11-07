@@ -98,3 +98,27 @@ class BankRules(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class Planning(unittest.TestCase):
+    def test_planned_expense_hits_salary_before_it(self):
+        cfg, rec, inst, ov = base()
+        planned = [{"kind": "saida", "name": "Caução", "amount": 600, "month": "2026-12", "done": 0},
+                   {"kind": "entrada", "name": "Horas extras", "amount": 300, "month": "2026-12", "done": 0},
+                   {"kind": "saida", "name": "Já paga", "amount": 999, "month": "2026-12", "done": 1}]
+        a = P.project(cfg, rec, inst, ov, TODAY)["months"]
+        b = P.project(cfg, rec, inst, ov, TODAY, planned=planned)["months"]
+        self.assertAlmostEqual(a[0]["caixinha"] - b[0]["caixinha"], 600, places=2)   # despesa de dez sai do salário de nov
+        self.assertAlmostEqual(b[1]["caixinha"] - a[1]["caixinha"], 300, places=2)   # entrada de dez entra no salário de dez
+
+    def test_auto_teto_leaves_the_goal(self):
+        cfg, rec, inst, ov = base()
+        cfg.update(teto_auto=True, meta_caixinha=300)
+        for m in P.project(cfg, rec, inst, ov, TODAY)["months"]:
+            if m["sobra"] > 300:
+                self.assertTrue(300 <= m["caixinha"] < 300 + 5 * m["semanas_x"] + 0.01, m)
+
+    def test_merchant_names(self):
+        self.assertEqual(finance.merchant("99* POP 06NOV"), "99")
+        self.assertEqual(finance.merchant("HELP GAS                 .RIO DAS OS BRA"), "help gas")
+        self.assertEqual(finance.merchant("Pagamento com Pix OSORIO S 2 LOJA"), "osorio s")

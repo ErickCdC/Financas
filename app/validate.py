@@ -183,3 +183,11 @@ def salario_regra(v):
     if "termos" in v:
         out["termos"] = str_list(v["termos"])
     return out
+
+
+def choice(*opts):
+    def fn(v):
+        if v not in opts:
+            raise ValueError("opção inválida")
+        return v
+    return fn

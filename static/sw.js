@@ -1,5 +1,5 @@
 /* Service worker do Finanças: app instalável, abre rápido mesmo com o servidor dormindo, recebe notificações. */
-const VERSION = "fin-v2.3.1";
+const VERSION = "fin-v2.4.0";
 const SHELL = ["/", "/app.js", "/style.css", "/manifest.webmanifest", "/logo.svg", "/favicon.svg",
   "/icons/icon-192.png", "/icons/badge-96.png"];
 const DATA = "fin-data";
@@ -34,12 +34,14 @@ self.addEventListener("push", e => {
   e.waitUntil(self.registration.showNotification(title, {
     body: d.body || "", icon: "/icons/icon-192.png", badge: "/icons/badge-96.png",
     tag: d.tag || "fin", renotify: true, data: { url: d.url || "/#inicio" }, lang: "pt-BR",
+    actions: Array.isArray(d.actions) ? d.actions.slice(0, 2) : [],
   }));
 });
 
 self.addEventListener("notificationclick", e => {
   e.notification.close();
-  const target = new URL((e.notification.data && e.notification.data.url) || "/#inicio", location.origin).href;
+  const base = (e.notification.data && e.notification.data.url) || "/#inicio";
+  const target = new URL(e.action === "add" ? "/#gastos/novo" : e.action === "open" ? "/#contas" : base, location.origin).href;
   e.waitUntil((async () => {
     const list = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
     for (const c of list) {

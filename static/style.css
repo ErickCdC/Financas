@@ -453,3 +453,57 @@ button.catrow:hover { background: var(--surface-2); }
 .monthnav .m-wrap { text-align: center; }
 .monthnav .m-sub { font-size: 12.5px; color: var(--muted); margin-top: 1px; }
 .item .sub.period { color: var(--text-2); }
+
+/* ---------- v2.4: livre até o salário, raio-x, metas, calendário, avulsos ---------- */
+.card.livre .v-big { margin: 2px 0 6px; }
+.hero .hero-auto { margin-top: 10px; }
+.insight { display: flex; gap: 12px; align-items: flex-start; padding: 12px; border-radius: 14px; background: var(--surface-2); margin-top: 10px; }
+.stack > .insight { margin-top: 0; }
+.insight .ic { width: 34px; height: 34px; }
+.insight .t { font-weight: 650; font-size: 14px; display: flex; justify-content: space-between; gap: 8px; }
+.insight .sub { font-size: 13px; color: var(--text-2); margin-top: 2px; }
+.insight.pos .ic { background: var(--pos-weak); color: var(--pos); }
+.insight.neg .ic { background: var(--neg-weak); color: var(--neg); }
+.insight.warn .ic { background: var(--warn-weak); color: var(--warn); }
+.goal-mini { padding: 6px 0 8px; }
+.goal-mini .kv { border: 0; padding: 0 0 6px; font-size: 13.5px; }
+.goal-mini .sub { font-size: 12px; margin-top: 6px; }
+.goal .v-big { font-size: 26px; }
+.goal .v-big .of { font-size: 14px; font-weight: 600; }
+.goal .goal-note { font-size: 12.5px; margin: 6px 0 12px; }
+.goal .lead { margin: 10px 0 4px; }
+.seg.seg-4 { display: flex; width: 100%; }
+.seg.seg-4 button { flex: 1; padding: 7px 6px; font-size: 13px; }
+.cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.cal-h { text-align: center; font-size: 11px; font-weight: 700; color: var(--muted); padding-bottom: 4px; text-transform: uppercase; }
+.cal-d { appearance: none; border: 1px solid transparent; background: var(--surface-2); border-radius: 10px; min-height: 54px; padding: 4px 2px;
+  display: flex; flex-direction: column; align-items: center; gap: 2px; cursor: pointer; font: inherit; color: inherit; position: relative; }
+.cal-d:hover { border-color: var(--line-strong); }
+.cal-d .n { font-size: 13px; font-weight: 650; }
+.cal-d .dots { display: flex; gap: 2px; min-height: 6px; }
+.cal-d .s { font-size: 10px; color: var(--text-2); font-weight: 600; }
+.cal-d.heat1 { background: color-mix(in srgb, var(--primary) 10%, var(--surface-2)); }
+.cal-d.heat2 { background: color-mix(in srgb, var(--primary) 20%, var(--surface-2)); }
+.cal-d.heat3 { background: color-mix(in srgb, var(--primary) 32%, var(--surface-2)); }
+.cal-d.heat4 { background: color-mix(in srgb, var(--primary) 46%, var(--surface-2)); }
+.cal-d.today { border-color: var(--primary); }
+.cal-d.pay::after { content: ""; position: absolute; inset: 3px; border-radius: 8px; border: 2px solid var(--pos); pointer-events: none; }
+.dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--muted); }
+.dot.fatura { background: var(--primary); }
+.dot.avulsa { background: var(--warn); }
+.dot.paid { background: var(--pos); }
+.legend .ring { display: inline-block; width: 10px; height: 10px; border-radius: 3px; border: 2px solid var(--pos); margin-right: 5px; vertical-align: -1px; }
+.cal-leg { flex-wrap: wrap; gap: 10px 14px; margin-top: 12px; }
+.cal-leg .dot { margin-right: 5px; }
+.suggest { display: flex; gap: 6px; overflow-x: auto; padding: 2px 0 12px; margin: 0 -2px; scrollbar-width: none; align-items: center; }
+.suggest::-webkit-scrollbar { display: none; }
+.suggest span { font-size: 12px; flex: none; }
+.suggest button { flex: none; border: 1px solid var(--line-strong); background: var(--surface-2); border-radius: 99px; padding: 6px 12px; font-size: 13px; font-weight: 600; color: var(--text-2); white-space: nowrap; }
+.suggest button:active { background: var(--primary-weak); }
+.field-switch { padding: 6px 0; border: 0; }
+.btn.light { background: #fff; color: #1d3fae; }
+.btn.light:hover { background: #eef3ff; }
+.updbar { position: fixed; left: 16px; right: 16px; bottom: calc(var(--nav-h) + env(safe-area-inset-bottom) + 84px); z-index: 85; display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px 10px 14px; border-radius: 14px; background: linear-gradient(135deg, var(--hero-1), var(--hero-2)); color: #fff; font-weight: 600; font-size: 14px; box-shadow: var(--shadow-lg); animation: up .25s ease-out; }
+.updbar span { flex: 1; }
+@media (min-width: 960px) { .updbar { left: auto; right: 28px; bottom: 28px; max-width: 380px; } }

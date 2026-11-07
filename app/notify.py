@@ -50,6 +50,10 @@ def deliver(conn, title, body, url="/", tag=None):
     ok = 0
     stamp = C.now().strftime("%Y-%m-%d %H:%M")
     msg = {"title": title, "body": body, "url": url, "tag": tag or url}
+    if (tag or "") in ("daily", "teto", "week"):
+        msg["actions"] = [{"action": "add", "title": "Lançar gasto"}]
+    elif (tag or "") in ("bills", "paid", "payday"):
+        msg["actions"] = [{"action": "open", "title": "Ver contas"}]
     for s in subs:
         r = push.send(s, msg)
         if r == "ok":
@@ -65,7 +69,7 @@ def deliver(conn, title, body, url="/", tag=None):
 
 def build(conn, now):
     """Lista de (chave, título, texto, url) que deveriam sair agora."""
-    cfg = finance.effective_cfg(db.get_cfg(conn), now.date())
+    cfg, _proj, _livre = finance.context(conn, now.date(), n=1)
     rules = cfg["notif"]["rules"]
     t = now.date()
     w = finance.week_info(conn, cfg, t)
@@ -129,11 +133,7 @@ def build(conn, now):
     if r.get("on") and due(now, r["time"]):
         dia = int(cfg.get("salario_dia") or 30)
         if finance.last_payday(t, dia) == t:
-            from . import projection as P
-            proj = P.project(cfg, db.rows(conn, "SELECT * FROM recurring"),
-                             db.rows(conn, "SELECT * FROM installments"),
-                             {(o["card"], o["month"]): o for o in db.rows(conn, "SELECT * FROM overrides")}, t, n=1)
-            m = proj["months"][0]
+            m = _proj["months"][0]
             body = (f"Planejado para guardar este mês: {brl(m['caixinha'])}. "
                     "Atualize o caixa e marque as contas que pagar.")
             out.append((f"payday:{t}", "Dia de salário", body, "/#contas", []))

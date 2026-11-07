@@ -5,7 +5,9 @@ from . import validate as V
 VERSION = 2
 TABLES = {
     "recurring": ["id", "name", "amount", "card", "due_day", "match"],
-    "installments": ["id", "name", "card", "amount", "total", "paid_count", "last_bill"],
+    "installments": ["id", "name", "card", "amount", "total", "paid_count", "last_bill", "original"],
+    "planned": ["id", "kind", "name", "amount", "month", "day", "note", "done"],
+    "goals": ["id", "name", "target", "saved", "kind", "note", "ordem", "share"],
     "payments": ["month", "key", "paid", "amount"],
     "overrides": ["card", "month", "amount", "note"],
     "spends": ["id", "date", "description", "amount", "category", "source", "ext_id", "ignored"],
@@ -20,6 +22,7 @@ SETTING_FIELDS = {
     "salario_data": V.iso_date, "ignore_terms": V.str_list, "pix_max": V.num, "ciclo_extra": V.money_dict,
     "cartoes": V.card_list, "cartao_venc": V.day_dict, "notif": V.notif,
     "auto": V.auto, "sync_auto": V.sync_auto, "salario_regra": V.salario_regra,
+    "nome": V.text(40, False), "meta_caixinha": V.num, "teto_auto": V.boolean,
 }
 # Guardados pelo app (não editáveis pela tela), mas fazem parte do backup.
 INTERNAL_SETTINGS = {"last_sync", "caixa_banco", "cartao_usado", "last_tick", "entradas", "last_force",
@@ -28,7 +31,12 @@ INTERNAL_SETTINGS = {"last_sync", "caixa_banco", "cartao_usado", "last_tick", "e
 RECURRING_SPEC = {"name": V.text(60), "amount": V.num, "card": V.text(30, False), "due_day": V.opt(V.posint(1, 31)),
                   "match": V.text(120, False)}
 INSTALLMENT_SPEC = {"name": V.text(60), "card": V.text(30), "amount": V.num,
-                    "total": V.posint(1, 600), "paid_count": V.posint(0, 600), "last_bill": V.opt(V.year_month)}
+                    "total": V.posint(1, 600), "paid_count": V.posint(0, 600), "last_bill": V.opt(V.year_month),
+                    "original": V.opt(V.num)}
+PLANNED_SPEC = {"kind": V.choice("saida", "entrada"), "name": V.text(60), "amount": V.num, "month": V.year_month,
+                "day": V.opt(V.posint(1, 31)), "note": V.text(120, False), "done": V.boolint}
+GOAL_SPEC = {"name": V.text(60), "target": V.num, "saved": V.num, "kind": V.text(20, False),
+             "note": V.text(160, False), "ordem": V.posint(0, 100), "share": V.posint(0, 100)}
 SPEND_SPEC = {"date": V.iso_date, "description": V.text(120), "amount": V.num,
               "category": V.text(30, False), "ignored": V.boolint}
 
@@ -66,6 +74,8 @@ def restore(conn, body):
         "push_subs": {"id": V.posint(1, 10**9), "endpoint": V.text(1000), "p256dh": V.text(200), "auth": V.text(100),
                       "label": V.text(80, False), "created": V.text(20), "last_ok": V.text(20, False),
                       "fails": V.posint(0, 1000)},
+        "planned": {"id": V.posint(1, 10**9), **PLANNED_SPEC},
+        "goals": {"id": V.posint(1, 10**9), **GOAL_SPEC},
         "notif_log": {"key": V.text(120), "sent_at": V.text(20), "title": V.text(200, False), "body": V.text(500, False)},
     }
     parsed = {}

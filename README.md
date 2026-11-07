@@ -4,6 +4,12 @@ App pessoal de finanças, instalável no Chrome (PWA). Mostra as contas do mês,
 
 - **Telas:** Início, Contas, Gastos, Planejamento (projeção com simulador de teto + parcelas) e Ajustes.
 - **Notificações:** lembrete diário de gastos, alerta do teto (80%/100%), contas a vencer, resumo semanal, dia do salário e sincronização diária com o banco (opcional). Têm horário de silêncio e cada uma pode ser ligada, desligada e ter o horário trocado.
+- **Livre até o salário:** quanto dá para gastar até o próximo salário sem ficar no vermelho, por dia, e onde você termina no ritmo atual.
+- **Teto automático (opcional):** defina quanto quer guardar por mês e o teto semanal se ajusta sozinho.
+- **Metas em potes separados:** reserva de emergência e casa própria (MCMV), com previsão de quando cada uma chega.
+- **Avulsos:** despesas e entradas que não se repetem (caução, presentes, horas extras), nas contas do mês e na projeção.
+- **Calendário** de vencimentos, salário e gastos por dia; **Raio-X** com ritmo, comparação com o salário anterior, transporte, assinaturas e juros de parcelamentos.
+- **Lançamento rápido** com as descrições mais frequentes e a categoria aprendida; botão "Lançar gasto" direto na notificação.
 - **Funciona no celular e no computador**, com tema claro/escuro e abertura rápida mesmo com o servidor dormindo.
 
 ## Configuração no Render (uma vez)
