@@ -147,17 +147,9 @@
     ]
    }
   },
-  "eventos_pendentes": [
-   [
-    "paid:2026-11:rec:4",
-    "Internet (Giga Mais) paga",
-    "R$ 93,33 em 30/10.",
-    "/#contas",
-    "2026-11-07 12:29"
-   ]
-  ],
-  "last_auto_sync": "2026-11-07T12:00",
-  "last_force": "2026-11-07T10:40",
+  "eventos_pendentes": [],
+  "last_auto_sync": "2026-11-07T12:27",
+  "last_force": "2026-11-07T12:29",
   "last_sync": "2026-11-07 12:29",
   "last_tick": "2026-11-07 12:27",
   "sync_detalhe": [
