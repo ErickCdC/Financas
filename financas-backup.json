@@ -149,7 +149,7 @@
   "last_auto_sync": "2026-11-07T12:00",
   "last_force": "2026-11-07T10:40",
   "last_sync": "2026-11-07 11:35",
-  "last_tick": "2026-11-07 12:17",
+  "last_tick": "2026-11-07 12:18",
   "sync_detalhe": [
    {
     "banco": "Nubank",
@@ -331,7 +331,7 @@
   {
    "month": "2026-11",
    "key": "rec:4",
-   "paid": 1,
+   "paid": 0,
    "amount": 93.33
   },
   {
@@ -481,7 +481,7 @@
   {
    "month": "2026-11",
    "key": "rec:8",
-   "paid": 0,
+   "paid": 1,
    "amount": null
   }
  ],
