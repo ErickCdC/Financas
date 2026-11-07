@@ -507,3 +507,7 @@ button.catrow:hover { background: var(--surface-2); }
   padding: 10px 12px 10px 14px; border-radius: 14px; background: linear-gradient(135deg, var(--hero-1), var(--hero-2)); color: #fff; font-weight: 600; font-size: 14px; box-shadow: var(--shadow-lg); animation: up .25s ease-out; }
 .updbar span { flex: 1; }
 @media (min-width: 960px) { .updbar { left: auto; right: 28px; bottom: 28px; max-width: 380px; } }
+.cash-note { font-size: 12.5px; margin-top: 8px; }
+.cal-title { font-size: 12.5px; margin-bottom: 10px; }
+.monthnav .m { text-transform: none; }
+.cal-d .n.sm { font-size: 10.5px; letter-spacing: -.02em; }

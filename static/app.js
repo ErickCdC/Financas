@@ -18,11 +18,10 @@ const ddmm = iso => iso.slice(8, 10) + "/" + iso.slice(5, 7);
 const daysBetween = (a, b) => Math.round((parse(b) - parse(a)) / 86400000);
 const monthName = ym => { const [y, m] = ym.split("-").map(Number); return `${MES[m - 1]} ${y}`; };
 const monthOnly = ym => MES[Number(ym.slice(5, 7)) - 1];
-// dia do salário dentro do mês (fevereiro curto etc.)
-const payday = (ym, dia) => { const [y, m] = ym.split("-").map(Number); const last = new Date(y, m, 0).getDate(); return `${String(Math.min(dia, last)).padStart(2, "0")}/${String(m).padStart(2, "0")}`; };
-// um "mês" do planejamento = o salário daquele mês, que paga as contas do mês seguinte
-const salLabel = (ym, c) => `Salário de ${payday(ym, c.salario_dia || 30)} → paga ${monthOnly(addMonths(ym, 1))}`;
-const dueOf = (ym, card, c) => { const d = (c.cartao_venc || {})[card]; return d ? payday(addMonths(ym, 1), d) : null; };
+// data do salário de cada mês (último dia útil ou dia fixo), calculada no servidor
+const payday = ym => { const iso = ((S.d && S.d.paydays) || {})[ym]; return iso ? ddmm(iso) : ""; };
+// um "mês" = um salário: paga as contas daquele mês (faturas com as compras do mês, aluguel, faculdade...)
+const salLabel = ym => `Salário de ${payday(ym)} · contas de ${monthOnly(ym)}`;
 const addMonths = (ym, n) => { const [y, m] = ym.split("-").map(Number); const t = y * 12 + (m - 1) + n; return `${Math.floor(t / 12)}-${String(t % 12 + 1).padStart(2, "0")}`; };
 const store = {
   get(k) { try { return localStorage.getItem(k); } catch (_) { return null; } },
@@ -209,13 +208,14 @@ VIEWS.inicio = d => {
         <div class="card-head"><div><div class="eyebrow">Livre até o salário de ${ddmm(w.proximo_salario)}</div>
           <div class="v-big num ${d.livre.livre <= 0 ? "neg" : ""}">${brl(d.livre.livre)}</div></div>
           <span class="chip blue num">≈ ${brl(d.livre.por_dia)}/dia</span></div>
-        <div class="lead">É o que sobra depois de todas as contas e faturas que esse dinheiro paga${d.livre.meta ? `, já guardando ${brl0(d.livre.meta)}` : ""}.</div>
+        <div class="lead">O que sobra do salário de ${payday(d.ciclo)} depois das contas de ${esc(monthOnly(d.ciclo))}, contando o que já está em conta${d.livre.meta ? ` e guardando ${brl0(d.livre.meta)}` : ""}.</div>
+        ${d.config.caixa_banco != null && d.livre.livre > d.config.caixa_banco ? `<div class="sub muted cash-note">Em conta hoje: <b class="num">${brl(d.config.caixa_banco)}</b>. Até o salário cair, Pix e débito saem daqui; o resto só no cartão.</div>` : ""}
         ${(d.insights || []).filter(i => i.id === "ritmo").map(insightCard).join("")}
       </section>
       ${alerts.length ? `<div class="stack">${alerts.join("")}</div>` : ""}
       <div class="grid two">
-        <a class="card stat" href="#contas"><div class="k">${icon("bills")}Falta pagar</div><div class="v num">${brl0(d.mes.falta)}</div><div class="s">vence em ${esc(monthOnly(d.mes.ym))}</div></a>
-        <a class="card stat" href="#plano"><div class="k">${icon("piggy")}Caixinha prevista</div><div class="v num ${m0.caixinha < 0 ? "neg" : ""}">${brl0(m0.caixinha)}</div><div class="s">do salário de ${payday(m0.ym, d.config.salario_dia || 30)} · teto ${brl0(d.config.teto_semanal)}/sem</div></a>
+        <a class="card stat" href="#contas"><div class="k">${icon("bills")}Falta pagar</div><div class="v num">${brl0(d.mes.falta)}</div><div class="s">contas de ${esc(monthOnly(d.mes.ref))}</div></a>
+        <a class="card stat" href="#plano"><div class="k">${icon("piggy")}Caixinha prevista</div><div class="v num ${m0.caixinha < 0 ? "neg" : ""}">${brl0(m0.caixinha)}</div><div class="s">do salário de ${payday(m0.ym)} · teto ${brl0(d.config.teto_semanal)}/sem</div></a>
         <div class="card stat"><div class="k">${icon("wallet")}Desde o salário</div><div class="v num">${brl0(w.desde_total)}</div><div class="s">desde ${ddmm(w.desde)}</div></div>
         <div class="card stat"><div class="k">${icon("calendar")}Próximo salário</div><div class="v num">${ddmm(w.proximo_salario)}</div><div class="s">${nextPay <= 0 ? "hoje" : `em ${nextPay} ${nextPay === 1 ? "dia" : "dias"}`}</div></div>
       </div>
@@ -255,11 +255,11 @@ VIEWS.contas = d => {
   };
   return `
   <div class="monthnav"><button class="iconbtn" data-act="mnav" data-d="-1" aria-label="Mês anterior">${icon("left")}</button>
-    <div class="m-wrap"><div class="m">${esc(monthName(m.ym))}</div><div class="m-sub">Contas que vencem em ${esc(monthOnly(m.ym))}</div></div><button class="iconbtn" data-act="mnav" data-d="1" aria-label="Próximo mês">${icon("right")}</button></div>
+    <div class="m-wrap"><div class="m">Contas de ${esc(monthName(m.ref))}</div><div class="m-sub">Pagas com o salário de ${ddmm(m.salario)}</div></div><button class="iconbtn" data-act="mnav" data-d="1" aria-label="Próximo mês">${icon("right")}</button></div>
   <div class="grid cols2">
     <div class="stack">
       <section class="card">
-        <div class="eyebrow">Falta pagar · vence em ${esc(monthOnly(m.ym))}</div>
+        <div class="eyebrow">Falta pagar · contas de ${esc(monthOnly(m.ref))}</div>
         <div class="num"><span class="v-big">${brl(m.falta)}</span></div>
         <div class="bar ok"><i data-w="${pct}"></i></div>
         <div class="lead">Pago ${brl(m.pago)} de ${brl(m.total)}${m.sem_valor ? ` · ${m.sem_valor} sem valor` : ""}</div>
@@ -268,7 +268,7 @@ VIEWS.contas = d => {
     </div>
     <div class="stack">
       <div class="monthnav"><div class="seg">${[["lista", "Lista"], ["cal", "Calendário"]].map(([k, l]) => `<button data-act="contasview" data-v="${k}" class="${S.contasView === k ? "on" : ""}">${l}</button>`).join("")}</div>
-        <button class="btn sm secondary" data-act="addplanned" data-kind="saida" data-month="${m.ym}">${icon("plus")}Avulsa</button></div>
+        <button class="btn sm secondary" data-act="addplanned" data-kind="saida" data-month="${m.ref}">${icon("plus")}Avulsa</button></div>
       ${S.contasView === "cal" ? `<section class="card">${calendarGrid(m, t)}</section>` :
       `<section class="card flush"><div class="list">${group("Contas fixas", "fixa")}${group("Despesas avulsas", "avulsa")}${group("Faturas dos cartões", "fatura")}</div></section>`}
       ${(m.entradas_avulsas || []).length ? `<section class="card flush"><div class="card-head"><h3>Entradas extras previstas</h3></div><div class="list">${m.entradas_avulsas.map(plannedRow).join("")}</div></section>` : ""}
@@ -277,30 +277,31 @@ VIEWS.contas = d => {
 };
 
 function calendarGrid(m, t) {
-  const [y, mo] = m.ym.split("-").map(Number);
-  const first = new Date(y, mo - 1, 1), dim = new Date(y, mo, 0).getDate();
+  const [a, b] = m.periodo, first = parse(a), nDays = daysBetween(a, b) + 1;
   const lead = (first.getDay() + 6) % 7;
   const byDay = {};
   m.items.forEach(i => { if (i.due) (byDay[i.due] = byDay[i.due] || []).push(i); });
   const g = m.gastos_dia || {}, max = Math.max(1, ...Object.values(g));
   let cells = ["seg", "ter", "qua", "qui", "sex", "sáb", "dom"].map(x => `<div class="cal-h">${x}</div>`).join("");
   for (let i = 0; i < lead; i++) cells += `<div></div>`;
-  for (let dd = 1; dd <= dim; dd++) {
-    const iso = `${m.ym}-${String(dd).padStart(2, "0")}`;
+  for (let k = 0; k < nDays; k++) {
+    const dt = new Date(first.getFullYear(), first.getMonth(), first.getDate() + k);
+    const iso = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}-${String(dt.getDate()).padStart(2, "0")}`;
+    const dd = dt.getDate() === 1 || k === 0 ? `${dt.getDate()}/${String(dt.getMonth() + 1).padStart(2, "0")}` : dt.getDate();
     const its = byDay[iso] || [], spent = g[iso] || 0;
     const heat = spent ? Math.min(4, Math.ceil((spent / max) * 4)) : 0;
     const dots = its.map(i => `<i class="dot ${i.paid ? "paid" : i.group}"></i>`).join("");
     cells += `<button type="button" class="cal-d heat${heat} ${iso === t ? "today" : ""} ${iso === m.salario ? "pay" : ""}" data-act="calday" data-date="${iso}" aria-label="${dd}">
-      <span class="n">${dd}</span><span class="dots">${dots}</span>${spent ? `<span class="s num">${brl0(spent).replace("R$", "").trim()}</span>` : ""}</button>`;
+      <span class="n ${typeof dd === "string" ? "sm" : ""}">${dd}</span><span class="dots">${dots}</span>${spent ? `<span class="s num">${brl0(spent).replace("R$", "").trim()}</span>` : ""}</button>`;
   }
-  return `<div class="cal">${cells}</div>
+  return `<div class="cal-title muted">De ${ddmm(a)} (salário) a ${ddmm(b)}</div><div class="cal">${cells}</div>
     <div class="legend cal-leg"><span><i class="dot fixa"></i>conta</span><span><i class="dot fatura"></i>fatura</span><span><i class="dot avulsa"></i>avulsa</span><span><i class="dot paid"></i>paga</span><span><i class="ring"></i>salário</span></div>`;
 }
 function plannedRow(p) {
   const neg = p.kind === "saida";
   return `<button class="item ${p.done ? "off" : ""}" data-act="editplanned" data-id="${p.id}">
     <span class="ic ${neg ? "" : "blue"}">${icon(neg ? "bills" : "piggy")}</span>
-    <span class="body"><span class="t">${esc(p.name)}</span><span class="sub">${esc(monthName(p.month))}${p.day ? ` · dia ${p.day}` : ""}${p.note ? " · " + esc(p.note) : ""}${p.done ? (neg ? " · paga" : " · recebida") : ""}</span></span>
+    <span class="body"><span class="t">${esc(p.name)}</span><span class="sub">${p.kind === "saida" ? "contas de " : "salário de "}${esc(monthName(p.month))}${p.day ? ` · dia ${p.day}` : ""}${p.note ? " · " + esc(p.note) : ""}${p.done ? (neg ? " · paga" : " · recebida") : ""}</span></span>
     <span class="amt num ${neg ? "" : "pos"}">${neg ? "−" : "+"}${brl(p.amount)}</span></button>`;
 }
 
@@ -354,7 +355,7 @@ function projChart(months, simTeto, teto) {
     svg += `<rect class="${v >= 0 ? "barp" : "barn"}" x="${cx - bw / 2}" y="${y}" width="${bw}" height="${Math.max(h, 2)}" rx="6"/>`;
     svg += `<rect class="hit" x="${cx - step / 2}" y="0" width="${step}" height="${H}" data-act="month" data-ym="${m.ym}"><title>${esc(monthName(m.ym))}</title></rect>`;
     svg += `<text class="val" x="${cx}" y="${v >= 0 ? y - 6 : y + h + 13}" text-anchor="middle">${esc(brl0(v).replace("R$", "").trim())}</text>`;
-    svg += `<text class="lbl" x="${cx}" y="${H - 8}" text-anchor="middle">${esc(payday(m.ym, (S.d.config.salario_dia || 30)))}</text>`;
+    svg += `<text class="lbl" x="${cx}" y="${H - 8}" text-anchor="middle">${esc(payday(m.ym))}</text>`;
     pts.push([cx, zero - accs[i] * scale]);
   });
   svg += `<polyline class="acc" points="${pts.map(p => p.join(",")).join(" ")}"/>` + pts.map(p => `<circle class="accdot" cx="${p[0]}" cy="${p[1]}" r="4"/>`).join("");
@@ -385,7 +386,7 @@ VIEWS.plano = d => {
     (d.avulsos || []).forEach(p => (groups[p.month] = groups[p.month] || []).push(p));
     return `<div class="monthnav">${seg}</div>
     <div class="btn-row"><button class="btn sm" data-act="addplanned" data-kind="saida">${icon("plus")}Despesa</button><button class="btn sm secondary" data-act="addplanned" data-kind="entrada">${icon("plus")}Entrada extra</button></div>
-    <p class="lead">Coisas que não acontecem todo mês: caução, presente, IPVA, horas extras, reembolso. Entram nas contas do mês e na projeção.</p>
+    <p class="lead">Coisas que não acontecem todo mês: caução, presente, IPVA, horas extras, reembolso. Cada uma é conta (ou entrada) de um mês e entra no salário desse mês.</p>
     ${Object.keys(groups).length ? Object.entries(groups).map(([ym, list]) => `<h2 class="sec">${esc(monthName(ym))}</h2><section class="card flush"><div class="list">${list.map(plannedRow).join("")}</div></section>`).join("") : `<div class="empty">${icon("calendar")}<div>Nada planejado ainda.</div></div>`}`;
   }
   if (S.planTab === "parcelas") {
@@ -413,7 +414,7 @@ VIEWS.plano = d => {
           <span class="chip ${c.aumento_on ? "blue" : ""}">${c.aumento_on ? "com aumento" : "sem aumento"}</span></div>
         <div class="chart" id="simchart">${P.chart}</div>
         <div class="legend"><span><i class="lg-bar"></i>Caixinha de cada salário</span><span><i class="lg-acc"></i>Acumulado</span><span>Toque num mês</span></div>
-        <div class="tap-hint">Cada barra é um salário. Ele paga as faturas e contas do mês seguinte.</div>
+        <div class="tap-hint">Cada barra é um salário: ele paga as contas daquele mês e o que você gasta até ele cair.</div>
       </section>
       <section class="card">
         <div class="card-head"><h3>Simular teto semanal</h3><b class="num" id="simlabel">${brl0(sim)}/sem</b></div>
@@ -428,7 +429,7 @@ VIEWS.plano = d => {
       <div class="stack" id="simmonths">${P.months}</div>
       <section class="card flush"><div class="card-head"><h3>Faturas informadas</h3><button class="btn sm ghost" data-act="setov">${icon("plus")}Informar</button></div>
         <div class="list">${d.overrides.length ? d.overrides.map(o => `<button class="item" data-act="editov" data-card="${esc(o.card)}" data-month="${esc(o.month)}" data-amount="${o.amount}" data-note="${esc(o.note || "")}">
-          <span class="ic blue">${icon("card")}</span><span class="body"><span class="t">${esc(o.card)}</span><span class="sub">fatura que vence em ${esc(monthName(addMonths(o.month, 1)))}${String(o.note || "").startsWith("Banco:") ? " · do banco" : ""}</span></span><span class="amt num">${brl(o.amount)}</span></button>`).join("") : `<div class="empty">Nenhuma. As faturas usam a previsão.</div>`}</div></section>
+          <span class="ic blue">${icon("card")}</span><span class="body"><span class="t">${esc(o.card)}</span><span class="sub">fatura de ${esc(monthName(o.month))}${String(o.note || "").startsWith("Banco:") ? " · do banco" : ""}</span></span><span class="amt num">${brl(o.amount)}</span></button>`).join("") : `<div class="empty">Nenhuma. As faturas usam a previsão.</div>`}</div></section>
     </div>
   </div>`;
 };
@@ -443,10 +444,10 @@ function simParts(d, sim) {
     chart: projChart(M, sim, c.teto_semanal),
     btns: sim === c.teto_semanal ? "" : `<div class="btn-row"><button class="btn sm" data-act="usesim">Usar ${brl0(sim)} como teto</button><button class="btn sm ghost" data-act="resetsim">Voltar ao atual</button></div>`,
     months: M.map(m => { const cx = simCaixinha(m, sim); return `<details class="card month" data-ym="${m.ym}" ${open.has(m.ym) ? "open" : ""}>
-        <summary class="card-head"><div><div class="eyebrow">${esc(salLabel(m.ym, c))}</div><b class="num ${cx < 0 ? "neg" : "pos"}">${brl(cx)}</b> <span class="muted">para a caixinha</span></div>${icon("right")}</summary>
+        <summary class="card-head"><div><div class="eyebrow">${esc(salLabel(m.ym))}</div><b class="num ${cx < 0 ? "neg" : "pos"}">${brl(cx)}</b> <span class="muted">para a caixinha</span></div>${icon("right")}</summary>
         <div class="kv"><span>Entra${m.decimo ? " (inclui 13º)" : ""}${m.caixa ? " + caixa" : ""}${m.recebido ? " · salário já no caixa" : ""}</span><span class="num">${brl(m.entra)}</span></div>
-        ${m.cartoes.map(k => `<div class="kv"><span class="muted">Fatura ${esc(k.card)}${dueOf(m.ym, k.card, c) ? ` (vence ${dueOf(m.ym, k.card, c)})` : ""}${k.source === "informado" ? " · informada" : ""}</span><span class="num">−${brl(k.total)}</span></div>`).join("")}
-        <div class="kv"><span class="muted">Contas fixas de ${esc(monthOnly(addMonths(m.ym, 1)))}</span><span class="num">−${brl(m.fixas)}</span></div>
+        ${m.cartoes.map(k => `<div class="kv"><span class="muted">Fatura ${esc(k.card)}${k.due ? ` (vence ${ddmm(k.due)})` : ""}${k.source === "informado" ? " · informada" : ""}</span><span class="num">−${brl(k.total)}</span></div>`).join("")}
+        <div class="kv"><span class="muted">Contas fixas de ${esc(monthOnly(m.ym))}</span><span class="num">−${brl(m.fixas)}</span></div>
         ${(m.avulsas_itens || []).map(p => `<div class="kv"><span class="muted">${esc(p.name)} (avulsa)</span><span class="num">−${brl(p.amount)}</span></div>`).join("")}
         ${(m.extras_itens || []).map(p => `<div class="kv"><span class="muted">${esc(p.name)} (entrada extra)</span><span class="num pos">+${brl(p.amount)}</span></div>`).join("")}
         <div class="kv"><span class="muted">Gasto livre (${weeks(m).toFixed(1)} sem × ${brl0(sim)})</span><span class="num">−${brl(sim * weeks(m))}</span></div>
@@ -504,7 +505,9 @@ VIEWS.ajustes = d => {
       <div class="setting field-switch"><div class="body"><div class="t">Teto automático</div><div class="sub">Ajusta o teto semanal para sobrar a meta</div></div>${sw("teto_auto", c.teto_auto)}</div>
       ${moneyIn("salario", c.salario, "Salário líquido")}
       ${moneyIn("teto_semanal", c.teto_semanal, "Teto semanal")}
-      <label class="field"><span>Dia do salário</span><input type="number" inputmode="numeric" min="1" max="31" data-set="salario_dia" data-kind="int" value="${c.salario_dia}"></label>
+      <label class="field"><span>Quando cai o salário</span><select data-set="salario_tipo" data-kind="text"><option value="util" ${c.salario_tipo !== "dia" ? "selected" : ""}>Último dia útil do mês</option><option value="dia" ${c.salario_tipo === "dia" ? "selected" : ""}>Dia fixo</option></select>
+        <small>Próximo: ${ddmm(d.semana.proximo_salario)}</small></label>
+      ${c.salario_tipo === "dia" ? `<label class="field"><span>Dia fixo</span><input type="number" inputmode="numeric" min="1" max="31" data-set="salario_dia" data-kind="int" value="${c.salario_dia}"></label>` : ""}
       <div class="field"><span>Caixa hoje</span><div class="money"><input inputmode="decimal" data-set="caixa" data-kind="num" value="${esc(String(c.caixa).replace(".", ","))}"></div>
         <small>${c.caixa_desatualizado ? '<span class="warn">Desatualizado — informe o saldo de agora.</span>' : `Saldo nas contas (${esc(monthName(c.caixa_ref || d.hoje.slice(0, 7)))})`}${c.caixa_banco != null ? ` · <button class="btn ghost sm" data-act="usebank">usar ${brl(c.caixa_banco)} do banco</button>` : ""}</small></div>
       ${moneyIn("decimo1", c.decimo1, "13º — 1ª parcela")}
@@ -539,7 +542,7 @@ VIEWS.ajustes = d => {
       <div class="setting"><div class="body"><div class="t">Pedir dados novos ao banco</div><div class="sub">O provedor permite no máximo 1 vez por hora por banco${c.last_force ? ` · último pedido ${esc(fmtStamp(c.last_force.replace("T", " ")))}` : ""}</div></div>${sw("sync_auto.forcar", sa.forcar)}</div>
       <div class="group-label">O que fazer sozinho</div>
       <div class="setting"><div class="body"><div class="t">Caixa pelo saldo das contas</div><div class="sub">Saldo menos as contas do mês ainda não pagas</div></div>${sw("auto.caixa", au.caixa)}</div>
-      <div class="setting"><div class="body"><div class="t">Salário real</div><div class="sub">${lastIncome(c) || "Detecta o crédito do salário perto do dia " + c.salario_dia}</div></div>${sw("auto.salario", au.salario)}</div>
+      <div class="setting"><div class="body"><div class="t">Salário real</div><div class="sub">${lastIncome(c) || "Detecta o crédito do salário perto do dia do pagamento"}</div></div>${sw("auto.salario", au.salario)}</div>
       <div class="setting"><div class="body"><div class="t">Marcar contas e faturas pagas</div><div class="sub">Pelo pagamento no extrato. Nas contas fixas, use “Como aparece no extrato”</div></div>${sw("auto.pagamentos", au.pagamentos)}</div>
       <div class="setting"><div class="body"><div class="t">Valor real das faturas</div><div class="sub">Usa a fatura fechada e a aberta do banco no lugar da previsão</div></div>${sw("auto.faturas", au.faturas)}</div>
       <div class="setting"><div class="body"><div class="t">Avançar parcelas</div><div class="sub">Conta a parcela quando a fatura é paga ou vence</div></div>${sw("auto.parcelas", au.parcelas)}</div>` : ""}
@@ -796,7 +799,7 @@ const recFields = () => [
 const plannedFields = kind => [
   { name: "name", label: kind === "saida" ? "Despesa" : "Entrada", required: true, placeholder: kind === "saida" ? "Ex.: caução, presente, IPVA" : "Ex.: horas extras, reembolso" },
   { name: "amount", label: "Valor", type: "money", required: true },
-  { name: "month", label: kind === "saida" ? "Mês da despesa" : "Mês em que recebe", type: "select", options: Array.from({ length: 13 }, (_, i) => { const ym = addMonths(S.d.hoje.slice(0, 7), i - 1); return [ym, monthName(ym)]; }) },
+  { name: "month", label: kind === "saida" ? "Conta de qual mês (paga com o salário desse mês)" : "Recebe junto com o salário de", type: "select", options: Array.from({ length: 13 }, (_, i) => { const ym = addMonths(S.d.ciclo, i - 1); return [ym, monthName(ym)]; }) },
   { name: "day", label: "Dia (opcional)", type: "number", min: 1, max: 31, hint: kind === "saida" ? "Com o dia, entra no calendário e nos lembretes" : "" },
   { name: "note", label: "Observação" },
   { name: "done", label: kind === "saida" ? "Já paguei" : "Já recebi", type: "checkbox", hint: "Marcado, deixa de contar na projeção" },
@@ -815,7 +818,7 @@ const A = {
     const its = m.items.filter(i => i.due === iso);
     const sp = S.d.semana.lista.filter(s => s.date === iso);
     const pay = iso === m.salario;
-    const body = `${pay ? notice("", "piggy", `<b>Dia do salário.</b> Esse dinheiro paga as contas de ${monthOnly(addMonths(m.ym, 1))}.`) : ""}
+    const body = `${pay ? notice("", "piggy", `<b>Dia do salário.</b> Esse dinheiro paga as contas de ${monthOnly(m.ref)}.`) : ""}
       ${its.length ? `<div class="list card flush">${its.map(i => `<div class="item"><span class="ic ${i.group === "fatura" ? "blue" : ""}">${icon(i.group === "fatura" ? "card" : "bills")}</span><span class="body"><span class="t">${esc(i.name)}</span><span class="sub">${i.paid ? "paga" : i.estimated ? "previsto" : "a pagar"}</span></span><span class="amt num">${i.amount == null ? "—" : brl(i.amount)}</span></div>`).join("")}</div>` : ""}
       ${sp.length ? `<h2 class="sec">Gastos</h2>${spendList(sp, "")}` : (!its.length && !pay ? `<div class="empty">Nada neste dia.</div>` : "")}`;
     openDetail({ eyebrow: `${DSEM_LONG[dt.getDay()]}, ${dt.getDate()} de ${MES[dt.getMonth()]}`, title: its.length ? `${its.length} conta(s) · ${brl(its.reduce((a, i) => a + (i.amount || 0), 0))}` : brl(sumSp(sp)), body,
@@ -824,7 +827,7 @@ const A = {
   addplanned: el => {
     const kind = el.dataset.kind || "saida";
     openSheet({ title: kind === "saida" ? "Nova despesa avulsa" : "Nova entrada extra", fields: plannedFields(kind),
-      values: { month: el.dataset.month || addMonths(S.d.hoje.slice(0, 7), 1) }, onSave: v => api("/api/planned", { ...v, kind }) });
+      values: { month: el.dataset.month || S.d.ciclo }, onSave: v => api("/api/planned", { ...v, kind }) });
   },
   editplanned: el => {
     const p = (S.d.avulsos || []).find(x => x.id === Number(el.dataset.id)); if (!p) return;
@@ -866,14 +869,14 @@ const A = {
     const c = S.d.config, sim = S.simTeto ?? c.teto_semanal;
     const weeks = m.semanas_x || m.semanas;
     const cx = simCaixinha(m, sim);
-    const parts = m.cartoes.map(k => `<div class="kv"><span class="muted">Fatura ${esc(k.card)}${dueOf(m.ym, k.card, c) ? ` (vence ${dueOf(m.ym, k.card, c)})` : ""}${k.source === "informado" ? " · informada" : ""}</span><span class="num">−${brl(k.total)}</span></div>
+    const parts = m.cartoes.map(k => `<div class="kv"><span class="muted">Fatura ${esc(k.card)}${k.due ? ` (vence ${ddmm(k.due)})` : ""}${k.source === "informado" ? " · informada" : ""}</span><span class="num">−${brl(k.total)}</span></div>
       ${(k.parts || []).map(p => `<div class="kv sub"><span>${esc(p.name)}</span><span class="num">${brl(p.amount)}</span></div>`).join("")}`).join("");
     openDetail({
-      eyebrow: salLabel(m.ym, c), title: `<span class="${cx < 0 ? "neg" : "pos"}">${brl(cx)}</span>`, sub: "para a caixinha",
+      eyebrow: salLabel(m.ym), title: `<span class="${cx < 0 ? "neg" : "pos"}">${brl(cx)}</span>`, sub: "para a caixinha",
       body: `<div class="card">
         <div class="kv"><span>Entra${m.decimo ? " (inclui 13º)" : ""}${m.caixa ? " + caixa" : ""}${m.recebido ? " · salário já no caixa" : ""}</span><span class="num">${brl(m.entra)}</span></div>
         ${parts}
-        <div class="kv"><span class="muted">Contas fixas de ${esc(monthOnly(addMonths(m.ym, 1)))}</span><span class="num">−${brl(m.fixas)}</span></div>
+        <div class="kv"><span class="muted">Contas fixas de ${esc(monthOnly(m.ym))}</span><span class="num">−${brl(m.fixas)}</span></div>
         ${(m.avulsas_itens || []).map(p => `<div class="kv"><span class="muted">${esc(p.name)} (avulsa)</span><span class="num">−${brl(p.amount)}</span></div>`).join("")}
         ${(m.extras_itens || []).map(p => `<div class="kv"><span class="muted">${esc(p.name)} (entrada extra)</span><span class="num pos">+${brl(p.amount)}</span></div>`).join("")}
         <div class="kv"><span class="muted">Gasto livre (${weeks.toFixed(1)} sem × ${brl0(sim)})</span><span class="num">−${brl(sim * weeks)}</span></div>
@@ -906,10 +909,10 @@ const A = {
   editrec: el => { const r = S.d.recorrentes.find(x => x.id === Number(el.dataset.id)); openSheet({ title: r.name, fields: recFields(), values: { ...r, card: r.card || "", due_day: r.due_day ?? "" }, onSave: v => api("/api/recurring", { ...v, id: r.id }), onDelete: () => api("/api/recurring", { id: r.id, delete: true }) }); },
   setov: () => openSheet({
     title: "Informar fatura", desc: "Substitui a previsão daquele mês.",
-    fields: [{ name: "card", label: "Cartão", type: "select", options: S.d.config.cartoes }, { name: "month", label: "Fatura que vence em", type: "select", options: S.d.proj.months.map(m => [m.ym, monthName(addMonths(m.ym, 1))]) }, { name: "amount", label: "Valor", type: "money", required: true }, { name: "note", label: "Observação" }],
+    fields: [{ name: "card", label: "Cartão", type: "select", options: S.d.config.cartoes }, { name: "month", label: "Fatura de", type: "select", options: S.d.proj.months.map(m => [m.ym, `${monthName(m.ym)} (paga com o salário de ${payday(m.ym)})`]) }, { name: "amount", label: "Valor", type: "money", required: true }, { name: "note", label: "Observação" }],
     values: { card: S.d.config.cartoes[0], month: S.d.proj.months[0].ym }, onSave: v => api("/api/overrides", v),
   }),
-  editov: el => openSheet({ title: `${el.dataset.card} · vence em ${monthName(addMonths(el.dataset.month, 1))}`, fields: [{ name: "amount", label: "Valor", type: "money", required: true }, { name: "note", label: "Observação" }],
+  editov: el => openSheet({ title: `Fatura ${el.dataset.card} de ${monthName(el.dataset.month)}`, fields: [{ name: "amount", label: "Valor", type: "money", required: true }, { name: "note", label: "Observação" }],
     values: { amount: Number(el.dataset.amount), note: el.dataset.note }, onSave: v => api("/api/overrides", { card: el.dataset.card, month: el.dataset.month, ...v }),
     onDelete: () => api("/api/overrides", { card: el.dataset.card, month: el.dataset.month, delete: true }) }),
   addcard: () => openSheet({ title: "Novo cartão", fields: [{ name: "name", label: "Nome", required: true }, { name: "venc", label: "Dia de vencimento", type: "number", min: 1, max: 31 }],

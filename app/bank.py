@@ -198,7 +198,7 @@ def progress():
 
 def fetch(cfg, t):
     """Lê contas, transações e faturas. Devolve um dicionário com tudo (sem tocar no banco local)."""
-    pay = last_payday(t, int(cfg.get("salario_dia") or 30))
+    pay = last_payday(t, cfg)
     since = max(pay - timedelta(days=8), t - timedelta(days=45)).isoformat()
     _step("Conectando ao banco", done=0, total=8)
     acc = banco_post("/accounts/list", {})
@@ -295,8 +295,7 @@ def apply(conn, data, t):
     estornos = reconcile_refunds(conn)
 
     # 2) salário e 13º
-    dia = int(cfg.get("salario_dia") or 30)
-    pay = last_payday(t, dia)
+    pay = last_payday(t, cfg)
     income_ym = P.ym_of(pay)
     lo, hi = (pay - timedelta(days=7)).isoformat(), (pay + timedelta(days=4)).isoformat()
     minimo = float(cfg["salario"]) * (float((cfg.get("salario_regra") or {}).get("minimo_pct", 60)) / 100)
@@ -422,11 +421,15 @@ def apply(conn, data, t):
     db.put_setting(conn, "caixa_banco", round(caixa_banco, 2))
     db.put_setting(conn, "cartao_usado", used)
     if auto.get("caixa", True):
+        # contas dos salários que já caíram e ainda não foram pagas saem do saldo
         cfg2 = db.get_cfg(conn)
-        panel = finance.month_panel(conn, cfg2, P.ym_of(t), t)
+        x = finance.income_month(t, cfg2)
+        # chave interna x = contas de referência x-1, pagas com o salário que já caiu
+        panel = finance.month_panel(conn, cfg2, x, t)
         pend = sum(i["amount"] or 0 for i in panel["items"] if not i["paid"])
         db.put_setting(conn, "caixa", round(caixa_banco - pend, 2))
         db.put_setting(conn, "caixa_ref", P.ym_of(t))
+        db.put_setting(conn, "caixa_data", t.isoformat())
     finance.advance_installments(conn, db.get_cfg(conn), t)
     db.put_setting(conn, "last_sync", C.now().strftime("%Y-%m-%d %H:%M"))
     return {"ok": True, "novos": added, "ja_lancados": adopted, "vistos": seen, "caixa_banco": round(caixa_banco, 2),

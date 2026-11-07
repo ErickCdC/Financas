@@ -75,7 +75,8 @@ def planned_for(planned, ym, k, cur):
     for p in planned or []:
         if p.get("done"):
             continue
-        if p["kind"] == "saida" and (p["month"] == nxt or (k == 0 and p["month"] <= cur)):
+        # despesa avulsa é "conta do mês" de referência: paga com o salário daquele mês
+        if p["kind"] == "saida" and (p["month"] == ym or (k == 0 and p["month"] < add_months(ym, -1))):
             out_s.append(p)
         elif p["kind"] == "entrada" and (p["month"] == ym or (k == 0 and p["month"] < cur)):
             out_e.append(p)
@@ -88,8 +89,10 @@ def auto_teto(sobra, meta, semanas):
     return max(0.0, float(int(v // 5) * 5))
 
 
-def project(cfg, recurring, installments, overrides, today, n=3, planned=None):
-    cur = ym_of(today)
+def project(cfg, recurring, installments, overrides, today, n=3, planned=None, start=None, payday=None):
+    """Um mês da projeção = um salário: paga as contas daquele mês e o que se gasta até ele cair.
+    `start` é o salário que paga o que acontece hoje; `payday(ym)` devolve a data de cada salário."""
+    cur = start or ym_of(today)
     fixas = round(sum(r["amount"] for r in recurring if not r.get("card")), 2)
     meta = float(cfg.get("meta_caixinha") or 0)
     months = []
@@ -119,8 +122,14 @@ def project(cfg, recurring, installments, overrides, today, n=3, planned=None):
         cards = [card_forecast(c, ym, cur, recurring, installments, overrides, cfg["ciclo_extra"])
                  for c in cfg["cartoes"]]
         cart = round(sum(c["total"] for c in cards), 2)
-        dim = calendar.monthrange(y, m)[1]
-        dias = dim - today.day + 1 if k == 0 else dim
+        if payday:
+            if k == 0:
+                dias = max((payday(ym) - today).days, 1)
+            else:
+                dias = (payday(ym) - payday(add_months(ym, -1))).days
+        else:
+            dim = calendar.monthrange(y, m)[1]
+            dias = dim - today.day + 1 if k == 0 else dim
         semanas = max(dias, 1) / 7.0
         sobra = entra - cart - fixas - avulsas
         teto = auto_teto(sobra, meta, semanas) if cfg.get("teto_auto") else float(cfg["teto_semanal"])

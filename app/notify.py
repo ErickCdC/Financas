@@ -131,8 +131,7 @@ def build(conn, now):
 
     r = rules["payday"]
     if r.get("on") and due(now, r["time"]):
-        dia = int(cfg.get("salario_dia") or 30)
-        if finance.last_payday(t, dia) == t:
+        if finance.last_payday(t, cfg) == t:
             m = _proj["months"][0]
             body = (f"Planejado para guardar este mês: {brl(m['caixinha'])}. "
                     "Atualize o caixa e marque as contas que pagar.")

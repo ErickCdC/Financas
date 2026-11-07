@@ -13,7 +13,8 @@ DEFAULT_SETTINGS = {
     "teto_semanal": 50.0,        # plano de nov/26: fechar o mês sem ficar no vermelho
     "caixa": 214.74,            # saldo somado em 05/11/2026
     "salario_data": "2026-10-30",  # legado; o app calcula pelo dia do salário
-    "salario_dia": 30,
+    "salario_dia": 30,          # usado só se salario_tipo = "dia"
+    "salario_tipo": "util",     # "util" = último dia útil do mês
     "caixa_ref": "2026-11",     # mês a que o caixa se refere
     "cartao_venc": {"Nubank": 3, "Mercado Pago": 4, "PicPay": 5},
     "cartoes": ["Nubank", "Mercado Pago", "PicPay"],

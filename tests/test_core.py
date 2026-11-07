@@ -49,6 +49,27 @@ class Projection(unittest.TestCase):
         self.assertEqual((ws.isoformat(), we.isoformat()), ("2026-11-02", "2026-11-08"))
 
 
+class BusinessDayPayday(unittest.TestCase):
+    cfg = {"salario_tipo": "util", "salario_dia": 30}
+
+    def test_last_business_day(self):
+        from app import paydays as PD
+        got = {(y, m): PD.payday_of(y, m, self.cfg).isoformat() for y, m in
+               [(2026, 10), (2026, 11), (2026, 12), (2027, 1), (2027, 2), (2027, 4)]}
+        self.assertEqual(got, {(2026, 10): "2026-10-30", (2026, 11): "2026-11-30", (2026, 12): "2026-12-30",
+                               (2027, 1): "2027-01-29", (2027, 2): "2027-02-26", (2027, 4): "2027-04-30"})
+
+    def test_income_month_switches_on_payday(self):
+        from app import paydays as PD
+        self.assertEqual(PD.income_month(date(2026, 11, 7), self.cfg), "2026-11")
+        self.assertEqual(PD.income_month(date(2026, 11, 30), self.cfg), "2026-12")
+
+    def test_rent_due_at_month_end_belongs_to_reference_month(self):
+        # contas de outubro (chave interna 2026-11): aluguel dia 31 vence em outubro; faculdade dia 5, em novembro
+        self.assertEqual(finance.due_date("2026-11", 31, self.cfg), "2026-10-31")
+        self.assertEqual(finance.due_date("2026-11", 5, self.cfg), "2026-11-05")
+
+
 class Paydays(unittest.TestCase):
     def test_last_and_next(self):
         self.assertEqual(finance.last_payday(date(2026, 11, 5), 30), date(2026, 10, 30))
@@ -103,12 +124,12 @@ if __name__ == "__main__":
 class Planning(unittest.TestCase):
     def test_planned_expense_hits_salary_before_it(self):
         cfg, rec, inst, ov = base()
-        planned = [{"kind": "saida", "name": "Caução", "amount": 600, "month": "2026-12", "done": 0},
+        planned = [{"kind": "saida", "name": "Caução", "amount": 600, "month": "2026-11", "done": 0},
                    {"kind": "entrada", "name": "Horas extras", "amount": 300, "month": "2026-12", "done": 0},
                    {"kind": "saida", "name": "Já paga", "amount": 999, "month": "2026-12", "done": 1}]
         a = P.project(cfg, rec, inst, ov, TODAY)["months"]
         b = P.project(cfg, rec, inst, ov, TODAY, planned=planned)["months"]
-        self.assertAlmostEqual(a[0]["caixinha"] - b[0]["caixinha"], 600, places=2)   # despesa de dez sai do salário de nov
+        self.assertAlmostEqual(a[0]["caixinha"] - b[0]["caixinha"], 600, places=2)   # conta de nov sai do salário de nov
         self.assertAlmostEqual(b[1]["caixinha"] - a[1]["caixinha"], 300, places=2)   # entrada de dez entra no salário de dez
 
     def test_auto_teto_leaves_the_goal(self):

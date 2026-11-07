@@ -6,6 +6,7 @@ from datetime import date, timedelta
 
 from . import config as C
 from . import db
+from . import paydays as PD
 from . import projection as P
 
 
@@ -13,26 +14,40 @@ def clamp_day(y, m, d):
     return date(y, m, min(d, calendar.monthrange(y, m)[1]))
 
 
-def last_payday(t, dia):
-    cand = clamp_day(t.year, t.month, dia)
-    if cand <= t:
-        return cand
-    y, m = (t.year, t.month - 1) if t.month > 1 else (t.year - 1, 12)
-    return clamp_day(y, m, dia)
+def last_payday(t, cfg):
+    """Último salário em ou antes de `t` (cfg pode ser a configuração ou um dia fixo)."""
+    return PD.last_payday(t, cfg)
 
 
-def next_payday(t, dia):
-    cand = clamp_day(t.year, t.month, dia)
-    if cand >= t:
-        return cand
-    y, m = (t.year, t.month + 1) if t.month < 12 else (t.year + 1, 1)
-    return clamp_day(y, m, dia)
+def next_payday(t, cfg):
+    return PD.next_payday(t, cfg)
+
+
+def income_month(t, cfg):
+    """Salário que paga o que acontece hoje (o próximo a cair). Ex.: em 07/11 é o de 30/11."""
+    return PD.income_month(t, cfg)
+
+
+def due_date(panel_ym, day, cfg):
+    """Vencimento de uma conta de referência `panel_ym - 1` (paga com o salário daquele mês).
+    Contas que vencem perto do fim do mês (aluguel, internet) ficam no próprio mês de referência;
+    as demais (faturas, faculdade) vencem no começo do mês seguinte."""
+    if not day:
+        return None
+    ref = P.add_months(panel_ym, -1)
+    ry, rm = map(int, ref.split("-"))
+    pay = PD.payday_of(ry, rm, cfg)
+    y, m = (ry, rm) if int(day) >= pay.day - 7 else map(int, panel_ym.split("-"))
+    return clamp_day(y, m, int(day)).isoformat()
 
 
 def effective_cfg(cfg, t):
-    """Ajustes derivados: o caixa só vale para o mês a que se refere."""
+    """Ajustes derivados: o caixa só vale se foi informado depois do último salário."""
     c = copy.deepcopy(cfg)
-    if c.get("caixa_ref") and c["caixa_ref"] != P.ym_of(t):
+    if c.get("caixa_data"):
+        if c["caixa_data"] < last_payday(t, c).isoformat():
+            c["caixa"] = 0.0
+    elif c.get("caixa_ref") and c["caixa_ref"] != P.ym_of(t):
         c["caixa"] = 0.0
     return c
 
@@ -51,7 +66,9 @@ def bill_period(cfg, card, y, m):
 
 
 def month_panel(conn, cfg, ym, t):
-    cur = P.ym_of(t)
+    """Contas de referência `ym - 1` (pagas com o salário daquele mês). `ym` é a chave interna (mês seguinte)."""
+    cur = income_month(t, cfg)
+    ref = P.add_months(ym, -1)
     y, m = map(int, ym.split("-"))
     recurring = db.rows(conn, "SELECT * FROM recurring ORDER BY id")
     inst = db.rows(conn, "SELECT * FROM installments ORDER BY id")
@@ -61,7 +78,7 @@ def month_panel(conn, cfg, ym, t):
     items = []
 
     def due(day):
-        return clamp_day(y, m, int(day)).isoformat() if day else None
+        return due_date(ym, day, cfg)
 
     for r in recurring:
         if r["card"]:
@@ -71,19 +88,19 @@ def month_panel(conn, cfg, ym, t):
         items.append({"key": f"rec:{r['id']}", "group": "fixa", "name": r["name"],
                       "amount": p["amount"] if has else r["amount"], "estimated": not has,
                       "paid": bool(p and p["paid"]), "parts": [], "due": due(r.get("due_day"))})
-    income_month = P.add_months(ym, -1)
-    can_forecast = P.months_between(cur, income_month) >= 0
+    inc = P.add_months(ym, -1)
+    can_forecast = P.months_between(cur, inc) >= 0 or P.months_between(P.ym_of(t), inc) >= 0
     for c in cfg["cartoes"]:
         p = pays.get(f"bill:{c}")
         has = bool(p and p["amount"] is not None)
-        fc = P.card_forecast(c, income_month, cur, recurring, inst, ov, cfg["ciclo_extra"]) if can_forecast else None
+        fc = P.card_forecast(c, inc, cur, recurring, inst, ov, cfg["ciclo_extra"]) if can_forecast else None
         amount = p["amount"] if has else (fc["total"] if fc else None)
         items.append({"key": f"bill:{c}", "group": "fatura", "name": f"Fatura {c}", "card": c,
                       "amount": amount, "estimated": not has, "paid": bool(p and p["paid"]),
                       "parts": (fc["parts"] if fc and not has else []),
                       "used": (cfg.get("cartao_usado") or {}).get(c), "due": due(venc.get(c)),
-                      **bill_period(cfg, c, y, m)})
-    for p in db.rows(conn, "SELECT * FROM planned WHERE kind='saida' AND month=? ORDER BY day, id", (ym,)):
+                      **(bill_period(cfg, c, *map(int, due(venc.get(c))[:7].split("-"))) if venc.get(c) else {})})
+    for p in db.rows(conn, "SELECT * FROM planned WHERE kind='saida' AND month=? ORDER BY day, id", (ref,)):
         items.append({"key": f"plan:{p['id']}", "group": "avulsa", "name": p["name"], "amount": p["amount"],
                       "estimated": False, "paid": bool(p["done"]), "parts": [], "due": due(p.get("day")),
                       "note": p.get("note")})
@@ -92,14 +109,16 @@ def month_panel(conn, cfg, ym, t):
     falta = round(sum(i["amount"] for i in items if not i["paid"] and i["amount"] is not None), 2)
     pago = round(sum(i["amount"] for i in items if i["paid"] and i["amount"] is not None), 2)
     sem_valor = sum(1 for i in items if i["amount"] is None and not i["paid"])
-    dim = calendar.monthrange(y, m)[1]
+    # período em que essas contas são pagas: do salário de referência até a véspera do próximo
+    p0 = PD.payday_ym(ref, cfg)
+    p1 = PD.payday_ym(ym, cfg) - timedelta(days=1)
     gastos_dia = {r["date"]: round(r["t"], 2) for r in conn.execute(
         "SELECT date, SUM(amount) AS t FROM spends WHERE ignored=0 AND date BETWEEN ? AND ? GROUP BY date",
-        (f"{ym}-01", f"{ym}-{dim:02d}"))}
-    entradas = db.rows(conn, "SELECT * FROM planned WHERE kind='entrada' AND month=? ORDER BY day, id", (ym,))
-    return {"ym": ym, "label": P.label(ym), "items": items, "falta": falta, "pago": pago,
+        (p0.isoformat(), p1.isoformat()))}
+    entradas = db.rows(conn, "SELECT * FROM planned WHERE kind='entrada' AND month=? ORDER BY day, id", (ref,))
+    return {"ym": ym, "ref": ref, "label": P.label(ref), "items": items, "falta": falta, "pago": pago,
             "sem_valor": sem_valor, "total": round(falta + pago, 2), "gastos_dia": gastos_dia,
-            "salario": clamp_day(y, m, int(cfg.get("salario_dia") or 30)).isoformat(),
+            "salario": p0.isoformat(), "periodo": [p0.isoformat(), p1.isoformat()],
             "entradas_avulsas": entradas}
 
 
@@ -108,7 +127,7 @@ def week_info(conn, cfg, t):
     q = "SELECT COALESCE(SUM(amount),0) FROM spends WHERE ignored=0 AND date BETWEEN ? AND ?"
     spent = conn.execute(q, (ws.isoformat(), we.isoformat())).fetchone()[0]
     prev = conn.execute(q, ((ws - timedelta(days=7)).isoformat(), (ws - timedelta(days=1)).isoformat())).fetchone()[0]
-    since = last_payday(t, int(cfg.get("salario_dia") or 30))
+    since = last_payday(t, cfg)
     since_total = conn.execute("SELECT COALESCE(SUM(amount),0) FROM spends WHERE ignored=0 AND date>=?",
                                (since.isoformat(),)).fetchone()[0]
     lista = db.rows(conn, "SELECT * FROM spends WHERE date>=? ORDER BY date DESC, id DESC LIMIT 500",
@@ -131,7 +150,7 @@ def week_info(conn, cfg, t):
             "por_dia_restante": round(restante / dias_rest, 2) if dias_rest > 0 else 0,
             "dias_restantes": dias_rest, "semana_passada": round(prev, 2), "dias": days,
             "desde": since.isoformat(), "desde_total": round(since_total, 2),
-            "proximo_salario": next_payday(t + timedelta(days=1), int(cfg.get("salario_dia") or 30)).isoformat(),
+            "proximo_salario": next_payday(t + timedelta(days=1), cfg).isoformat(),
             "categorias": cats, "lista": lista}
 
 
@@ -182,7 +201,8 @@ def upcoming(conn, cfg, t, days=10):
     """Contas não pagas que vencem nos próximos `days` dias (inclui atrasadas do mês)."""
     out = []
     seen = set()
-    for ym in (P.ym_of(t), P.add_months(P.ym_of(t), 1)):
+    x = income_month(t, cfg)
+    for ym in (x, P.add_months(x, 1)):
         for i in month_panel(conn, cfg, ym, t)["items"]:
             if i["paid"] or not i["due"] or i["amount"] in (None, 0):
                 continue
@@ -196,7 +216,8 @@ def upcoming(conn, cfg, t, days=10):
 
 
 def resolve_month(conn, cfg, t, month):
-    cur = P.ym_of(t)
+    """Abre nas contas do salário anterior se ainda faltar pagar algo; senão, nas do próximo salário."""
+    cur = income_month(t, cfg)
     if month:
         return month
     p = month_panel(conn, cfg, cur, t)
@@ -213,7 +234,9 @@ def context(conn, t, n=6):
     inst = db.rows(conn, "SELECT * FROM installments ORDER BY id")
     ov = {(r["card"], r["month"]): r for r in db.rows(conn, "SELECT * FROM overrides")}
     planned = db.rows(conn, "SELECT * FROM planned ORDER BY month, day, id")
-    proj = P.project(cfg, recurring, inst, ov, t, n=n, planned=planned)
+    start = income_month(t, cfg)
+    proj = P.project(cfg, recurring, inst, ov, t, n=n, planned=planned, start=start,
+                     payday=lambda ym: PD.payday_ym(ym, cfg))
     m0 = proj["months"][0]
     livre = max(m0["sobra"] - m0["meta"], 0.0)
     por_dia = livre / max(m0["dias"], 1)
@@ -221,7 +244,7 @@ def context(conn, t, n=6):
         ws, we = P.week_range(t)
         q = "SELECT COALESCE(SUM(amount),0) FROM spends WHERE ignored=0 AND date BETWEEN ? AND ?"
         gasto = conn.execute(q, (ws.isoformat(), we.isoformat())).fetchone()[0]
-        end = min(we, clamp_day(t.year, t.month, calendar.monthrange(t.year, t.month)[1]))
+        end = min(we, PD.payday_ym(start, cfg) - timedelta(days=1))
         cfg["teto_semanal"] = round(gasto + por_dia * ((end - t).days + 1), 2)
     return cfg, proj, {"livre": round(livre, 2), "por_dia": round(por_dia, 2), "dias": m0["dias"],
                        "sobra": m0["sobra"], "meta": m0["meta"], "auto": bool(cfg.get("teto_auto"))}
@@ -245,8 +268,7 @@ def merchant(desc):
 def insights(conn, cfg, t, proj, livre):
     """Raio-X: leitura rápida do que está acontecendo, com números do próprio app."""
     out = []
-    dia = int(cfg.get("salario_dia") or 30)
-    since = last_payday(t, dia)
+    since = last_payday(t, cfg)
     days = max((t - since).days + 1, 1)
     q = "SELECT COALESCE(SUM(amount),0) FROM spends WHERE ignored=0 AND date BETWEEN ? AND ?"
     gasto = conn.execute(q, (since.isoformat(), t.isoformat())).fetchone()[0]
@@ -259,7 +281,7 @@ def insights(conn, cfg, t, proj, livre):
                 "value": fim, "text": f"Gastando {brl(ritmo)}/dia (média desde {since:%d/%m}), você termina o mês "
                 f"{'com ' + brl(fim) + ' sobrando' if fim >= 0 else 'faltando ' + brl(-fim)}."})
     # comparação com o ciclo anterior, mesmo número de dias
-    prev_since = last_payday(since - timedelta(days=1), dia)
+    prev_since = last_payday(since - timedelta(days=1), cfg)
     prev_end = prev_since + timedelta(days=days - 1)
     prev = conn.execute(q, (prev_since.isoformat(), prev_end.isoformat())).fetchone()[0]
     if prev > 0:
@@ -359,8 +381,14 @@ def summary(conn, month=None, extra=None):
         "aumento_from", "teto_semanal", "caixa", "caixa_ref", "salario_dia", "ignore_terms", "pix_max",
         "ciclo_extra", "cartoes", "cartao_venc", "last_sync", "caixa_banco", "cartao_usado", "notif",
         "auto", "sync_auto", "salario_regra", "entradas", "last_force", "last_tick", "sync_detalhe", "ciclo_info",
-        "nome", "meta_caixinha", "teto_auto")}
+        "nome", "meta_caixinha", "teto_auto", "salario_tipo", "caixa_data")}
     public_cfg["teto_efetivo"] = cfg["teto_semanal"]
+    x = income_month(t, cfg)
+    paydays = {P.add_months(x, k): PD.payday_ym(P.add_months(x, k), cfg).isoformat() for k in range(-4, 10)}
+    venc = cfg.get("cartao_venc") or {}
+    for mo in proj["months"]:  # vencimento de cada fatura prevista
+        for k in mo["cartoes"]:
+            k["due"] = due_date(P.add_months(mo["ym"], 1), venc.get(k["card"]), cfg)
     public_cfg["caixa_desatualizado"] = bool(raw.get("caixa_ref") and raw["caixa_ref"] != P.ym_of(t))
     out = {
         "hoje": t.isoformat(), "mes": month_panel(conn, cfg, month, t),
@@ -369,6 +397,7 @@ def summary(conn, month=None, extra=None):
         "parcelas_mensal": round(sum(p["amount"] for p in parc if p["restante"] > 0), 2),
         "vencimentos": upcoming(conn, cfg, t),
         "recorrentes": recurring, "overrides": ov_rows, "proj": proj, "config": public_cfg,
+        "ciclo": x, "paydays": paydays,
         "livre": livre, "insights": insights(conn, cfg, t, proj, livre), **goals_plan(conn, proj),
         "avulsos": db.rows(conn, "SELECT * FROM planned ORDER BY month, day, id"),
         "notificacoes": db.rows(conn, "SELECT * FROM notif_log ORDER BY sent_at DESC LIMIT 20"),

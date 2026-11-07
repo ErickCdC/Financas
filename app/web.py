@@ -85,6 +85,7 @@ def act_settings(conn, body):
         db.put_setting(conn, k, val)
         if k == "caixa":
             db.put_setting(conn, "caixa_ref", finance.P.ym_of(C.today()))
+            db.put_setting(conn, "caixa_data", C.today().isoformat())
     return {"ok": True}
 
 
