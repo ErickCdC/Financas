@@ -148,10 +148,10 @@
    }
   },
   "eventos_pendentes": [],
-  "last_auto_sync": "2026-11-07T17:25",
+  "last_auto_sync": "2026-11-07T17:52",
   "last_force": "2026-11-07T17:00",
-  "last_sync": "2026-11-07 17:26",
-  "last_tick": "2026-11-07 17:25",
+  "last_sync": "2026-11-07 17:53",
+  "last_tick": "2026-11-07 17:52",
   "migracoes": [
    "salario_minimo_50"
   ],
