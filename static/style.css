@@ -511,3 +511,12 @@ button.catrow:hover { background: var(--surface-2); }
 .cal-title { font-size: 12.5px; margin-bottom: 10px; }
 .monthnav .m { text-transform: none; }
 .cal-d .n.sm { font-size: 10.5px; letter-spacing: -.02em; }
+.card.nextbills { display: block; }
+.nextbills .v-big { margin: 2px 0 6px; }
+.nb-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 9px 0; border-top: 1px solid var(--line); }
+.nb-row .t { font-weight: 600; font-size: 14px; }
+.nb-row .sub { font-size: 12px; color: var(--muted); margin-top: 1px; }
+.nb-row b { font-size: 14.5px; white-space: nowrap; }
+.nb-row.paid { opacity: .55; }
+.nb-row.paid b { text-decoration: line-through; }
+.nb-foot { font-size: 12px; color: var(--muted); margin-top: 8px; }

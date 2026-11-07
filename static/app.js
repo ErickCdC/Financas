@@ -146,7 +146,7 @@ function spendRow(s) {
   return `<button class="item ${s.ignored ? "off" : ""}" data-act="editspend" data-id="${s.id}">
     <span class="ic">${icon(catIcon(s.category))}</span>
     <span class="body"><span class="t">${esc(s.description)}</span>
-      <span class="sub">${esc(s.category || "sem categoria")}${s.source === "banco" ? " · banco" : ""}${s.ignored && s.category !== "estornado" ? " · ignorado" : ""}</span></span>
+      <span class="sub">${esc(s.category || "sem categoria")}${s.card ? " · " + esc(s.card) : ""}${s.source === "banco" ? " · banco" : ""}${s.ignored && s.category !== "estornado" ? " · ignorado" : ""}</span></span>
     <span class="amt num ${s.amount < 0 ? "pos" : ""}">${brl(s.amount)}</span></button>`;
 }
 function weekBars(w) {
@@ -163,6 +163,24 @@ function notice(kind, ic, html, action) {
 function greet(d) {
   const h = new Date().getHours(), n = d.config.nome ? `, ${esc(d.config.nome)}` : "";
   return `${h < 5 ? "Boa noite" : h < 12 ? "Bom dia" : h < 18 ? "Boa tarde" : "Boa noite"}${n}`;
+}
+function nextBills(d) {
+  const p = d.proximas; if (!p) return "";
+  const faturas = p.items.filter(i => i.group === "fatura");
+  const fixas = p.items.filter(i => i.group === "fixa"), avulsas = p.items.filter(i => i.group === "avulsa");
+  const sum = l => l.reduce((a, i) => a + (i.amount || 0), 0);
+  const compras = faturas.reduce((a, i) => a + (i.compras || 0), 0);
+  const row = (label, val, sub, paid) => `<div class="nb-row ${paid ? "paid" : ""}"><div><div class="t">${label}</div>${sub ? `<div class="sub">${sub}</div>` : ""}</div><b class="num">${val}</b></div>`;
+  return `<a class="card nextbills" href="#contas" data-act="goto-proximas">
+    <div class="card-head"><div><div class="eyebrow">A pagar com o salário de ${ddmm(p.salario)}</div>
+      <div class="v-big num">${brl(p.total)}</div></div>
+      ${compras ? `<span class="chip blue num">+${brl0(compras)} em compras</span>` : ""}</div>
+    ${faturas.map(i => row(esc(i.name), i.amount == null ? "—" : brl(i.amount),
+      `${i.compras ? `compras ${brl(i.compras)} · ` : ""}${i.compras_de ? `até ${ddmm(i.fecha)} · ` : ""}vence ${i.due ? ddmm(i.due) : "—"}`, i.paid)).join("")}
+    ${row("Contas fixas", brl(sum(fixas)), `${fixas.length} conta(s) de ${esc(monthOnly(p.ref))}`, fixas.length && fixas.every(i => i.paid))}
+    ${avulsas.length ? row("Avulsas", brl(sum(avulsas)), avulsas.map(i => esc(i.name)).join(", "), avulsas.every(i => i.paid)) : ""}
+    <div class="nb-foot">${p.pago ? `Já pago ${brl(p.pago)} · ` : ""}Cada compra no cartão soma aqui na hora.</div>
+  </a>`;
 }
 function etaText(g) {
   if (g.eta === "pronta") return "Meta alcançada!";
@@ -204,6 +222,7 @@ VIEWS.inicio = d => {
         <div class="hero-actions"><button class="btn light sm" data-act="addspend">${icon("plus")}Lançar gasto</button><a class="btn glass sm" href="#gastos">Ver gastos</a></div>
         ${d.livre.auto ? `<div class="meta hero-auto">Teto automático: deixa ${brl0(d.livre.meta)} para a caixinha</div>` : ""}
       </section>
+      ${nextBills(d)}
       <section class="card livre">
         <div class="card-head"><div><div class="eyebrow">Livre até o salário de ${ddmm(w.proximo_salario)}</div>
           <div class="v-big num ${d.livre.livre <= 0 ? "neg" : ""}">${brl(d.livre.livre)}</div></div>
@@ -246,7 +265,7 @@ VIEWS.contas = d => {
     return `<div class="group-label">${title}</div>` + its.map(i => `<div class="item">
       <input type="checkbox" class="check" data-chg="paid" data-key="${esc(i.key)}" ${i.paid ? "checked" : ""} aria-label="Marcar ${esc(i.name)} como paga">
       <div class="body"><div class="t">${esc(i.name)}</div>
-        ${i.compras_de ? `<div class="sub period">Compras de ${ddmm(i.compras_de)} a ${ddmm(i.fecha)} · vence ${ddmm(i.due)}</div>` : ""}
+        ${i.compras_de ? `<div class="sub period">Compras de ${ddmm(i.compras_de)} a ${ddmm(i.fecha)} · vence ${ddmm(i.due)}${i.compras ? ` · até agora ${brl(i.compras)}` : ""}</div>` : ""}
         <div class="sub">${dueChip(i, t)}${i.estimated && i.amount != null ? ` <span class="chip">previsto</span>` : ""}${i.used != null && !i.paid ? ` <span class="muted">· usado no cartão ${brl(i.used)}</span>` : ""}</div>
         ${i.parts && i.parts.length ? `<details class="parts"><summary>Ver composição (${i.parts.length})</summary><div class="pl">${i.parts.map(p => `<div><span>${esc(p.name)}</span><span class="num">${brl(p.amount)}</span></div>`).join("")}</div></details>` : ""}
       </div>
@@ -579,7 +598,7 @@ function learned() {
     if (s.amount <= 0 || s.category === "estornado" || s.category === "parcela") return;
     const k = s.description.trim().toLowerCase().replace(/\s+\..*$/, "").replace(/\s{2,}.*/, "").slice(0, 40);
     if (!k) return;
-    const e = map[k] || (map[k] = { label: s.description.replace(/\s{2,}.*$/, "").replace(/\s+\..*$/, "").trim().slice(0, 24), n: 0, cat: null, amt: s.amount });
+    const e = map[k] || (map[k] = { label: s.description.replace(/\s{2,}.*$/, "").replace(/\s+\..*$/, "").trim().slice(0, 24), n: 0, cat: null, amt: s.amount, card: s.card || "" });
     e.n += 1; if (!e.cat && s.category) e.cat = s.category;
   });
   return Object.entries(map).sort((a, b) => b[1].n - a[1].n).slice(0, 8);
@@ -595,6 +614,7 @@ function suggestSpends(box) {
     const b = ev.target.closest("button[data-k]"); if (!b) return;
     const e = L.find(x => x[0] === b.dataset.k)[1];
     desc.value = e.label; if (e.cat) pickCat(e.cat);
+    const sel = box.querySelector("select"); if (sel && e.card) sel.value = e.card;
     box.querySelector(".amount-input").focus();
   });
   box.querySelector(".form-grid").before(row);
@@ -777,12 +797,17 @@ async function disablePush() {
 }
 
 // ---------- ações ----------
-const spendFields = [
+const spendFieldsBase = [
   { name: "amount", label: "Valor", type: "money", required: true, big: true },
   { name: "description", label: "Descrição", placeholder: "Ex.: mercado, Uber, lanche", required: true },
+  { name: "card", label: "Como pagou", type: "select", options: [] },
   { name: "category", label: "Categoria", type: "chips", options: CATS.map(c => c[0]) },
   { name: "date", label: "Data", type: "date" },
 ];
+// "Como pagou": no cartão, a compra soma na fatura certa na hora
+const spendFields = () => spendFieldsBase.map(f => f.name === "card"
+  ? { ...f, options: [["", "Pix, débito ou dinheiro"], ...S.d.config.cartoes.map(c => [c, `Cartão ${c}`])], hint: "No cartão, soma na fatura que você vai pagar" } : f);
+const lastCard = () => store.get("fin-card") || "";
 const instFields = () => [
   { name: "name", label: "Nome", required: true }, { name: "card", label: "Cartão", type: "select", options: S.d.config.cartoes },
   { name: "amount", label: "Valor da parcela", type: "money", required: true },
@@ -812,6 +837,7 @@ const goalFields = [
 const A = {
   refresh: () => load(),
   "goto-metas": () => { S.planTab = "metas"; location.hash = "#plano"; },
+  "goto-proximas": () => { S.month = S.d.proximas.ym; location.hash = "#contas"; load({ silent: true }); },
   contasview: el => { S.contasView = el.dataset.v; store.set("fin-contas", S.contasView); render(); },
   calday: el => {
     const iso = el.dataset.date, dt = parse(iso), m = S.d.mes;
@@ -889,12 +915,12 @@ const A = {
   plantab: el => { S.planTab = el.dataset.t; render(); },
   resetsim: () => { S.simTeto = null; render(); },
   usesim: async () => { try { await api("/api/settings", { teto_semanal: S.simTeto }); toast("Teto atualizado"); S.simTeto = null; await load({ silent: true }); } catch (e) { toast(e.message); } },
-  addspend: el => openSheet({ title: "Lançar gasto", desc: "Entra no teto da semana.", fields: spendFields, values: { date: (el && el.dataset && el.dataset.date) || S.d.hoje }, saveLabel: "Lançar", onMount: suggestSpends,
-    onSave: async v => { await api("/api/spends", v); return "Gasto lançado"; } }),
+  addspend: el => openSheet({ title: "Lançar gasto", desc: "Entra no teto da semana.", fields: spendFields(), values: { date: (el && el.dataset && el.dataset.date) || S.d.hoje, card: lastCard() }, saveLabel: "Lançar", onMount: suggestSpends,
+    onSave: async v => { store.set("fin-card", v.card || ""); await api("/api/spends", { ...v, card: v.card || null }); return v.card ? `Lançado · soma na fatura ${v.card}` : "Gasto lançado"; } }),
   editspend: el => {
     const s = S.d.semana.lista.find(x => x.id === Number(el.dataset.id)); if (!s) return;
-    openSheet({ title: "Editar gasto", fields: [...spendFields, { name: "ignored", label: "Ignorar no teto", type: "checkbox", hint: "Ex.: reembolso ou gasto que já é conta fixa" }],
-      values: s, onSave: v => api("/api/spends", { ...v, id: s.id }), onDelete: () => api("/api/spends", { id: s.id, delete: true }) });
+    openSheet({ title: "Editar gasto", fields: [...spendFields(), { name: "ignored", label: "Ignorar no teto", type: "checkbox", hint: "Ex.: reembolso ou gasto que já é conta fixa" }],
+      values: { ...s, card: s.card || "" }, onSave: v => api("/api/spends", { ...v, card: v.card || null, id: s.id }), onDelete: () => api("/api/spends", { id: s.id, delete: true }) });
   },
   editamt: el => openSheet({
     title: el.dataset.name, desc: "Informe o valor real. Deixe vazio para voltar à previsão.", fields: [{ name: "amount", label: "Valor", type: "money", big: true }],
@@ -919,9 +945,9 @@ const A = {
     onSave: async v => { const c = S.d.config; await api("/api/settings", { cartoes: [...c.cartoes, v.name], cartao_venc: { ...(c.cartao_venc || {}), ...(v.venc ? { [v.name]: v.venc } : {}) } }); } }),
   editcard: el => {
     const k = el.dataset.card, c = S.d.config;
-    openSheet({ title: k, fields: [{ name: "venc", label: "Dia de vencimento", type: "number", min: 1, max: 31 }, { name: "extra", label: "Compras do ciclo atual", type: "money", hint: "Gastos já feitos neste cartão que vão para a próxima fatura (fora parcelas e assinaturas)" }],
-      values: { venc: (c.cartao_venc || {})[k] ?? "", extra: (c.ciclo_extra || {})[k] ?? 0 },
-      onSave: v => { const venc = { ...(c.cartao_venc || {}) }; if (v.venc) venc[k] = v.venc; else delete venc[k]; return api("/api/settings", { cartao_venc: venc, ciclo_extra: { ...(c.ciclo_extra || {}), [k]: v.extra || 0 } }); },
+    openSheet({ title: k, desc: "As compras entram sozinhas: as do banco e as que você lança com este cartão.", fields: [{ name: "venc", label: "Dia de vencimento", type: "number", min: 1, max: 31 }],
+      values: { venc: (c.cartao_venc || {})[k] ?? "" },
+      onSave: v => { const venc = { ...(c.cartao_venc || {}) }; if (v.venc) venc[k] = v.venc; else delete venc[k]; return api("/api/settings", { cartao_venc: venc }); },
       onDelete: c.cartoes.length > 1 ? () => api("/api/settings", { cartoes: c.cartoes.filter(x => x !== k) }) : null });
   },
   usebank: async () => { try { await api("/api/settings", { caixa: S.d.config.caixa_banco }); toast("Caixa atualizado"); await load({ silent: true }); } catch (e) { toast(e.message); } },

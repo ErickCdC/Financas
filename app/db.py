@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS overrides(
 CREATE TABLE IF NOT EXISTS spends(
   id INTEGER PRIMARY KEY AUTOINCREMENT, date TEXT NOT NULL, description TEXT NOT NULL,
   amount REAL NOT NULL, category TEXT, source TEXT NOT NULL DEFAULT 'manual',
-  ext_id TEXT UNIQUE, ignored INTEGER NOT NULL DEFAULT 0);
+  ext_id TEXT UNIQUE, ignored INTEGER NOT NULL DEFAULT 0, card TEXT);
 CREATE INDEX IF NOT EXISTS spends_date ON spends(date);
 CREATE TABLE IF NOT EXISTS push_subs(
   id INTEGER PRIMARY KEY AUTOINCREMENT, endpoint TEXT NOT NULL UNIQUE, p256dh TEXT NOT NULL,
@@ -75,6 +75,9 @@ def migrate(conn):
         conn.execute("ALTER TABLE recurring ADD COLUMN due_day INTEGER")
     if "match" not in cols:
         conn.execute("ALTER TABLE recurring ADD COLUMN match TEXT")
+    scols = {r[1] for r in conn.execute("PRAGMA table_info(spends)")}
+    if "card" not in scols:
+        conn.execute("ALTER TABLE spends ADD COLUMN card TEXT")
     icols = {r[1] for r in conn.execute("PRAGMA table_info(installments)")}
     if "last_bill" not in icols:
         conn.execute("ALTER TABLE installments ADD COLUMN last_bill TEXT")

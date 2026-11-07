@@ -10,7 +10,7 @@ TABLES = {
     "goals": ["id", "name", "target", "saved", "kind", "note", "ordem", "share"],
     "payments": ["month", "key", "paid", "amount"],
     "overrides": ["card", "month", "amount", "note"],
-    "spends": ["id", "date", "description", "amount", "category", "source", "ext_id", "ignored"],
+    "spends": ["id", "date", "description", "amount", "category", "source", "ext_id", "ignored", "card"],
     "push_subs": ["id", "endpoint", "p256dh", "auth", "label", "created", "last_ok", "fails"],
     "notif_log": ["key", "sent_at", "title", "body"],
 }
@@ -39,7 +39,7 @@ PLANNED_SPEC = {"kind": V.choice("saida", "entrada"), "name": V.text(60), "amoun
 GOAL_SPEC = {"name": V.text(60), "target": V.num, "saved": V.num, "kind": V.text(20, False),
              "note": V.text(160, False), "ordem": V.posint(0, 100), "share": V.posint(0, 100)}
 SPEND_SPEC = {"date": V.iso_date, "description": V.text(120), "amount": V.num,
-              "category": V.text(30, False), "ignored": V.boolint}
+              "category": V.text(30, False), "ignored": V.boolint, "card": V.text(30, False)}
 
 
 def export(conn):

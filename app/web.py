@@ -143,7 +143,7 @@ def act_goals(conn, body):
 
 
 def act_spends(conn, body):
-    r = crud(conn, "spends", data.SPEND_SPEC, body, optional=("category", "ignored"))
+    r = crud(conn, "spends", data.SPEND_SPEC, body, optional=("category", "ignored", "card"))
     # Confere o teto logo depois de um lançamento (sem travar a resposta).
     threading.Thread(target=_safe_tick, daemon=True).start()
     return r

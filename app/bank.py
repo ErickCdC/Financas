@@ -167,6 +167,16 @@ def reconcile_refunds(conn):
     return n
 
 
+def ignore_subscription_charges(conn):
+    """A cobrança de uma assinatura no cartão já está na previsão da fatura: não conta de novo como gasto."""
+    n = 0
+    for r in db.rows(conn, "SELECT name, amount, card FROM recurring WHERE card IS NOT NULL AND card != ''"):
+        cur = conn.execute("UPDATE spends SET ignored=1, category='assinatura' WHERE ignored=0 AND card=? "
+                           "AND ABS(amount - ?) < 0.02 AND source='banco'", (r["card"], r["amount"]))
+        n += cur.rowcount
+    return n
+
+
 AUTO_NOTE = "Banco: "  # overrides criados pela sincronização começam com isto (os seus nunca são sobrescritos)
 EXCLUDE_INCOME = ("rendimento", "estorno", "resgate", "cashback", "reembolso")
 
@@ -285,12 +295,14 @@ def apply(conn, data, t):
             manual = conn.execute("SELECT id FROM spends WHERE source='manual' AND ext_id IS NULL "
                                   "AND date=? AND ABS(amount-?)<0.005 ORDER BY id LIMIT 1", (sp[0], sp[2])).fetchone()
             if manual:
-                conn.execute("UPDATE spends SET ext_id=? WHERE id=?", (ext, manual["id"]))
+                conn.execute("UPDATE spends SET ext_id=?, card=COALESCE(card, ?) WHERE id=?",
+                             (ext, card_name(cfg, a["bank"]) if a["type"] == "CREDIT" else None, manual["id"]))
                 adopted += 1
                 continue
-            cur = conn.execute("INSERT OR IGNORE INTO spends(date,description,amount,category,source,ext_id) "
-                               "VALUES(?,?,?,?,?,?)",
-                               (sp[0], sp[1], sp[2], map_category(x.get("category")), "banco", ext))
+            cur = conn.execute("INSERT OR IGNORE INTO spends(date,description,amount,category,source,ext_id,card) "
+                               "VALUES(?,?,?,?,?,?,?)",
+                               (sp[0], sp[1], sp[2], map_category(x.get("category")), "banco", ext,
+                                card_name(cfg, a["bank"]) if a["type"] == "CREDIT" else None))
             added += cur.rowcount
     estornos = reconcile_refunds(conn)
 
@@ -408,6 +420,9 @@ def apply(conn, data, t):
             info["compras"] = extra[card]
         db.put_setting(conn, "ciclo_extra", extra)
         db.put_setting(conn, "ciclo_info", ciclo)
+    for card, info in ciclo.items():  # lançamentos antigos sem cartão
+        conn.execute("UPDATE spends SET card=? WHERE card IS NULL AND ext_id LIKE ?", (card, info["conta"] + ":%"))
+    ignore_subscription_charges(conn)
 
     # diagnóstico por conta (mostrado em Ajustes)
     detalhe = []

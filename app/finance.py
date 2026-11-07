@@ -65,7 +65,24 @@ def bill_period(cfg, card, y, m):
     return {"compras_de": (prev_close + timedelta(days=1)).isoformat(), "fecha": close.isoformat()}
 
 
-def month_panel(conn, cfg, ym, t):
+def card_purchases(conn, cfg, t, months):
+    """Compras no cartão (banco + lançadas à mão com o cartão) que caem em cada fatura.
+    Devolve {(cartão, mês do salário): total}. A fatura do salário `ym` vence em ym+1."""
+    out = {}
+    venc = cfg.get("cartao_venc") or {}
+    for card in cfg["cartoes"]:
+        if not venc.get(card):
+            continue
+        for ym in months:
+            due = due_date(P.add_months(ym, 1), venc[card], cfg)
+            per = bill_period(cfg, card, *map(int, due[:7].split("-")))
+            row = conn.execute("SELECT COALESCE(SUM(amount),0) FROM spends WHERE ignored=0 AND card=? "
+                               "AND date BETWEEN ? AND ?", (card, per["compras_de"], per["fecha"])).fetchone()
+            out[(card, ym)] = round(row[0], 2)
+    return out
+
+
+def month_panel(conn, cfg, ym, t, purchases=None):
     """Contas de referência `ym - 1` (pagas com o salário daquele mês). `ym` é a chave interna (mês seguinte)."""
     cur = income_month(t, cfg)
     ref = P.add_months(ym, -1)
@@ -89,16 +106,19 @@ def month_panel(conn, cfg, ym, t):
                       "amount": p["amount"] if has else r["amount"], "estimated": not has,
                       "paid": bool(p and p["paid"]), "parts": [], "due": due(r.get("due_day"))})
     inc = P.add_months(ym, -1)
+    if purchases is None:
+        purchases = card_purchases(conn, cfg, t, [inc])
     can_forecast = P.months_between(cur, inc) >= 0 or P.months_between(P.ym_of(t), inc) >= 0
     for c in cfg["cartoes"]:
         p = pays.get(f"bill:{c}")
         has = bool(p and p["amount"] is not None)
-        fc = P.card_forecast(c, inc, cur, recurring, inst, ov, cfg["ciclo_extra"]) if can_forecast else None
+        fc = P.card_forecast(c, inc, cur, recurring, inst, ov, cfg["ciclo_extra"], purchases) if can_forecast else None
         amount = p["amount"] if has else (fc["total"] if fc else None)
         items.append({"key": f"bill:{c}", "group": "fatura", "name": f"Fatura {c}", "card": c,
                       "amount": amount, "estimated": not has, "paid": bool(p and p["paid"]),
                       "parts": (fc["parts"] if fc and not has else []),
                       "used": (cfg.get("cartao_usado") or {}).get(c), "due": due(venc.get(c)),
+                      "compras": purchases.get((c, inc), 0),
                       **(bill_period(cfg, c, *map(int, due(venc.get(c))[:7].split("-"))) if venc.get(c) else {})})
     for p in db.rows(conn, "SELECT * FROM planned WHERE kind='saida' AND month=? ORDER BY day, id", (ref,)):
         items.append({"key": f"plan:{p['id']}", "group": "avulsa", "name": p["name"], "amount": p["amount"],
@@ -235,8 +255,9 @@ def context(conn, t, n=6):
     ov = {(r["card"], r["month"]): r for r in db.rows(conn, "SELECT * FROM overrides")}
     planned = db.rows(conn, "SELECT * FROM planned ORDER BY month, day, id")
     start = income_month(t, cfg)
+    purchases = card_purchases(conn, cfg, t, [start, P.add_months(start, 1)])
     proj = P.project(cfg, recurring, inst, ov, t, n=n, planned=planned, start=start,
-                     payday=lambda ym: PD.payday_ym(ym, cfg))
+                     payday=lambda ym: PD.payday_ym(ym, cfg), purchases=purchases)
     m0 = proj["months"][0]
     livre = max(m0["sobra"] - m0["meta"], 0.0)
     por_dia = livre / max(m0["dias"], 1)
@@ -398,6 +419,7 @@ def summary(conn, month=None, extra=None):
         "vencimentos": upcoming(conn, cfg, t),
         "recorrentes": recurring, "overrides": ov_rows, "proj": proj, "config": public_cfg,
         "ciclo": x, "paydays": paydays,
+        "proximas": month_panel(conn, cfg, P.add_months(x, 1), t),
         "livre": livre, "insights": insights(conn, cfg, t, proj, livre), **goals_plan(conn, proj),
         "avulsos": db.rows(conn, "SELECT * FROM planned ORDER BY month, day, id"),
         "notificacoes": db.rows(conn, "SELECT * FROM notif_log ORDER BY sent_at DESC LIMIT 20"),

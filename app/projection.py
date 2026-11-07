@@ -35,8 +35,9 @@ def week_range(d):
     return start, start + timedelta(days=6)
 
 
-def card_forecast(card, income_month, current_month, recurring, installments, overrides, cycle_extra):
-    """Quanto vai na fatura de `card` paga com o dinheiro de `income_month`."""
+def card_forecast(card, income_month, current_month, recurring, installments, overrides, cycle_extra, purchases=None):
+    """Quanto vai na fatura de `card` paga com o salário de `income_month`.
+    `purchases[(card, income_month)]` = compras já feitas que caem nessa fatura (banco + lançadas à mão)."""
     idx = months_between(current_month, income_month)
     ov = overrides.get((card, income_month))
     if ov:
@@ -58,7 +59,11 @@ def card_forecast(card, income_month, current_month, recurring, installments, ov
                 n = i["paid_count"] + offset
                 parts.append({"name": f"{i['name']} ({n}/{i['total']})",
                               "amount": i["amount"], "kind": "parcela"})
-    if idx == 0:
+    if purchases is not None:
+        extra = round(purchases.get((card, income_month), 0), 2)
+        if extra:
+            parts.append({"name": "Compras no cartão", "amount": extra, "kind": "compras"})
+    elif idx == 0:
         extra = cycle_extra.get(card, 0)
         if extra:
             parts.append({"name": "Compras do ciclo atual", "amount": extra, "kind": "variavel"})
@@ -89,7 +94,7 @@ def auto_teto(sobra, meta, semanas):
     return max(0.0, float(int(v // 5) * 5))
 
 
-def project(cfg, recurring, installments, overrides, today, n=3, planned=None, start=None, payday=None):
+def project(cfg, recurring, installments, overrides, today, n=3, planned=None, start=None, payday=None, purchases=None):
     """Um mês da projeção = um salário: paga as contas daquele mês e o que se gasta até ele cair.
     `start` é o salário que paga o que acontece hoje; `payday(ym)` devolve a data de cada salário."""
     cur = start or ym_of(today)
@@ -119,7 +124,7 @@ def project(cfg, recurring, installments, overrides, today, n=3, planned=None, s
         extras = round(sum(p["amount"] for p in entradas), 2)
         avulsas = round(sum(p["amount"] for p in saidas), 2)
         entra = salario + decimo + caixa + extras
-        cards = [card_forecast(c, ym, cur, recurring, installments, overrides, cfg["ciclo_extra"])
+        cards = [card_forecast(c, ym, cur, recurring, installments, overrides, cfg["ciclo_extra"], purchases)
                  for c in cfg["cartoes"]]
         cart = round(sum(c["total"] for c in cards), 2)
         if payday:
