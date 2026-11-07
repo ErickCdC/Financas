@@ -6,7 +6,7 @@
   "decimo2": 1100.0,
   "decimo1_mes": 11,
   "decimo2_mes": 12,
-  "aumento_on": false,
+  "aumento_on": true,
   "aumento_pct": 25.0,
   "aumento_from": "2027-01",
   "teto_semanal": 50.0,
@@ -143,7 +143,7 @@
   "last_auto_sync": "2026-11-06T22:16",
   "last_force": "2026-11-06T22:18",
   "last_sync": "2026-11-07 00:09",
-  "last_tick": "2026-11-07 00:18",
+  "last_tick": "2026-11-07 00:19",
   "sync_detalhe": [
    {
     "banco": "PicPay",
