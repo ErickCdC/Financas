@@ -325,13 +325,13 @@
   {
    "month": "2026-11",
    "key": "rec:3",
-   "paid": 0,
+   "paid": 1,
    "amount": 123.0
   },
   {
    "month": "2026-11",
    "key": "rec:4",
-   "paid": 0,
+   "paid": 1,
    "amount": 93.33
   },
   {
