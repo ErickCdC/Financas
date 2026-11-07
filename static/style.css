@@ -214,6 +214,11 @@ button.item:hover, .item.tap:hover { background: var(--surface-2); }
 }
 .check:checked { background: var(--pos); border-color: var(--pos); }
 .check:checked::after { content: ""; width: 7px; height: 12px; border: solid #fff; border-width: 0 2.5px 2.5px 0; transform: translateY(-1px) rotate(45deg); }
+.check.sq { width: 20px; height: 20px; border-radius: 6px; cursor: pointer; }
+.check.sq:checked { background: var(--primary); border-color: var(--primary); }
+.check.sq:checked::after { width: 5px; height: 9px; border-width: 0 2px 2px 0; }
+.est-toggle { display: flex; align-items: center; gap: 10px; padding: 2px 16px 12px; font-size: 13.5px; color: var(--muted); cursor: pointer; user-select: none; }
+.est-toggle .num { margin-left: auto; }
 
 .chip { display: inline-flex; align-items: center; gap: 4px; height: 22px; padding: 0 8px; border-radius: 99px; font-size: 11.5px; font-weight: 650; background: var(--surface-2); color: var(--text-2); white-space: nowrap; }
 .chip.blue { background: var(--primary-weak); color: var(--primary-text); }

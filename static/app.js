@@ -44,7 +44,8 @@ const NAV = [
   ["plano", "Planejamento", "chart"], ["ajustes", "Ajustes", "settings"],
 ];
 const S0 = (() => { try { return localStorage.getItem("fin-contas"); } catch (_) { return null; } })();
-const S = { view: "inicio", month: null, d: null, planTab: "proj", filter: "semana", simTeto: null, offline: false, installEvt: null, pushOn: false, contasView: S0 === "cal" ? "cal" : "lista" };
+const isEst = s => s.category === "estornado"; // compra estornada e o estorno dela
+const S = { view: "inicio", month: null, d: null, planTab: "proj", filter: "semana", showEst: store.get("fin-estornos") === "1", simTeto: null, offline: false, installEvt: null, pushOn: false, contasView: S0 === "cal" ? "cal" : "lista" };
 
 function toast(msg) {
   const t = $("#toast");
@@ -348,7 +349,8 @@ VIEWS.gastos = d => {
   const over = w.gasto > w.teto, pct = w.teto ? (w.gasto / w.teto) * 100 : 0;
   const since30 = (() => { const x = parse(t); x.setDate(x.getDate() - 30); return x.toISOString().slice(0, 10); })();
   const filt = { semana: s => s.date >= w.inicio && s.date <= w.fim, salario: s => s.date >= w.desde, "30d": s => s.date >= since30 }[S.filter];
-  const list = w.lista.filter(filt);
+  const all = w.lista.filter(filt), nEst = all.filter(isEst).length;
+  const list = S.showEst ? all : all.filter(s => !isEst(s));
   const total = list.filter(s => !s.ignored).reduce((a, s) => a + s.amount, 0);
   const byDay = {};
   list.forEach(s => (byDay[s.date] = byDay[s.date] || []).push(s));
@@ -371,6 +373,7 @@ VIEWS.gastos = d => {
     <section class="card flush">
       <div class="card-head"><div class="seg" role="tablist">${[["semana", "Semana"], ["salario", "Desde o salário"], ["30d", "30 dias"]].map(([k, l]) => `<button data-act="filter" data-f="${k}" class="${S.filter === k ? "on" : ""}">${l}</button>`).join("")}</div></div>
       <div class="kv inset"><span class="muted">${list.length} lançamento(s)</span><b class="num">${brl(total)}</b></div>
+      ${nEst ? `<label class="est-toggle" data-act="estornos"><input type="checkbox" class="check sq" ${S.showEst ? "checked" : ""}><span>Mostrar estornos</span><span class="muted num">${nEst}</span></label>` : ""}
       <div class="list">${Object.keys(byDay).length ? Object.entries(byDay).map(([day, items]) => `<div class="group-label">${relDay(day, t)} · <span class="num">${brl(items.filter(s => !s.ignored).reduce((a, s) => a + s.amount, 0))}</span></div>${items.map(spendRow).join("")}`).join("") : `<div class="empty">${icon("wallet")}<div>Nenhum lançamento neste período.</div></div>`}</div>
     </section>
   </div>`;
@@ -889,7 +892,7 @@ const A = {
   goalwithdraw: el => { const g = S.d.metas.find(x => x.id === Number(el.dataset.id)); openSheet({ title: `Retirar de ${g.name}`, fields: [{ name: "add", label: "Valor", type: "money", required: true, big: true }], saveLabel: "Retirar", onSave: v => api("/api/goals", { id: g.id, add: -Math.abs(v.add) }) }); },
   day: el => {
     const w = S.d.semana, date = el.dataset.date, dt = parse(date);
-    const list = w.lista.filter(s => s.date === date);
+    const list = w.lista.filter(s => s.date === date && (S.showEst || !isEst(s)));
     const total = sumSp(list), media = w.teto / 7;
     const future = date > w.hoje;
     const ratio = media ? (total / media) * 100 : 0;
@@ -935,6 +938,7 @@ const A = {
   },
   mnav: async el => { S.month = addMonths(S.month, Number(el.dataset.d)); await load(); },
   filter: el => { S.filter = el.dataset.f; render(); },
+  estornos: () => { S.showEst = !S.showEst; store.set("fin-estornos", S.showEst ? "1" : "0"); render(); },
   plantab: el => { S.planTab = el.dataset.t; render(); },
   resetsim: () => { S.simTeto = null; render(); },
   usesim: async () => { try { await api("/api/settings", { teto_semanal: S.simTeto }); toast("Teto atualizado"); S.simTeto = null; await load({ silent: true }); } catch (e) { toast(e.message); } },
