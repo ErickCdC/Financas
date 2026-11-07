@@ -110,17 +110,11 @@
   "caixa_banco": 212.6,
   "caixa_data": "2026-11-07",
   "cartao_usado": {
-   "Nubank": 206.27,
    "PicPay": 1360.0,
-   "Mercado Pago": 1265.69
+   "Mercado Pago": 1265.69,
+   "Nubank": 206.27
   },
   "ciclo_info": {
-   "Nubank": {
-    "conta": "27be5f3e-7a39-4e21-b734-1d4439c35288",
-    "fechou": "2026-10-25",
-    "fecha_antes": 7,
-    "compras": 27.94
-   },
    "PicPay": {
     "conta": "6d7341ae-373e-4d3b-b53b-f28126fded99",
     "fechou": "2026-10-29",
@@ -132,6 +126,12 @@
     "fechou": "2026-10-29",
     "fecha_antes": 6,
     "compras": 88.98
+   },
+   "Nubank": {
+    "conta": "27be5f3e-7a39-4e21-b734-1d4439c35288",
+    "fechou": "2026-10-25",
+    "fecha_antes": 7,
+    "compras": 27.94
    }
   },
   "entradas": {
@@ -148,26 +148,14 @@
    }
   },
   "eventos_pendentes": [],
-  "last_auto_sync": "2026-11-07T16:58",
+  "last_auto_sync": "2026-11-07T17:25",
   "last_force": "2026-11-07T17:00",
-  "last_sync": "2026-11-07 16:59",
-  "last_tick": "2026-11-07 16:58",
+  "last_sync": "2026-11-07 17:26",
+  "last_tick": "2026-11-07 17:25",
   "migracoes": [
    "salario_minimo_50"
   ],
   "sync_detalhe": [
-   {
-    "banco": "Nubank",
-    "tipo": "conta",
-    "lidas": 0,
-    "no_app": 0
-   },
-   {
-    "banco": "Nubank",
-    "tipo": "cartão",
-    "lidas": 18,
-    "no_app": 16
-   },
    {
     "banco": "PicPay",
     "tipo": "conta",
@@ -191,6 +179,18 @@
     "tipo": "cartão",
     "lidas": 9,
     "no_app": 5
+   },
+   {
+    "banco": "Nubank",
+    "tipo": "conta",
+    "lidas": 0,
+    "no_app": 0
+   },
+   {
+    "banco": "Nubank",
+    "tipo": "cartão",
+    "lidas": 18,
+    "no_app": 16
    }
   ]
  },
