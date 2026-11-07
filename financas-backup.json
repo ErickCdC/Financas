@@ -151,7 +151,7 @@
   "last_auto_sync": "2026-11-07T20:07",
   "last_force": "2026-11-07T18:47",
   "last_sync": "2026-11-07 19:14",
-  "last_tick": "2026-11-07 20:27",
+  "last_tick": "2026-11-07 20:30",
   "migracoes": [
    "salario_minimo_50"
   ],
@@ -1165,7 +1165,7 @@
    "auth": "-LZCogkbAIUGPprhqKSGMw",
    "label": "Android · Chrome",
    "created": "2026-11-06 17:47",
-   "last_ok": "2026-11-07 09:00",
+   "last_ok": "2026-11-07 20:30",
    "fails": 0
   }
  ],
@@ -1247,6 +1247,12 @@
    "sent_at": "2026-11-07 09:00",
    "title": "Academia vence atrasada",
    "body": "R$ 100,00 (previsto). Toque para marcar como paga."
+  },
+  {
+   "key": "daily:2026-11-07",
+   "sent_at": "2026-11-07 20:30",
+   "title": "Lançou seus gastos de hoje?",
+   "body": "Nada lançado hoje. Restam R$ 0,00 na semana."
   }
  ]
 }
