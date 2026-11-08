@@ -98,6 +98,10 @@
     "relatorio": {
      "on": true,
      "time": "09:00"
+    },
+    "cobrancas": {
+     "on": true,
+     "time": "09:00"
     }
    }
   },
@@ -175,12 +179,13 @@
   "last_auto_sync": "2026-11-08T14:15",
   "last_force": "2026-11-08T13:49",
   "last_sync": "2026-11-08 13:49",
-  "last_tick": "2026-11-08 14:36",
+  "last_tick": "2026-11-08 14:37",
   "metas_eta": {
    "1": "2026-12"
   },
   "migracoes": [
    "assinaturas_nov26",
+   "cobranca_valter",
    "fgts_libera_aprendiz",
    "metas_share_igual",
    "netinjection_valor",
@@ -895,7 +900,7 @@
    "date": "2026-10-23",
    "description": "BANCO MCP                .CAMPO GRAN MS",
    "amount": 29.9,
-   "category": "assinatura",
+   "category": "outros",
    "source": "banco",
    "ext_id": "6d7341ae-373e-4d3b-b53b-f28126fded99:3bcac943-5cbd-49cc-9552-864c42f1912c",
    "ignored": 1,
@@ -1093,7 +1098,7 @@
    "date": "2026-10-19",
    "description": "SEGUROCARTEIR",
    "amount": 9.5,
-   "category": "assinatura",
+   "category": "outros",
    "source": "banco",
    "ext_id": "6d7341ae-373e-4d3b-b53b-f28126fded99:9ab530ea-995a-49e4-9dd7-c28bc56bc01f",
    "ignored": 1,
@@ -1159,7 +1164,7 @@
    "date": "2026-10-15",
    "description": "Google One               .SAO PAULO  BRA",
    "amount": 14.99,
-   "category": "assinatura",
+   "category": "outros",
    "source": "banco",
    "ext_id": "6d7341ae-373e-4d3b-b53b-f28126fded99:8971932e-c5e8-4840-ae74-74346cab094c",
    "ignored": 1,
@@ -1329,5 +1334,20 @@
    "title": "Lançou seus gastos de hoje?",
    "body": "Nada lançado hoje. Restam R$ 0,00 na semana."
   }
- ]
+ ],
+ "cobrancas": [
+  {
+   "id": 1,
+   "nome": "I-Conecta",
+   "pessoa": "Valter",
+   "valor": 115.0,
+   "conta_id": 12,
+   "dia_ini": 1,
+   "dia_fim": 5,
+   "match": "valter luis",
+   "nota": "Internet da casa dele",
+   "ativo": 1
+  }
+ ],
+ "cobranca_mes": []
 }
