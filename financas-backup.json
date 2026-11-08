@@ -107,6 +107,13 @@
   "meta_caixinha": 0.0,
   "teto_auto": false,
   "salario_tipo": "util",
+  "fgts": {
+   "saldo": 1285.0,
+   "data": "2026-11-08",
+   "mensal": 205.19,
+   "libera": "2028-05-12",
+   "rende_pct": 3.0
+  },
   "caixa_banco": 192.7,
   "caixa_data": "2026-11-08",
   "cartao_usado": {
@@ -148,10 +155,10 @@
    }
   },
   "eventos_pendentes": [],
-  "last_auto_sync": "2026-11-08T11:06",
+  "last_auto_sync": "2026-11-08T11:33",
   "last_force": "2026-11-08T10:39",
-  "last_sync": "2026-11-08 11:08",
-  "last_tick": "2026-11-08 11:12",
+  "last_sync": "2026-11-08 11:35",
+  "last_tick": "2026-11-08 11:33",
   "migracoes": [
    "salario_minimo_50"
   ],
