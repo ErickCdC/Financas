@@ -415,7 +415,7 @@ function fgtsCard(f) {
     <div class="card-head"><div><div class="eyebrow">Casa própria · cresce sozinho</div><h3>FGTS</h3></div>
       <button class="btn ghost sm" data-act="editfgts">Atualizar</button></div>
     <div class="v-big num">${brl(f.hoje)} <span class="muted of">estimado hoje</span></div>
-    <div class="lead">+${brl(f.mensal)} por mês, mais um depósito em dezembro pelo 13º${f.rende_pct ? ` · rende ~${String(f.rende_pct).replace(".", ",")}% ao ano` : ""}.</div>
+    <div class="lead">+${brl(f.mensal)} por mês (8% do salário bruto), mais o do 13º em dezembro${f.rende_pct ? ` · rende ~${String(f.rende_pct).replace(".", ",")}% ao ano` : ""}. Acompanha seu salário: mês com hora extra conta o que caiu de verdade, e aumento muda a projeção.</div>
     ${f.marcos.map(x => `<div class="kv ${x.libera ? "strong" : ""}"><span class="${x.libera ? "" : "muted"}">${x.libera ? `Libera para a casa · ${dmy(x.data)}` : `Em ${monthName(x.data.slice(0, 7))}`}</span><span class="num">~${brl0(x.saldo)}</span></div>`).join("")}
     <div class="sub muted goal-note">Saldo informado: ${brl(f.saldo)} em ${dmy(f.data)}. Atualize quando conferir no app do FGTS.</div>
   </section>`;
@@ -905,14 +905,13 @@ const A = {
   editfgts: () => {
     const f = S.d.fgts || {};
     openSheet({
-      title: "FGTS", desc: "Confira o saldo no app FGTS e informe aqui. Daqui pra frente o app soma os depósitos sozinho.",
+      title: "FGTS", desc: "Confira o saldo no app FGTS e informe aqui. Daqui pra frente o app soma sozinho os depósitos, que acompanham seu salário.",
       fields: [
         { name: "saldo", label: "Saldo hoje", type: "money", required: true, big: true },
-        { name: "mensal", label: "Depósito por mês", type: "money", hint: "8% do salário bruto. Com R$ 2.564,92, dá R$ 205,19." },
         { name: "libera", label: "Liberado para a casa a partir de", type: "date", hint: "Com 3 anos de carteira assinada, somando todos os empregos" },
         { name: "rende_pct", label: "Rendimento ao ano (%)", type: "decimal", hint: "3% mais TR; deixe 3 se não souber" },
       ],
-      values: { saldo: f.hoje, mensal: f.mensal ?? 205.19, libera: f.libera || "", rende_pct: f.rende_pct ?? 3 },
+      values: { saldo: f.hoje, libera: f.libera || "", rende_pct: f.rende_pct ?? 3 },
       onSave: v => api("/api/settings", { fgts: { ...v, data: S.d.hoje } }),
     });
   },

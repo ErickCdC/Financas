@@ -178,3 +178,21 @@ class Fgts(unittest.TestCase):
         self.assertEqual(V.fgts({"saldo": "1.285,00".replace(".", ""), "libera": ""}), {"saldo": 1285.0, "libera": None})
         with self.assertRaises(ValueError):
             V.fgts({"saldo": -1})
+
+
+class FgtsFollowsSalary(unittest.TestCase):
+    F = {"saldo": 1000.0, "data": "2026-06-01", "libera": "2027-10-25", "rende_pct": 0}
+
+    def test_gross_from_net_matches_payslips(self):
+        self.assertAlmostEqual(finance.bruto_de_liquido(2372), 2579.87, places=1)  # holerite out: 2.579,30 (+troco)
+        self.assertAlmostEqual(finance.bruto_de_liquido(3174), 3480.23, places=1)  # holerite mai: 3.479,92
+
+    def test_overtime_month_and_raise(self):
+        cfg = {"salario": 2372, "fgts": self.F, "entradas": {"2026-06": {"total": 2698}, "2026-07": {"total": 2380}}}
+        dep = finance.fgts_deposito(cfg)
+        self.assertAlmostEqual(dep(2026, 7), 0.08 * finance.bruto_de_liquido(2698), places=2)  # jun com hora extra
+        self.assertAlmostEqual(dep(2026, 9), 0.08 * finance.bruto_de_liquido(2372), places=2)  # ago: salário atual
+        antes = dep(2027, 2)
+        cfg.update(aumento_on=True, aumento_pct=10, aumento_from="2027-01")
+        self.assertAlmostEqual(finance.fgts_deposito(cfg)(2027, 2), 0.08 * finance.bruto_de_liquido(2372 * 1.1), places=2)
+        self.assertGreater(finance.fgts_deposito(cfg)(2027, 2), antes)

@@ -410,7 +410,7 @@ def apply(conn, data, t):
         elif prev != total:
             events.append((f"decimo:{ym_j}:{total}", "13º recebido", f"Caiu {brl(total)} na conta.", "/#inicio"))
     if entradas:
-        db.put_setting(conn, "entradas", {k: entradas[k] for k in sorted(entradas)[-6:]})
+        db.put_setting(conn, "entradas", {k: entradas[k] for k in sorted(entradas)[-14:]})  # 14 meses: o FGTS usa
     if incomes:
         sal = max(incomes, key=lambda i: i["amount"])["amount"]
         cfg_month = int(income_ym[5:])

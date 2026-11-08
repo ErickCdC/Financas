@@ -397,39 +397,92 @@ def goals_plan(conn, proj):
     return {"metas": out, "aporte_medio": round(steady, 2)}
 
 
-def fgts_saldo(f, ate):
-    """Saldo estimado do FGTS em `ate`: depósito do mês até o dia 20, mais um em dezembro (13º),
-    e o rendimento de ~3% ao ano creditado todo dia 10."""
+# INSS 2026 (confere com os holerites: R$ 2.579,30 -> R$ 207,81; R$ 3.479,92 -> R$ 306,17).
+# Muda todo janeiro com o salário mínimo; o erro de usar a tabela antiga é de poucos reais.
+INSS_FAIXAS = ((1621.00, 0.075), (2902.84, 0.09), (4354.27, 0.12), (8475.55, 0.14))
+
+
+def inss(bruto):
+    total, antes = 0.0, 0.0
+    for teto, aliq in INSS_FAIXAS:
+        if bruto <= antes:
+            break
+        total += (min(bruto, teto) - antes) * aliq
+        antes = teto
+    return total
+
+
+def bruto_de_liquido(liq):
+    """Salário bruto a partir do líquido. Até R$ 5 mil o único desconto é o INSS (IR isento desde 2026)."""
+    lo, hi = float(liq), float(liq) * 1.25 + 10
+    for _ in range(50):
+        mid = (lo + hi) / 2
+        lo, hi = (mid, hi) if mid - inss(mid) < liq else (lo, mid)
+    return round(hi, 2)
+
+
+def fgts_saldo(f, ate, deposito=None):
+    """Saldo estimado do FGTS em `ate`. `deposito(y, m)` é o que cai no dia 20 do mês (y, m), referente ao
+    salário do mês anterior; em dezembro cai também o do 13º. Rende ~3% ao ano, creditado todo dia 10."""
     try:
         d0 = date.fromisoformat(f.get("data") or "")
     except ValueError:
         return None
-    saldo, mensal = float(f.get("saldo") or 0), float(f.get("mensal") or 0)
+    if deposito is None:
+        mensal = float(f.get("mensal") or 0)
+        deposito = lambda y, m: mensal * (2 if m == 12 else 1)  # noqa: E731
+    saldo = float(f.get("saldo") or 0)
     juros = (1 + float(f.get("rende_pct") or 0) / 100) ** (1 / 12) - 1
     y, m = d0.year, d0.month
     while date(y, m, 1) <= ate:
         if d0 < date(y, m, 10) <= ate:
             saldo *= 1 + juros
         if d0 < date(y, m, 20) <= ate:
-            saldo += mensal * (2 if m == 12 else 1)
+            saldo += deposito(y, m)
         y, m = (y, m + 1) if m < 12 else (y + 1, 1)
     return round(saldo, 2)
 
 
+def fgts_deposito(cfg):
+    """Depósito de FGTS de cada mês, acompanhando o salário: 8% do bruto. Mês que já caiu usa o líquido
+    que entrou de verdade (com hora extra); os próximos usam o salário atual, com o aumento programado."""
+    entradas = cfg.get("entradas") or {}
+    decimos = (int(cfg.get("decimo1_mes") or 11), int(cfg.get("decimo2_mes") or 12))
+
+    def salario_de(ym):
+        rec = (entradas.get(ym) or {}).get("total")
+        if rec and int(ym[5:]) not in decimos:  # em mês de 13º o total mistura salário e 13º
+            return float(rec)
+        sal = float(cfg.get("salario") or 0)
+        if cfg.get("aumento_on") and ym >= (cfg.get("aumento_from") or "9999"):
+            sal *= 1 + float(cfg.get("aumento_pct") or 0) / 100
+        return sal
+
+    def deposito(y, m):
+        ref = P.add_months(f"{y:04d}-{m:02d}", -1)  # o dia 20 traz o FGTS do salário do mês anterior
+        valor = 0.08 * bruto_de_liquido(salario_de(ref))
+        if m == 12:  # FGTS do 13º (as duas parcelas, juntas)
+            valor += 0.08 * bruto_de_liquido(salario_de(f"{y:04d}-12"))
+        return round(valor, 2)
+    return deposito
+
+
 def fgts_plan(cfg, t):
     f = cfg.get("fgts") or {}
-    hoje = fgts_saldo(f, t)
+    dep = fgts_deposito(cfg)
+    hoje = fgts_saldo(f, t, dep)
     if hoje is None:
         return None
+
     def depois(d, meses):
         y, m = divmod(d.month - 1 + meses, 12)
         return clamp_day(d.year + y, m + 1, d.day)
     libera = f.get("libera")
     # daqui a 6 meses, na liberação e um ano depois dela (ou daqui a 6 e 12 meses, sem data)
     datas = [depois(t, 6)] + ([date.fromisoformat(libera), depois(date.fromisoformat(libera), 12)] if libera else [depois(t, 12)])
-    marcos = [{"data": d.isoformat(), "saldo": fgts_saldo(f, d), **({"libera": True} if d.isoformat() == libera else {})}
+    marcos = [{"data": d.isoformat(), "saldo": fgts_saldo(f, d, dep), **({"libera": True} if d.isoformat() == libera else {})}
               for d in sorted(set(datas)) if d > t]
-    return {**f, "hoje": hoje, "marcos": marcos,
+    return {**f, "mensal": round(0.08 * bruto_de_liquido(float(cfg.get("salario") or 0)), 2), "hoje": hoje, "marcos": marcos,
             "na_liberacao": next((x["saldo"] for x in marcos if x.get("libera")), None)}
 
 
