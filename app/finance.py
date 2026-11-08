@@ -697,7 +697,7 @@ def summary(conn, month=None, extra=None):
         "aumento_from", "teto_semanal", "caixa", "caixa_ref", "salario_dia", "ignore_terms", "pix_max",
         "ciclo_extra", "cartoes", "cartao_venc", "last_sync", "caixa_banco", "cartao_usado", "notif",
         "auto", "sync_auto", "salario_regra", "entradas", "last_force", "last_tick", "sync_detalhe", "ciclo_info",
-        "nome", "meta_caixinha", "teto_auto", "salario_tipo", "caixa_data", "fgts", "metas_modo")}
+        "nome", "meta_caixinha", "teto_auto", "salario_tipo", "caixa_data", "fgts", "metas_modo", "banco_incidentes")}
     public_cfg["teto_efetivo"] = cfg["teto_semanal"]
     x = income_month(t, cfg)
     paydays = {P.add_months(x, k): PD.payday_ym(P.add_months(x, k), cfg).isoformat() for k in range(-4, 10)}
@@ -718,6 +718,8 @@ def summary(conn, month=None, extra=None):
         "livre": livre, "insights": insights(conn, cfg, t, proj, livre), **goals_plan(conn, proj, cfg),
         "fgts": fgts_plan(cfg, t), "acima_teto": _acima_teto(conn, cfg, t), "cobrancas": cobrancas_mes(conn, t),
         "cobrancas_pendentes": cobrancas_pendentes(conn, t),
+        "ultima_compra": {r["card"]: r["d"] for r in db.rows(
+            conn, "SELECT card, MAX(date) AS d FROM spends WHERE ext_id IS NOT NULL AND card IS NOT NULL GROUP BY card")},
         "avulsos": db.rows(conn, "SELECT * FROM planned ORDER BY month, day, id"),
         "notificacoes": db.rows(conn, "SELECT * FROM notif_log ORDER BY sent_at DESC LIMIT 20"),
         "aparelhos": db.rows(conn, "SELECT id, label, created, last_ok, fails FROM push_subs ORDER BY id"),

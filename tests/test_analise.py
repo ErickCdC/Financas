@@ -316,3 +316,61 @@ class CobrancaMesSeguinte(Cobrancas):
             got = {ym: finance.cobrancas_mes(conn, date(2026, 12, 21), ym)["itens"][0]["recebido"]
                    for ym in ("2026-10", "2026-11", "2026-12")}
         self.assertEqual(got, {"2026-10": None, "2026-11": "2026-12-03", "2026-12": "2026-12-20"})
+
+
+class CompraAtrasadaDoBanco(unittest.TestCase):
+    """O PicPay demora a mandar compras e manda a hora de Brasília marcada como UTC."""
+    def setUp(self):
+        fresh_db()
+        with db.connect() as conn:
+            for k, v in S.DEFAULT_SETTINGS.items():
+                db.put_setting(conn, k, v)
+
+    def picpay(self, *txs):
+        return {"id": "pp", "type": "CREDIT", "bank": "PicPay", "balance": 0, "credit": {}, "bills": None, "tx": list(txs)}
+
+    def test_picpay_time_is_local(self):
+        calls = []
+
+        def fake(path, body):
+            calls.append(path)
+            if path == "/accounts/list":
+                return {"results": [{"id": "pp", "type": "CREDIT", "bank": "PicPay", "balance": "0"}],
+                        "provider_incident": {"incidents": [{"name": "PicPay - Transações de cartão de crédito não sendo retornada"}]}}
+            if path == "/transactions/list":
+                return {"results": [tx("a", "2026-11-07T01:30:00.001Z", "BAR", 20, "DEBIT"),
+                                    tx("b", "2026-11-06T22:28:00.001Z", "REDE NOVO", 15, "DEBIT")]}
+            return {"results": []}
+        orig, bank.banco_post = bank.banco_post, fake
+        try:
+            with db.connect() as conn:
+                data = bank.fetch(db.get_cfg(conn), date(2026, 11, 8))
+        finally:
+            bank.banco_post = orig
+        self.assertEqual([bank.local_date(x["date"]) for x in data["accounts"][0]["tx"]], ["2026-11-07", "2026-11-06"])
+        self.assertEqual(data["incidentes"], ["PicPay - Transações de cartão de crédito não sendo retornada"])
+        with db.connect() as conn:
+            bank.apply(conn, data, date(2026, 11, 8))
+            self.assertEqual(db.get_cfg(conn)["banco_incidentes"], data["incidentes"])
+            bank.apply(conn, {"accounts": [], "incidentes": []}, date(2026, 11, 9))
+            self.assertEqual(db.get_cfg(conn)["banco_incidentes"], [])  # resolvido: o aviso some
+
+    def test_manual_entry_is_merged_when_the_bank_catches_up(self):
+        with db.connect() as conn:
+            conn.execute("INSERT INTO spends(date,description,amount,category,source,card) "
+                         "VALUES('2026-11-06','Recarga celular',15,'outros','manual','PicPay')")
+            conn.execute("INSERT INTO spends(date,description,amount,category,source,card) "
+                         "VALUES('2026-11-06','Lanche',15,'outros','manual','Nubank')")
+            bank.apply(conn, {"accounts": [self.picpay(tx("b", "2026-11-07T00:10:00", "REDE NOVO", 15, "DEBIT"))]},
+                       date(2026, 11, 9))
+            rows = db.rows(conn, "SELECT description, card, ext_id FROM spends ORDER BY id")
+        self.assertEqual(len(rows), 2)  # não duplicou
+        self.assertEqual((rows[0]["description"], rows[0]["ext_id"]), ("Recarga celular", "pp:b"))
+        self.assertIsNone(rows[1]["ext_id"])  # o lançamento do Nubank não é a compra do PicPay
+
+    def test_wrong_date_already_in_the_app_is_fixed(self):
+        with db.connect() as conn:
+            spend(conn, "2026-11-06", "BAR", 20, ext="pp:a")
+            bank.apply(conn, {"accounts": [self.picpay(tx("a", "2026-11-07T01:30:00", "BAR", 20, "DEBIT"))]},
+                       date(2026, 11, 9))
+            self.assertEqual(conn.execute("SELECT date FROM spends WHERE ext_id='pp:a'").fetchone()[0], "2026-11-07")

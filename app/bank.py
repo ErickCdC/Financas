@@ -256,6 +256,20 @@ def progress():
     return p
 
 
+HORA_LOCAL = ("picpay",)  # bancos que mandam a hora de Brasília marcada como UTC (19h23 vem "19:23Z")
+
+
+def _incidentes(*resps):
+    """Avisos de instabilidade do provedor que afetam os bancos conectados (vêm junto das respostas)."""
+    out = []
+    for r in resps:
+        for i in ((r or {}).get("provider_incident") or {}).get("incidents") or []:
+            nome = str(i.get("name") or "").strip()[:140]
+            if nome and nome not in out:
+                out.append(nome)
+    return out
+
+
 def fetch(cfg, t):
     """Lê contas, transações e faturas. Devolve um dicionário com tudo (sem tocar no banco local)."""
     pay = last_payday(t, cfg)
@@ -266,7 +280,7 @@ def fetch(cfg, t):
     accounts = [a for a in (acc.get("results") or acc.get("accounts") or []) if a.get("type") in ("BANK", "CREDIT")]
     n_credit = sum(1 for a in accounts if a.get("type") == "CREDIT")
     _step("Contas encontradas", done=1, total=1 + len(accounts) + n_credit + 2)
-    out = {"accounts": [], "since": since, "items": set()}
+    out = {"accounts": [], "since": since, "items": set(), "incidentes": _incidentes(acc)}
     for a in accounts:
         typ = a.get("type")
         aid = a.get("account_id") or a.get("id")
@@ -278,6 +292,11 @@ def fetch(cfg, t):
         entry = {"id": aid, "type": typ, "bank": str(a.get("bank") or a.get("name") or "?"),
                  "balance": _num(a.get("balance")), "credit": a.get("creditData") or {},
                  "tx": [x for x in (tx.get("results") or []) if not x.get("scheduled")], "bills": None}
+        if typ == "CREDIT" and any(b in entry["bank"].lower() for b in HORA_LOCAL):
+            for x in entry["tx"]:  # sem o "Z", a data vale como está (compra de 0h a 3h não volta um dia)
+                if str(x.get("date") or "").endswith("Z"):
+                    x["date"] = str(x["date"])[:-1]
+        out["incidentes"] += [i for i in _incidentes(tx) if i not in out["incidentes"]]
         _step(f"Lendo {nome}")
         if typ == "CREDIT":
             PROGRESS["etapa"] = f"Faturas {entry['bank']}"
@@ -341,25 +360,28 @@ def apply(conn, data, t):
             if not sp or not x.get("id"):
                 continue
             ext = f"{a['id']}:{x['id']}"
+            card = card_name(cfg, a["bank"]) if a["type"] == "CREDIT" else None
             if conn.execute("SELECT 1 FROM spends WHERE ext_id=?", (ext,)).fetchone():
                 # categoria apagada (ex.: deixou de ser tratada como assinatura): volta a do banco
                 conn.execute("UPDATE spends SET category=? WHERE ext_id=? AND category IS NULL",
                              (map_category(x.get("category")), ext))
+                conn.execute("UPDATE spends SET date=? WHERE ext_id=? AND source='banco' AND date<>?", (sp[0], ext, sp[0]))
                 continue
             cat, ign_flag = map_category(x.get("category")), 0
             if card_transfer(a["type"], x, cfg["pix_max"]):
                 cat, ign_flag = "pix_credito", 1
+            # lançado à mão antes de o banco mandar (o PicPay às vezes demora dias): junta, não conta duas vezes
             manual = conn.execute("SELECT id FROM spends WHERE source='manual' AND ext_id IS NULL "
-                                  "AND date=? AND ABS(amount-?)<0.005 ORDER BY id LIMIT 1", (sp[0], sp[2])).fetchone()
+                                  "AND ABS(julianday(date) - julianday(?)) <= 1 AND ABS(amount-?)<0.005 "
+                                  "AND (card IS NULL OR card=?) ORDER BY ABS(julianday(date) - julianday(?)), id LIMIT 1",
+                                  (sp[0], sp[2], card, sp[0])).fetchone()
             if manual:
-                conn.execute("UPDATE spends SET ext_id=?, card=COALESCE(card, ?) WHERE id=?",
-                             (ext, card_name(cfg, a["bank"]) if a["type"] == "CREDIT" else None, manual["id"]))
+                conn.execute("UPDATE spends SET ext_id=?, card=COALESCE(card, ?) WHERE id=?", (ext, card, manual["id"]))
                 adopted += 1
                 continue
             cur = conn.execute("INSERT OR IGNORE INTO spends(date,description,amount,category,source,ext_id,card,ignored) "
                                "VALUES(?,?,?,?,?,?,?,?)",
-                               (sp[0], sp[1], sp[2], cat, "banco", ext,
-                                card_name(cfg, a["bank"]) if a["type"] == "CREDIT" else None, ign_flag))
+                               (sp[0], sp[1], sp[2], cat, "banco", ext, card, ign_flag))
             added += cur.rowcount
     estornos = reconcile_refunds(conn)
 
@@ -571,6 +593,7 @@ def apply(conn, data, t):
         detalhe.append({"banco": a["bank"], "tipo": "cartão" if a["type"] == "CREDIT" else "conta",
                         "lidas": len(a["tx"]), "no_app": n})
     db.put_setting(conn, "sync_detalhe", detalhe)
+    db.put_setting(conn, "banco_incidentes", list(data.get("incidentes") or []))
 
     # 5) caixa = saldo das contas − contas do mês já cobertas por esse dinheiro e ainda não pagas
     db.put_setting(conn, "caixa_banco", round(caixa_banco, 2))

@@ -197,13 +197,15 @@ function nextBills(d) {
 function faturaDetail(i, panel) {
   const parts = (i.parts && i.parts.length ? i.parts : i.parts_prev) || [];
   const lista = i.lista || [];
+  const ult = (S.d.ultima_compra || {})[i.card || i.name];
   const status = i.paid ? `<span class="chip pos">paga</span>` : i.estimated ? `<span class="chip">previsto</span>` : `<span class="chip blue">a pagar</span>`;
   const comp = parts.length ? `<div class="card">${parts.map(p => `<div class="kv"><span class="muted">${esc(p.name)}</span><span class="num">${brl(p.amount)}</span></div>`).join("")}
       <div class="kv total"><span>${i.estimated ? "Previsto" : "Valor da fatura"}</span><span class="num">${i.amount == null ? "—" : brl(i.amount)}</span></div></div>` : "";
   const nota = i.nota && String(i.nota).startsWith("Banco: ") ? `<p class="lead">${esc(i.nota.replace("Banco: ", "Valor do banco: "))}.</p>` : "";
   const per = i.compras_de ? `Compras de ${ddmm(i.compras_de)} a ${ddmm(i.ate || i.fecha)} · fecha ${ddmm(i.fecha)} · vence ${ddmm(i.due)}` : (i.due ? `Vence ${ddmm(i.due)}` : "");
   const head = `<h2 class="sec">Compras deste ciclo${lista.length ? ` · ${lista.length}` : ""}<span class="num">${brl(lista.reduce((a, s) => a + s.amount, 0))}</span></h2>`
-    + (i.lista_desde ? `<p class="lead">O app só tem as compras a partir de ${ddmm(i.lista_desde)}, então a lista não fecha com o valor da fatura${i.estimated ? "" : ", que veio do banco"}.</p>` : "");
+    + (i.lista_desde ? `<p class="lead">O app só tem as compras a partir de ${ddmm(i.lista_desde)}, então a lista não fecha com o valor da fatura${i.estimated ? "" : ", que veio do banco"}.</p>` : "")
+    + (ult && !i.paid ? `<p class="lead">Última compra que o banco mandou: ${ddmm(ult)}. Se faltar alguma depois disso, lance à mão: quando o banco mandar, o app junta as duas.</p>` : "");
   openDetail({
     eyebrow: `${i.name} · contas de ${monthOnly(panel.ref)}`,
     title: `${i.amount == null ? "—" : brl(i.amount)} ${status}`, sub: per,
@@ -243,6 +245,7 @@ VIEWS.inicio = d => {
   const alerts = [];
   if (d.config.caixa_desatualizado) alerts.push(notice("warn", "alert", `<b>Atualize seu caixa.</b> O saldo informado é de outro mês, então a projeção está sem ele.`, `<div><a class="btn sm secondary" href="#ajustes">Atualizar caixa</a></div>`));
   (d.cobrancas_pendentes || []).forEach(i => alerts.push(notice(i.estado === "atrasado" ? "warn" : "", "bills", `<b>${i.estado === "atrasado" ? `${esc(i.pessoa)} ainda não pagou` : `Cobrar ${esc(i.pessoa)}`}:</b> ${esc(i.nome)} de ${esc(monthOnly(i.ym))} ${brl(i.valor_mes)}${i.estado === "cobrar" ? ` até ${ddmm(i.fim)}` : ""}.`, `<div><a class="btn sm secondary" href="#contas/receber">Ver cobranças</a></div>`)));
+  (d.config.banco_incidentes || []).forEach(n => alerts.push(notice("warn", "alert", `<b>Open Finance instável:</b> ${esc(n)}. Uma compra recente pode demorar a aparecer: lance à mão. Quando o banco mandar, o app junta as duas e não conta em dobro.`, `<div><button class="btn sm secondary" data-act="addspend">Lançar gasto</button></div>`)));
   if (!S.pushOn && "Notification" in window && Notification.permission !== "denied") alerts.push(notice("", "bell", `<b>Ative as notificações</b> para receber lembretes de contas e do teto da semana.`, `<div><button class="btn sm" data-act="pushon">Ativar neste aparelho</button></div>`));
   if (!d.backup.ativo) alerts.push(notice("warn", "cloud", `<b>Backup automático desligado.</b> No Render grátis os dados podem sumir quando o servidor reinicia.`, `<div><a class="btn sm secondary" href="#ajustes">Ver como ligar</a></div>`));
   else if (d.backup.pausado) alerts.push(notice("warn", "cloud", `<b>Backup pausado:</b> ${esc(d.backup.erro || "erro ao ler o GitHub")}. Evite editar até voltar.`));
