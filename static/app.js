@@ -46,7 +46,7 @@ const NAV = [
 ];
 const S0 = (() => { try { return localStorage.getItem("fin-contas"); } catch (_) { return null; } })();
 const isEst = s => s.category === "estornado"; // compra estornada e o estorno dela
-const S = { view: "inicio", month: null, d: null, planTab: "proj", filter: "semana", showEst: store.get("fin-estornos") === "1", simTeto: null, offline: false, installEvt: null, pushOn: false, contasView: S0 === "cal" ? "cal" : "lista" };
+const S = { openG: new Set(), view: "inicio", month: null, d: null, planTab: "metas", filter: "semana", showEst: store.get("fin-estornos") === "1", simTeto: null, offline: false, installEvt: null, pushOn: false, contasView: S0 === "cal" ? "cal" : "lista" };
 
 function toast(msg) {
   const t = $("#toast");
@@ -82,6 +82,7 @@ async function load({ silent = false } = {}) {
     if (d.sync_rodando && !SB.polling) setTimeout(pollSync, 50);
     if (!location.search.includes("month")) cacheSummary(d);
     render();
+    if (S.pendingRel != null) { const ym = S.pendingRel; S.pendingRel = null; openRelatorio(ym || undefined); }
     syncPush();
   } catch (e) {
     if (e.message === "Faça login") return;
@@ -95,13 +96,18 @@ function showLogin() { $("#login").hidden = false; setTimeout(() => $("#pw").foc
 
 // ---------- navegação ----------
 function route() {
+  const rel = location.hash.match(/^#relatorio(?:-(\d{4}-\d{2}))?$/);
+  if (rel) { history.replaceState(null, "", "#gastos"); S.pendingRel = rel[1] || ""; }
   const [v, sub] = (location.hash.replace("#", "") || "inicio").split("/");
   S.view = NAV.some(n => n[0] === v) ? v : "inicio";
   if (S.d) render();
   window.scrollTo(0, 0);
   if (sub === "novo" && S.d) { history.replaceState(null, "", "#" + S.view); A.addspend(); }
+  if (S.pendingRel != null && S.d) { const ym = S.pendingRel; S.pendingRel = null; openRelatorio(ym || undefined); }
 }
 window.addEventListener("hashchange", route);
+// lembra quais grupos de Ajustes estão abertos (a tela é redesenhada ao salvar)
+document.addEventListener("toggle", e => { const g = e.target; if (g.matches && g.matches("details.sgroup")) g.open ? S.openG.add(g.dataset.g) : S.openG.delete(g.dataset.g); }, true);
 
 function render() {
   if (!S.d) return;
@@ -209,6 +215,18 @@ function etaText(g) {
   if (!g.eta) return "Com a caixinha prevista hoje, ainda não dá para prever quando chega.";
   return `Chega em ${monthName(g.eta)} (${g.meses} ${g.meses === 1 ? "mês" : "meses"}) guardando a caixinha prevista`;
 }
+function metasMini(d) {
+  const G = d.metas || [];
+  if (!G.length && !d.fgts) return "";
+  const a0 = (d.alocacao || [])[0];
+  return `<section class="card"><div class="card-head"><h3>Metas</h3><button class="btn ghost sm" data-act="goto-metas">Ver metas</button></div>
+    ${G.map(g => `<div class="goal-mini"><div class="kv"><span><i class="dot ${goalColor(d, g.id)}"></i>${esc(g.name)}</span><span class="num">${brl0(g.saved)} de ${brl0(g.target)}</span></div>
+      <div class="bar ok"><i data-w="${g.pct}"></i></div>
+      <div class="sub muted">${g.eta === "pronta" ? "Meta alcançada!" : g.eta ? `Chega em ${esc(monthName(g.eta))}` : "Sem previsão com a caixinha de agora"}${a0 && g.proximo > 0 ? ` · recebe ${brl0(g.proximo)} do salário de ${esc(payday(a0.ym))}` : ""}</div></div>`).join("")}
+    ${d.acima_teto > 0 && G.some(g => g.falta > 0) ? `<div class="sub warn-text">Você passou ${brl0(d.acima_teto)} do teto desde o salário: isso já saiu da caixinha e as datas acima já contam com isso.</div>` : ""}
+    ${d.fgts ? `<div class="goal-mini"><div class="kv"><span>FGTS</span><span class="num">${brl0(d.fgts.hoje)}</span></div><div class="sub muted">${d.fgts.na_liberacao != null ? `~${brl0(d.fgts.na_liberacao)} em ${dmy(d.fgts.libera)}, quando libera para a casa` : `+${brl0(d.fgts.mensal)} por mês`}</div></div>` : ""}
+  </section>`;
+}
 function insightCard(i) {
   const v = i.id === "ritmo" || i.id === "comparativo" ? "" : `<b class="num">${brl(i.value)}</b>`;
   return `<div class="insight ${i.tone || ""}"><span class="ic">${icon(i.icon)}</span><div class="body"><div class="t">${esc(i.title)} ${v}</div><div class="sub">${esc(i.text)}</div></div></div>`;
@@ -221,16 +239,12 @@ VIEWS.inicio = d => {
   const w = d.semana, t = d.hoje, dt = parse(t);
   const over = w.gasto > w.teto;
   const pct = w.teto ? (w.gasto / w.teto) * 100 : 0;
-  const m0 = d.proj.months[0];
-  const nextPay = daysBetween(t, w.proximo_salario);
   const alerts = [];
   if (d.config.caixa_desatualizado) alerts.push(notice("warn", "alert", `<b>Atualize seu caixa.</b> O saldo informado é de outro mês, então a projeção está sem ele.`, `<div><a class="btn sm secondary" href="#ajustes">Atualizar caixa</a></div>`));
   if (!S.pushOn && "Notification" in window && Notification.permission !== "denied") alerts.push(notice("", "bell", `<b>Ative as notificações</b> para receber lembretes de contas e do teto da semana.`, `<div><button class="btn sm" data-act="pushon">Ativar neste aparelho</button></div>`));
   if (!d.backup.ativo) alerts.push(notice("warn", "cloud", `<b>Backup automático desligado.</b> No Render grátis os dados podem sumir quando o servidor reinicia.`, `<div><a class="btn sm secondary" href="#ajustes">Ver como ligar</a></div>`));
   else if (d.backup.pausado) alerts.push(notice("warn", "cloud", `<b>Backup pausado:</b> ${esc(d.backup.erro || "erro ao ler o GitHub")}. Evite editar até voltar.`));
 
-  const venc = d.vencimentos.slice(0, 5);
-  const recentes = w.lista.filter(s => !s.ignored).slice(0, 5);
   return `
   <div class="page-head"><div class="eyebrow">${DSEM_LONG[dt.getDay()]}, ${dt.getDate()} de ${MES[dt.getMonth()]}</div><h1>${greet(d)}</h1></div>
   <div class="grid dash">
@@ -249,32 +263,14 @@ VIEWS.inicio = d => {
         <div class="card-head"><div><div class="eyebrow">Livre até o salário de ${ddmm(w.proximo_salario)}</div>
           <div class="v-big num ${d.livre.livre <= 0 ? "neg" : ""}">${brl(d.livre.livre)}</div></div>
           <span class="chip blue num">≈ ${brl(d.livre.por_dia)}/dia</span></div>
-        <div class="lead">O que sobra do salário de ${payday(d.ciclo)} depois das contas de ${esc(monthOnly(d.ciclo))}, contando o que já está em conta${d.livre.meta ? ` e guardando ${brl0(d.livre.meta)}` : ""}.</div>
+        <div class="lead">Depois das contas de ${esc(monthOnly(d.ciclo))}, contando o que já está em conta${d.livre.meta ? ` e guardando ${brl0(d.livre.meta)}` : ""}.</div>
         ${d.config.caixa_banco != null && d.livre.livre > d.config.caixa_banco ? `<div class="sub muted cash-note">Em conta hoje: <b class="num">${brl(d.config.caixa_banco)}</b>. Até o salário cair, Pix e débito saem daqui; o resto só no cartão.</div>` : ""}
         ${(d.insights || []).filter(i => i.id === "ritmo").map(insightCard).join("")}
       </section>
       ${alerts.length ? `<div class="stack">${alerts.join("")}</div>` : ""}
-      <div class="grid two">
-        <a class="card stat" href="#contas"><div class="k">${icon("bills")}Falta pagar</div><div class="v num">${brl0(d.mes.falta)}</div><div class="s">contas de ${esc(monthOnly(d.mes.ref))}</div></a>
-        <a class="card stat" href="#plano"><div class="k">${icon("piggy")}Caixinha prevista</div><div class="v num ${m0.caixinha < 0 ? "neg" : ""}">${brl0(m0.caixinha)}</div><div class="s">do salário de ${payday(m0.ym)} · teto ${brl0(d.config.teto_semanal)}/sem</div></a>
-        <div class="card stat"><div class="k">${icon("wallet")}Desde o salário</div><div class="v num">${brl0(w.desde_total)}</div><div class="s">desde ${ddmm(w.desde)}</div></div>
-        <div class="card stat"><div class="k">${icon("calendar")}Próximo salário</div><div class="v num">${ddmm(w.proximo_salario)}</div><div class="s">${nextPay <= 0 ? "hoje" : `em ${nextPay} ${nextPay === 1 ? "dia" : "dias"}`}</div></div>
-      </div>
     </div>
     <div class="stack">
-      ${(d.metas || []).length ? `<section class="card"><div class="card-head"><h3>Metas</h3><button class="btn ghost sm" data-act="goto-metas">Ver metas</button></div>
-        ${d.metas.map(g => `<div class="goal-mini"><div class="kv"><span>${esc(g.name)}</span><span class="num">${brl0(g.saved)} de ${brl0(g.target)}</span></div>
-          <div class="bar ok"><i data-w="${g.pct}"></i></div><div class="sub muted">${etaText(g)}</div></div>`).join("")}
-        ${d.fgts ? `<div class="goal-mini"><div class="kv"><span>FGTS</span><span class="num">${brl0(d.fgts.hoje)}</span></div><div class="sub muted">${d.fgts.na_liberacao != null ? `~${brl0(d.fgts.na_liberacao)} em ${dmy(d.fgts.libera)}, quando libera para a casa` : `+${brl0(d.fgts.mensal)} por mês`}</div></div>` : ""}</section>` : ""}
-      <section class="card"><div class="card-head"><h3>Gastos da semana</h3><span class="chip ${over ? "neg" : pct > 80 ? "warn" : "blue"}">${Math.round(pct)}% do teto</span></div>${weekBars(w)}<div class="tap-hint">Toque num dia para ver os gastos</div></section>
-      <section class="card flush"><div class="card-head"><h3>Próximos vencimentos</h3></div>
-        <div class="list">${venc.length ? venc.map(i => `<a class="item tap" href="#contas"><span class="ic ${i.group === "fatura" ? "blue" : ""}">${icon(i.group === "fatura" ? "card" : "bills")}</span>
-          <span class="body"><span class="t">${esc(i.name)}</span><span class="sub">${ddmm(i.due)}${i.estimated ? " · previsto" : ""}</span></span>
-          <span class="amt num">${brl(i.amount)}</span>${dueChip(i, t)}</a>`).join("") : `<div class="empty">${icon("check")}<div>Nada vencendo nos próximos dias.</div></div>`}</div>
-      </section>
-      <section class="card flush"><div class="card-head"><h3>Últimos lançamentos</h3><a class="btn ghost sm" href="#gastos">Ver todos</a></div>
-        <div class="list">${recentes.length ? recentes.map(spendRow).join("") : `<div class="empty">${icon("wallet")}<div>Nenhum gasto lançado.</div></div>`}</div>
-      </section>
+      ${metasMini(d)}
     </div>
   </div>`;
 };
@@ -306,7 +302,6 @@ VIEWS.contas = d => {
         <div class="bar ok"><i data-w="${pct}"></i></div>
         <div class="lead">Pago ${brl(m.pago)} de ${brl(m.total)}${m.sem_valor ? ` · ${m.sem_valor} sem valor` : ""}</div>
       </section>
-      ${notice("", "info", "Valores com <b>previsto</b> são estimativas. Toque no valor para informar o real da fatura.")}
     </div>
     <div class="stack">
       <div class="monthnav"><div class="seg">${[["lista", "Lista"], ["cal", "Calendário"]].map(([k, l]) => `<button data-act="contasview" data-v="${k}" class="${S.contasView === k ? "on" : ""}">${l}</button>`).join("")}</div>
@@ -368,9 +363,10 @@ VIEWS.gastos = d => {
         <div class="lead num">${brl(w.gasto)} de ${brl(w.teto)} · semana passada ${brl(w.semana_passada)}</div>
         ${weekBars(w)}
       </section>
-      ${(d.insights || []).length ? `<section class="card"><div class="card-head"><h3>Raio-X</h3><span class="muted">desde ${ddmm(w.desde)}</span></div><div class="stack">${d.insights.filter(i => i.id !== "ritmo").map(insightCard).join("")}</div></section>` : ""}
-      <section class="card"><div class="card-head"><h3>Por categoria</h3><span class="muted num">desde ${ddmm(w.desde)}</span></div>
-        ${w.categorias.length ? w.categorias.map(c => `<button type="button" class="catrow" data-act="cat" data-cat="${esc(c.cat)}"><span class="n">${esc(c.cat)}</span><div class="bar"><i data-w="${(c.total / maxCat) * 100}"></i></div><span class="num">${brl0(c.total)}</span></button>`).join("") : `<div class="muted">Sem gastos ainda.</div>`}
+      <section class="card">
+        <div class="card-head"><div><div class="eyebrow">Desde o salário de ${ddmm(w.desde)}</div><h3 class="num">${brl(w.desde_total)}</h3></div>
+          <button class="btn sm" data-act="relatorio">${icon("chart")}Relatório</button></div>
+        ${w.categorias.slice(0, 4).map(c => `<button type="button" class="catrow" data-act="cat" data-cat="${esc(c.cat)}"><span class="n">${esc(c.cat)}</span><div class="bar"><i data-w="${(c.total / maxCat) * 100}"></i></div><span class="num">${brl0(c.total)}</span></button>`).join("") || `<div class="muted">Sem gastos ainda.</div>`}
       </section>
     </div>
     <section class="card flush">
@@ -438,7 +434,8 @@ function metasCaixinha(d) {
     <div class="card-head"><div><div class="eyebrow">Caixinha dos próximos ${A.length} salários</div><h3 class="num">${brl(total)}</h3></div>
       <span class="chip ${d.config.aumento_on ? "blue" : ""}">${d.config.aumento_on ? "com aumento" : "sem aumento"}</span></div>
     <div class="seg seg-2"><button data-act="metasmodo" data-m="ordem" class="${modo === "ordem" ? "on" : ""}">Uma por vez</button><button data-act="metasmodo" data-m="divisao" class="${modo === "divisao" ? "on" : ""}">Dividir em %</button></div>
-    <p class="lead">${modo === "ordem" ? "A caixinha enche uma meta por vez, na ordem de prioridade. Quando uma termina, passa para a próxima." : "Cada meta recebe a % definida nela. Quando uma termina, a parte dela vai para as outras."}</p>
+    <p class="lead">${modo === "ordem" ? "A caixinha enche uma meta por vez, na ordem de prioridade." : "Cada meta recebe a % definida nela; quando uma termina, a parte dela vai para as outras."} Se você passar do teto, a caixinha do salário diminui e as datas das metas se ajustam sozinhas.</p>
+    ${d.acima_teto > 0 ? `<div class="sub warn-text">Desde o salário você passou ${brl(d.acima_teto)} do teto: já está descontado aqui.</div>` : ""}
     ${G.length ? `<div class="chart">${metasChart(d)}</div>
     <div class="legend wrap">${G.map(g => `<span><i class="${goalColor(d, g.id)}"></i>${esc(g.name)}</span>`).join("")}${livre ? `<span><i class="glivre"></i>Sem meta</span>` : ""}</div>` : ""}
     ${a0 ? `<div class="kv strong"><span>Do salário de ${esc(payday(a0.ym))}</span><span class="num">${brl(a0.total)}</span></div>
@@ -466,6 +463,13 @@ function previewDivisao(valor, metas, modo) {
   return { partes, resto: Math.max(resto, 0) };
 }
 
+function avulsosHtml(d) {
+  const groups = {};
+  (d.avulsos || []).forEach(p => (groups[p.month] = groups[p.month] || []).push(p));
+  return `<h2 class="sec">Avulsos <span class="btn-row"><button class="btn ghost sm" data-act="addplanned" data-kind="saida">${icon("plus")}Despesa</button><button class="btn ghost sm" data-act="addplanned" data-kind="entrada">${icon("plus")}Entrada</button></span></h2>
+    ${Object.keys(groups).length ? Object.entries(groups).map(([ym, list]) => `<div class="group-label">${esc(monthName(ym))}</div><section class="card flush"><div class="list">${list.map(plannedRow).join("")}</div></section>`).join("") : `<p class="lead">Caução, presente, IPVA, hora extra: o que não acontece todo mês entra aqui, como conta ou entrada do mês certo.</p>`}`;
+}
+
 function fgtsCard(f) {
   if (!f) return `<section class="card goal"><div class="card-head"><div><div class="eyebrow">Casa própria</div><h3>FGTS</h3></div></div>
     <p class="lead">Informe o saldo e o app soma os depósitos de cada mês sozinho.</p><div class="btn-row"><button class="btn sm" data-act="editfgts">Informar saldo</button></div></section>`;
@@ -480,7 +484,8 @@ function fgtsCard(f) {
 }
 
 VIEWS.plano = d => {
-  const seg = `<div class="seg seg-4">${[["proj", "Projeção"], ["metas", "Metas"], ["parcelas", "Parcelas"], ["avulsos", "Avulsos"]].map(([k, l]) => `<button data-act="plantab" data-t="${k}" class="${S.planTab === k ? "on" : ""}">${l}</button>`).join("")}</div>`;
+  if (S.planTab === "avulsos") S.planTab = "parcelas";
+  const seg = `<div class="seg seg-3">${[["metas", "Metas"], ["proj", "Projeção"], ["parcelas", "Parcelas"]].map(([k, l]) => `<button data-act="plantab" data-t="${k}" class="${S.planTab === k ? "on" : ""}">${l}</button>`).join("")}</div>`;
   if (S.planTab === "metas") {
     return `<div class="monthnav">${seg}</div>
     ${metasCaixinha(d)}
@@ -498,20 +503,12 @@ VIEWS.plano = d => {
     </section>`).join("") || `<div class="empty">${icon("piggy")}<div>Nenhuma meta ainda.</div></div>`}${fgtsCard(d.fgts)}</div>
     <p class="lead">A previsão usa a caixinha projetada de cada salário (depois dos próximos meses, a média de ${brl0(d.aporte_medio)}/mês). Ela muda sozinha quando você gasta menos, recebe mais ou cria outra meta.</p>`;
   }
-  if (S.planTab === "avulsos") {
-    const groups = {};
-    (d.avulsos || []).forEach(p => (groups[p.month] = groups[p.month] || []).push(p));
-    return `<div class="monthnav">${seg}</div>
-    <div class="btn-row"><button class="btn sm" data-act="addplanned" data-kind="saida">${icon("plus")}Despesa</button><button class="btn sm secondary" data-act="addplanned" data-kind="entrada">${icon("plus")}Entrada extra</button></div>
-    <p class="lead">Coisas que não acontecem todo mês: caução, presente, IPVA, horas extras, reembolso. Cada uma é conta (ou entrada) de um mês e entra no salário desse mês.</p>
-    ${Object.keys(groups).length ? Object.entries(groups).map(([ym, list]) => `<h2 class="sec">${esc(monthName(ym))}</h2><section class="card flush"><div class="list">${list.map(plannedRow).join("")}</div></section>`).join("") : `<div class="empty">${icon("calendar")}<div>Nada planejado ainda.</div></div>`}`;
-  }
   if (S.planTab === "parcelas") {
     const ps = d.parcelas;
-    return `<div class="monthnav">${seg}<button class="btn sm" data-act="addinst">${icon("plus")}Nova</button></div>
+    return `<div class="monthnav">${seg}</div>
     <div class="grid two"><div class="card stat"><div class="k">Total restante</div><div class="v num">${brl0(d.parcelas_total_restante)}</div></div>
       <div class="card stat"><div class="k">Por mês agora</div><div class="v num">${brl0(d.parcelas_mensal)}</div></div></div>
-    <h2 class="sec">Parcelas</h2>
+    <h2 class="sec">Parcelas <span class="btn-row"><button class="btn ghost sm" data-act="addinst">${icon("plus")}Nova</button></span></h2>
     <section class="card flush"><div class="list">${ps.length ? ps.map(p => `<div class="item">
       <span class="ic blue">${icon("card")}</span>
       <div class="body"><div class="t">${esc(p.name)}</div>
@@ -519,7 +516,8 @@ VIEWS.plano = d => {
         <div class="bar ok"><i data-w="${(p.paid_count / p.total) * 100}"></i></div></div>
       <div class="ctrl"><div class="amt num">${brl(p.amount)}</div>
         <div class="btn-row">${p.restante > 0 && (d.config.auto || {}).parcelas === false ? `<button class="btn sm secondary" data-act="instpay" data-id="${p.id}" data-n="${p.paid_count}">+1 paga</button>` : ""}<button class="btn sm ghost" data-act="editinst" data-id="${p.id}">Editar</button></div></div>
-    </div>`).join("") : `<div class="empty">${icon("card")}<div>Nenhuma parcela.</div></div>`}</div></section>`;
+    </div>`).join("") : `<div class="empty">${icon("card")}<div>Nenhuma parcela.</div></div>`}</div></section>
+    ${avulsosHtml(d)}`;
   }
   const c = d.config, sim = S.simTeto ?? c.teto_semanal;
   const P = simParts(d, sim);
@@ -539,9 +537,9 @@ VIEWS.plano = d => {
     </div>
     <div class="stack">
       <div class="stack" id="simmonths">${P.months}</div>
-      <section class="card flush"><div class="card-head"><h3>Faturas informadas</h3><button class="btn sm ghost" data-act="setov">${icon("plus")}Informar</button></div>
+      <details class="card flush sgroup-inline"><summary class="card-head"><h3>Faturas informadas (${d.overrides.length})</h3>${icon("right")}</summary><div class="btn-row pad"><button class="btn sm ghost" data-act="setov">${icon("plus")}Informar valor de uma fatura</button></div>
         <div class="list">${d.overrides.length ? d.overrides.map(o => `<button class="item" data-act="editov" data-card="${esc(o.card)}" data-month="${esc(o.month)}" data-amount="${o.amount}" data-note="${esc(o.note || "")}">
-          <span class="ic blue">${icon("card")}</span><span class="body"><span class="t">${esc(o.card)}</span><span class="sub">fatura de ${esc(monthName(o.month))}${String(o.note || "").startsWith("Banco:") ? " · do banco" : ""}</span></span><span class="amt num">${brl(o.amount)}</span></button>`).join("") : `<div class="empty">Nenhuma. As faturas usam a previsão.</div>`}</div></section>
+          <span class="ic blue">${icon("card")}</span><span class="body"><span class="t">${esc(o.card)}</span><span class="sub">fatura de ${esc(monthName(o.month))}${String(o.note || "").startsWith("Banco:") ? " · do banco" : ""}</span></span><span class="amt num">${brl(o.amount)}</span></button>`).join("") : `<div class="empty">Nenhuma. As faturas usam a previsão.</div>`}</div></details>
     </div>
   </div>`;
 };
@@ -574,6 +572,9 @@ function lastIncome(c) {
   const e = c.entradas || {}; const k = Object.keys(e).sort().pop();
   return k ? `Último: ${brl(e[k].total)} em ${ddmm(e[k].itens[0].date)}` : "";
 }
+function sgroup(id, ic, title, sub, body) {
+  return `<details class="card flush sgroup" data-g="${id}" ${S.openG.has(id) ? "open" : ""}><summary><span class="ic blue">${icon(ic)}</span><span class="body"><span class="t">${title}</span><span class="sub">${sub}</span></span>${icon("right")}</summary><div class="sg-body">${body}</div></details>`;
+}
 function sw(path, on) { return `<label class="switch"><input type="checkbox" data-set="${path}" data-kind="bool" ${on ? "checked" : ""}><span></span></label>`; }
 function timeIn(path, v) { return `<input type="time" data-set="${path}" data-kind="text" value="${esc(v)}">`; }
 function moneyIn(path, v, label) { return `<label class="field"><span>${label}</span><div class="money"><input inputmode="decimal" data-set="${path}" data-kind="num" value="${esc(String(v ?? "").replace(".", ","))}"></div></label>`; }
@@ -588,11 +589,12 @@ VIEWS.ajustes = d => {
   const months = MES.map((m, i) => `<option value="${i + 1}">${m}</option>`).join("");
   const sel = (path, v, opts) => `<select data-set="${path}" data-kind="int">${opts.replace(`value="${v}"`, `value="${v}" selected`)}</select>`;
   const lastTick = c.last_tick || null;
+  const ligados = Object.values(r).filter(x => x && x.on).length;
+  const fixasMes = d.recorrentes.filter(x => !x.card).reduce((a, x) => a + x.amount, 0);
+  const assinMes = d.recorrentes.filter(x => x.card).reduce((a, x) => a + x.amount, 0);
   return `
-  <div class="grid cols2">
-  <div class="stack">
-    <h2 class="sec">Notificações</h2>
-    <section class="card flush">
+  <div class="stack settings">
+    ${sgroup("notif", "bell", "Notificações", n.enabled ? `${ligados} avisos ligados · silêncio ${n.quiet_start}–${n.quiet_end}` : "Desligadas", `
       <div class="setting"><span class="ic blue">${icon("bell")}</span><div class="body"><div class="t">Este aparelho</div><div class="sub">${pushState}</div></div>
         <div class="ctrl">${S.pushOn ? `<button class="btn sm secondary" data-act="pushtest">Testar</button><button class="btn sm ghost" data-act="pushoff">Desativar</button>` : perm !== "denied" && perm !== "unsupported" ? `<button class="btn sm" data-act="pushon">Ativar</button>` : ""}</div></div>
       ${d.aparelhos.length ? `<div class="setting"><div class="body"><div class="t">Aparelhos inscritos</div><div class="sub">${d.aparelhos.map(a => `${esc(a.label)}${a.last_ok ? ` (último aviso ${esc(a.last_ok.slice(8, 10) + "/" + a.last_ok.slice(5, 7))})` : ""}`).join(" · ")}</div></div></div>` : ""}
@@ -603,15 +605,17 @@ VIEWS.ajustes = d => {
       <div class="setting"><div class="body"><div class="t">Alerta do teto semanal</div><div class="sub">Quando chegar a estes percentuais</div></div><div class="ctrl"><input class="sm-in" data-set="notif.rules.teto_alert.pcts" data-kind="list" value="${esc(r.teto_alert.pcts.join(", "))}" aria-label="Percentuais">%${sw("notif.rules.teto_alert.on", r.teto_alert.on)}</div></div>
       <div class="setting"><div class="body"><div class="t">Contas a vencer</div><div class="sub">Avisar com antecedência</div></div><div class="ctrl">${sel("notif.rules.bills_due.days_before", r.bills_due.days_before, [0, 1, 2, 3, 5, 7].map(x => `<option value="${x}">${x === 0 ? "no dia" : x + " dia(s) antes"}</option>`).join(""))}${timeIn("notif.rules.bills_due.time", r.bills_due.time)}${sw("notif.rules.bills_due.on", r.bills_due.on)}</div></div>
       <div class="setting"><div class="body"><div class="t">Resumo semanal</div><div class="sub">Como foi a semana anterior</div></div><div class="ctrl">${sel("notif.rules.weekly_summary.weekday", r.weekly_summary.weekday, DSEM_LONG.map((x, i) => `<option value="${(i + 6) % 7}">${x}</option>`).join(""))}${timeIn("notif.rules.weekly_summary.time", r.weekly_summary.time)}${sw("notif.rules.weekly_summary.on", r.weekly_summary.on)}</div></div>
+      <div class="setting"><div class="body"><div class="t">Compra grande</div><div class="sub">Avisa quando o banco mostrar uma compra a partir deste valor</div></div><div class="ctrl"><div class="money"><input class="sm-in" inputmode="decimal" data-set="notif.rules.compra_grande.valor" data-kind="num" value="${(r.compra_grande || {}).valor ?? 100}" aria-label="Valor"></div>${sw("notif.rules.compra_grande.on", (r.compra_grande || {}).on)}</div></div>
+      <div class="setting"><div class="body"><div class="t">Ritmo do mês</div><div class="sub">Se, no ritmo atual, o dinheiro não fecha até o salário</div></div><div class="ctrl">${sel("notif.rules.ritmo.weekday", (r.ritmo || {}).weekday ?? 3, DSEM_LONG.map((x, i) => `<option value="${(i + 6) % 7}">${x}</option>`).join(""))}${timeIn("notif.rules.ritmo.time", (r.ritmo || {}).time || "19:00")}${sw("notif.rules.ritmo.on", (r.ritmo || {}).on)}</div></div>
+      <div class="setting"><div class="body"><div class="t">Metas</div><div class="sub">Quando uma meta atrasa, adianta ou é alcançada</div></div>${sw("notif.rules.metas.on", (r.metas || { on: true }).on)}</div>
+      <div class="setting"><div class="body"><div class="t">Relatório do mês</div><div class="sub">No dia do salário: quanto gastou, onde e contra o teto</div></div><div class="ctrl">${timeIn("notif.rules.relatorio.time", (r.relatorio || {}).time || "09:00")}${sw("notif.rules.relatorio.on", (r.relatorio || {}).on)}</div></div>
       <div class="setting"><div class="body"><div class="t">Dia do salário</div><div class="sub">Quanto guardar e o que pagar</div></div><div class="ctrl">${timeIn("notif.rules.payday.time", r.payday.time)}${sw("notif.rules.payday.on", r.payday.on)}</div></div>
       ${d.sync_disponivel ? `<div class="setting"><div class="body"><div class="t">Eventos do banco</div><div class="sub">Salário recebido, fatura ou conta paga</div></div>${sw("notif.rules.bank_events.on", (r.bank_events || { on: true }).on)}</div>` : ""}
       <div class="setting"><div class="body"><div class="t">Agendador</div><div class="sub">${d.agendador ? `Configurado${lastTick ? ` · última verificação ${esc(lastTick.slice(8, 10) + "/" + lastTick.slice(5, 7) + " " + lastTick.slice(11))}` : ""}` : "Sem CRON_TOKEN: avisos só saem com o servidor acordado. Veja o README."}</div></div>
         <button class="btn sm secondary" data-act="notifrun">Verificar agora</button></div>
-    </section>
-    ${d.notificacoes.filter(x => x.title).length ? `<section class="card flush"><div class="card-head"><h3>Últimos avisos</h3></div><div class="list">${d.notificacoes.filter(x => x.title).slice(0, 6).map(x => `<div class="item"><span class="ic">${icon("bell")}</span><span class="body"><span class="t">${esc(x.title)}</span><span class="sub">${esc(x.sent_at.slice(8, 10) + "/" + x.sent_at.slice(5, 7) + " " + x.sent_at.slice(11))} · ${esc(x.body)}</span></span></div>`).join("")}</div></section>` : ""}
-
-    <h2 class="sec">Orçamento</h2>
-    <section class="card"><div class="form-grid two">
+    ${d.notificacoes.filter(x => x.title).length ? `<div class="group-label">Últimos avisos</div><div class="list">${d.notificacoes.filter(x => x.title).slice(0, 6).map(x => `<div class="item"><span class="ic">${icon("bell")}</span><span class="body"><span class="t">${esc(x.title)}</span><span class="sub">${esc(x.sent_at.slice(8, 10) + "/" + x.sent_at.slice(5, 7) + " " + x.sent_at.slice(11))} · ${esc(x.body)}</span></span></div>`).join("")}</div>` : ""}`)}
+    ${sgroup("orc", "wallet", "Salário e orçamento", `Salário ${brl0(c.salario)} · teto ${brl0(c.teto_semanal)}/semana${c.aumento_on ? ` · aumento de ${c.aumento_pct}% em ${esc(monthName(c.aumento_from))}` : ""}`, `
+    <div class="form-grid two pad">
       <label class="field"><span>Seu nome</span><input data-set="nome" data-kind="text" value="${esc(c.nome || "")}" autocomplete="given-name"></label>
       ${moneyIn("meta_caixinha", c.meta_caixinha, "Guardar por mês (meta da caixinha)")}
       <div class="setting field-switch"><div class="body"><div class="t">Teto automático</div><div class="sub">Ajusta o teto semanal para sobrar a meta</div></div>${sw("teto_auto", c.teto_auto)}</div>
@@ -628,21 +632,19 @@ VIEWS.ajustes = d => {
       <label class="field"><span>Mês da 2ª parcela</span>${sel("decimo2_mes", c.decimo2_mes, months)}</label>
       <label class="field"><span>Aumento (%)</span><input inputmode="decimal" data-set="aumento_pct" data-kind="num" value="${c.aumento_pct}"></label>
       <label class="field"><span>Aumento a partir de</span><input type="month" data-set="aumento_from" data-kind="text" value="${esc(c.aumento_from)}"></label>
-    </div></section>
-  </div>
-  <div class="stack">
-    <h2 class="sec">Cartões <button class="btn ghost sm" data-act="addcard">${icon("plus")}Cartão</button></h2>
-    <section class="card flush">${c.cartoes.map(k => `<div class="setting"><span class="ic blue">${icon("card")}</span><div class="body"><div class="t">${esc(k)}</div><div class="sub">Vence dia ${esc((c.cartao_venc || {})[k] ?? "—")} · compras desde o fechamento${((c.ciclo_info || {})[k] || {}).fechou ? ` (${ddmm(c.ciclo_info[k].fechou)})` : ""}: ${brl((c.ciclo_extra || {})[k] || 0)}</div></div>
-      <button class="btn sm ghost" data-act="editcard" data-card="${esc(k)}">Editar</button></div>`).join("")}</section>
-
-    <h2 class="sec">Contas fixas e assinaturas <button class="btn ghost sm" data-act="addrec">${icon("plus")}Nova</button></h2>
-    <section class="card flush"><div class="list">${d.recorrentes.map(x => `<button class="item" data-act="editrec" data-id="${x.id}">
+    </div>`)}
+    ${sgroup("cartoes", "card", "Cartões", c.cartoes.join(", "), `
+      <div class="btn-row pad"><button class="btn ghost sm" data-act="addcard">${icon("plus")}Cartão</button></div>
+    ${c.cartoes.map(k => `<div class="setting"><span class="ic blue">${icon("card")}</span><div class="body"><div class="t">${esc(k)}</div><div class="sub">Vence dia ${esc((c.cartao_venc || {})[k] ?? "—")} · compras desde o fechamento${((c.ciclo_info || {})[k] || {}).fechou ? ` (${ddmm(c.ciclo_info[k].fechou)})` : ""}: ${brl((c.ciclo_extra || {})[k] || 0)}</div></div>
+      <button class="btn sm ghost" data-act="editcard" data-card="${esc(k)}">Editar</button></div>`).join("")}`)}
+    ${sgroup("fixas", "bills", "Contas fixas e assinaturas", `${brl0(fixasMes)} em contas · ${brl0(assinMes)} em assinaturas por mês`, `
+      <div class="btn-row pad"><button class="btn ghost sm" data-act="addrec">${icon("plus")}Nova</button></div>
+    <div class="list">${d.recorrentes.map(x => `<button class="item" data-act="editrec" data-id="${x.id}">
       <span class="ic ${x.card ? "blue" : ""}">${icon(x.card ? "card" : "bills")}</span>
       <span class="body"><span class="t">${esc(x.name)}</span><span class="sub">${x.card ? "na fatura " + esc(x.card) : "paga direto"}${x.due_day ? ` · vence dia ${x.due_day}` : x.card ? "" : " · sem dia de vencimento"}${!x.card && x.match ? " · automático" : ""}</span></span>
-      <span class="amt num">${brl(x.amount)}</span></button>`).join("")}</div></section>
-
-    <h2 class="sec">Banco</h2>
-    <section class="card flush">
+      <span class="amt num">${brl(x.amount)}</span></button>`).join("")}</div>`)}
+    ${sgroup("banco", "bank", "Banco e sincronização", d.sync_disponivel ? `Última: ${esc(fmtStamp(c.last_sync) || "nunca")}` : "Sem conexão com o banco", `
+    
       <div class="setting"><span class="ic">${icon("bank")}</span><div class="body"><div class="t">Banco MCP</div><div class="sub">${d.sync_disponivel ? `Última sincronização: ${esc(fmtStamp(c.last_sync) || "nunca")}${c.caixa_banco != null ? ` · saldo ${brl(c.caixa_banco)}` : ""}` : "Sem BANCO_MCP_KEY no servidor. O app funciona só com lançamentos manuais."}</div></div>
         ${d.sync_disponivel ? `<button class="btn sm" data-act="sync">Sincronizar</button>` : ""}</div>
       ${d.sync_disponivel && (c.sync_detalhe || []).length ? `<div class="setting"><div class="body"><div class="t">Lido na última sincronização</div><div class="sub">${c.sync_detalhe.map(x => `${esc(x.banco)} ${esc(x.tipo)}: ${x.lidas} lidas, ${x.no_app} no app`).join(" · ")}</div></div></div>` : ""}
@@ -660,26 +662,21 @@ VIEWS.ajustes = d => {
       <div class="setting"><div class="body"><div class="t">Avançar parcelas</div><div class="sub">Conta a parcela quando a fatura é paga ou vence</div></div>${sw("auto.parcelas", au.parcelas)}</div>` : ""}
       <div class="setting stack"><div class="body"><div class="t">Ignorar na sincronização</div><div class="sub">Palavras separadas por vírgula</div></div><textarea class="input" rows="3" data-set="ignore_terms" data-kind="list">${esc(c.ignore_terms.join(", "))}</textarea></div>
       <div class="setting"><div class="body"><div class="t">Pix até este valor vira gasto</div><div class="sub">Acima disso é tratado como conta</div></div><div class="money"><input class="sm-in" inputmode="decimal" data-set="pix_max" data-kind="num" value="${c.pix_max}"></div></div>
-    </section>
-
-    <h2 class="sec">Dados</h2>
-    <section class="card flush">
+    `)}
+    ${sgroup("dados", "cloud", "Dados e aparelho", `Backup ${d.backup.ativo ? (d.backup.pausado ? "pausado" : "ativo") : "desligado"} · tema, instalar, sair`, `
+    
       <div class="setting"><span class="ic ${d.backup.ativo && !d.backup.pausado ? "blue" : ""}">${icon("cloud")}</span><div class="body"><div class="t">Backup automático no GitHub</div>
         <div class="sub">${d.backup.ativo ? (d.backup.pausado ? `<span class="warn">Pausado: ${esc(d.backup.erro)}</span>` : `Ativo em ${esc(d.backup.repo)}${d.backup.ultimo ? ` · último ${esc(d.backup.ultimo.slice(11))}` : ""}${d.backup.erro ? ` · <span class="warn">${esc(d.backup.erro)}</span>` : ""}`) : "Desligado. Configure GITHUB_TOKEN e GITHUB_REPO no Render (README)."}</div></div>
         ${d.backup.ativo ? `<button class="btn sm secondary" data-act="backupnow">Salvar agora</button>` : ""}</div>
       <div class="setting"><span class="ic">${icon("download")}</span><div class="body"><div class="t">Cópia manual</div><div class="sub">Baixe ou restaure um arquivo .json</div></div>
         <div class="ctrl"><a class="btn sm secondary" href="/api/export" download>Baixar</a><button class="btn sm ghost" data-act="import">Restaurar</button></div></div>
       <input id="impfile" type="file" accept="application/json" hidden>
-    </section>
-
-    <h2 class="sec">Aparelho</h2>
-    <section class="card flush">
+        
       <div class="setting"><span class="ic">${icon("moon")}</span><div class="body"><div class="t">Tema</div></div>
         <div class="seg">${[["auto", "Auto"], ["light", "Claro"], ["dark", "Escuro"]].map(([k, l]) => `<button data-act="theme" data-t="${k}" class="${(store.get("fin-theme") || "auto") === k ? "on" : ""}">${l}</button>`).join("")}</div></div>
       ${!standalone ? `<div class="setting"><span class="ic">${icon("install")}</span><div class="body"><div class="t">Instalar o app</div><div class="sub">${S.installEvt ? "Abre em tela cheia, com ícone na tela inicial" : "No Chrome: menu ⋮ › Instalar app (ou Adicionar à tela inicial)"}</div></div>${S.installEvt ? `<button class="btn sm" data-act="install">Instalar</button>` : ""}</div>` : ""}
       <div class="setting"><span class="ic">${icon("logout")}</span><div class="body"><div class="t">Sair</div><div class="sub">Encerra a sessão neste aparelho</div></div><button class="btn sm danger" data-act="logout">Sair</button></div>
-    </section>
-  </div>
+    `)}
   </div>`;
 };
 
@@ -792,6 +789,33 @@ function openDetail({ eyebrow, title, sub, body, actions = "" }) {
   return ov;
 }
 const sumSp = list => list.filter(s => !s.ignored).reduce((a, s) => a + s.amount, 0);
+async function openRelatorio(ym) {
+  let r;
+  try { r = await api("/api/relatorio" + (ym ? "?ym=" + ym : "")); } catch (e) { toast(e.message); return; }
+  const pctv = (a, b) => b > 0 ? Math.round((a - b) / b * 100) : null;
+  const ant = r.anterior, cmp = ant.tem_dados ? pctv(r.total, ant.mesmo_ponto) : null;
+  const maxC = Math.max(...r.categorias.map(c => c.total), 1);
+  const sem = r.semanas.map(w => { const p = w.teto ? w.gasto / w.teto * 100 : 0; return `<div class="wk"><div class="kv"><span class="muted">${ddmm(w.inicio)} a ${ddmm(w.fim)}</span><span class="num ${w.acima > 0 ? "neg" : ""}">${brl0(w.gasto)} <span class="muted">de ${brl0(w.teto)}</span></span></div><div class="bar ${w.acima > 0 ? "over" : ""}"><i data-w="${p}"></i></div></div>`; }).join("");
+  const prev = addMonths(r.ym, -1), next = addMonths(r.ym, 1), atual = S.d.ciclo;
+  openDetail({
+    eyebrow: `Relatório · salário de ${payday(r.ym) || ddmm(r.fim)}`,
+    title: brl(r.total),
+    sub: `${r.aberto ? "Até hoje" : "Gasto"} de ${ddmm(r.inicio)} a ${ddmm(r.ate)} · ${r.dias} dias · ${brl(r.por_dia)}/dia`,
+    body: `${r.dados_desde ? `<p class="lead">O app tem lançamentos a partir de ${ddmm(r.dados_desde)}; antes disso o mês fica incompleto.</p>` : ""}
+      <div class="card">
+        <div class="kv"><span>Teto no período</span><span class="num">${brl(r.teto_periodo)}</span></div>
+        <div class="kv total"><span>${r.acima_teto > 0 ? "Acima do teto" : "Dentro do teto"}</span><span class="num ${r.acima_teto > 0 ? "neg" : "pos"}">${r.acima_teto > 0 ? brl(r.acima_teto) : "✓"}</span></div>
+        ${cmp != null ? `<div class="kv"><span class="muted">No mesmo ponto do mês anterior</span><span class="num">${brl(ant.mesmo_ponto)} <span class="${cmp > 0 ? "neg" : "pos"}">(${cmp > 0 ? "+" : ""}${cmp}%)</span></span></div>` : ""}
+      </div>
+      <h2 class="sec">Semanas</h2><div class="card">${sem}</div>
+      <h2 class="sec">Por categoria</h2><div class="card">${r.categorias.map(c => `<div class="catrow"><span class="n">${esc(c.cat)}</span><div class="bar"><i data-w="${c.total / maxC * 100}"></i></div><span class="num">${brl0(c.total)}${ant.tem_dados && c.anterior ? ` <span class="muted">· ${brl0(c.anterior)}</span>` : ""}</span></div>`).join("") || `<div class="muted">Sem gastos.</div>`}</div>
+      <h2 class="sec">Por onde saiu</h2><div class="card">${r.meios.map(m => `<div class="kv"><span class="muted">${esc(m.nome)}</span><span class="num">${brl(m.total)}</span></div>`).join("")}</div>
+      <h2 class="sec">Maiores gastos</h2>${spendList(r.maiores, "Nenhum gasto.")}
+      <h2 class="sec">Assinaturas no cartão</h2><div class="card">${r.assinaturas.itens.map(a => `<div class="kv"><span class="muted">${esc(a.name)} · ${esc(a.card)}</span><span class="num">${brl(a.amount)}</span></div>`).join("")}<div class="kv total"><span>Por mês</span><span class="num">${brl(r.assinaturas.total)}</span></div></div>`,
+    actions: `<button type="button" class="btn ghost" data-act="relatorio" data-ym="${prev}">‹ ${esc(monthOnly(prev))}</button>${r.ym < atual ? `<button type="button" class="btn ghost" data-act="relatorio" data-ym="${next}">${esc(monthOnly(next))} ›</button>` : ""}`,
+  });
+}
+
 function spendList(list, empty) {
   return list.length ? `<div class="list card flush">${list.map(spendRow).join("")}</div>` : `<div class="empty">${icon("wallet")}<div>${empty}</div></div>`;
 }
@@ -1047,6 +1071,7 @@ const A = {
   },
   mnav: async el => { S.month = addMonths(S.month, Number(el.dataset.d)); await load(); },
   filter: el => { S.filter = el.dataset.f; render(); },
+  relatorio: el => openRelatorio(el && el.dataset ? el.dataset.ym : undefined),
   estornos: () => { S.showEst = !S.showEst; store.set("fin-estornos", S.showEst ? "1" : "0"); render(); },
   plantab: el => { S.planTab = el.dataset.t; render(); },
   resetsim: () => { S.simTeto = null; render(); },

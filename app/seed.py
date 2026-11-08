@@ -50,6 +50,10 @@ DEFAULT_SETTINGS = {
             "payday": {"on": True, "time": "10:00"},
             "auto_sync": {"on": False, "time": "12:30"},
             "bank_events": {"on": True},
+            "compra_grande": {"on": True, "valor": 100.0},
+            "ritmo": {"on": True, "weekday": 3, "time": "19:00"},
+            "metas": {"on": True},
+            "relatorio": {"on": True, "time": "09:00"},
         },
     },
 }
@@ -60,9 +64,14 @@ RECURRING = [  # nome, valor, cartão (None = paga direto da conta)
     ("Luz", 123.00, None),
     ("Internet (Giga Mais)", 93.33, None),
     ("Claude", 113.85, "Mercado Pago"),
-    ("Clube iFood", 7.95, "PicPay"),
-    ("Armazenamento Gigi", 19.90, "PicPay"),
+    ("I-Conecta", 117.22, None),
+    ("Banco MCP", 29.90, "PicPay"),
+    ("Seguro carteira", 9.50, "PicPay"),
+    ("Google One", 14.99, "PicPay"),
 ]
+# Conferido no extrato em 08/11/2026: Clube iFood e Armazenamento Gigi pararam; estas cobram todo mês.
+NOVAS_NOV26 = [("Banco MCP", 29.90, "PicPay", "banco mcp"), ("Seguro carteira", 9.50, "PicPay", "segurocarteir,seguro carteira"),
+               ("Google One", 14.99, "PicPay", "google one"), ("I-Conecta", 117.22, None, "i-conecta")]
 
 INSTALLMENTS = [  # nome, cartão, valor, total, já pagas
     ("Kit PC (Pichau)", "Nubank", 178.33, 6, 5),
@@ -99,7 +108,8 @@ SPENDS = [  # desde o salário (30/10), conferido com o banco em 05/11. Uber com
 
 # Palavras que identificam o pagamento de cada conta fixa no extrato (editável no app).
 MATCH = {"Aluguel": "isabela raissa", "Faculdade": "principia", "Internet (Giga Mais)": "giga mais", "Luz": "ampla",
-         "Claude": "anthropic,claude", "Clube iFood": "ifood club,clube ifood"}
+         "Claude": "anthropic,claude", "Clube iFood": "ifood club,clube ifood", "I-Conecta": "i-conecta",
+         "Banco MCP": "banco mcp", "Seguro carteira": "segurocarteir,seguro carteira", "Google One": "google one"}
 
 
 # Valor original de compras parceladas com juros (para mostrar quanto custou o crédito).

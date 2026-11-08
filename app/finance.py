@@ -449,6 +449,81 @@ def goals_plan(conn, proj, cfg=None):
     return {"metas": out, "aporte_medio": round(steady, 2), "metas_modo": modo, "alocacao": alocacao}
 
 
+def _acima_teto(conn, cfg, t):
+    """Quanto passou do teto desde o salário (já sai da caixinha deste salário)."""
+    since = last_payday(t, cfg)
+    gasto = conn.execute("SELECT COALESCE(SUM(amount),0) FROM spends WHERE ignored=0 AND date BETWEEN ? AND ?",
+                         (since.isoformat(), t.isoformat())).fetchone()[0]
+    return round(max(gasto - float(cfg["teto_semanal"]) / 7 * ((t - since).days + 1), 0), 2)
+
+
+def _ciclo(cfg, ym):
+    """Ciclo do salário `ym`: do salário anterior até a véspera deste."""
+    return PD.payday_ym(P.add_months(ym, -1), cfg), PD.payday_ym(ym, cfg) - timedelta(days=1)
+
+
+def relatorio(conn, cfg, t, ym=None):
+    """Relatório de um ciclo de salário: quanto, onde, em quê, contra o teto e contra o ciclo anterior."""
+    ym = ym or income_month(t, cfg)
+    ini, fim = _ciclo(cfg, ym)
+    ate = min(fim, t)
+    if ate < ini:
+        raise ValueError("esse ciclo ainda não começou")
+    dias = (ate - ini).days + 1
+    q = "SELECT * FROM spends WHERE ignored=0 AND date BETWEEN ? AND ? ORDER BY amount DESC"
+    itens = db.rows(conn, q, (ini.isoformat(), ate.isoformat()))
+    total = round(sum(s["amount"] for s in itens), 2)
+    # ciclo anterior, no mesmo ponto (mesmo número de dias) e inteiro
+    pini, pfim = _ciclo(cfg, P.add_months(ym, -1))
+    pate = min(pini + timedelta(days=dias - 1), pfim)
+    ant = db.rows(conn, q, (pini.isoformat(), pate.isoformat()))
+    ant_total = round(sum(s["amount"] for s in ant), 2)
+    ant_inteiro = conn.execute("SELECT COALESCE(SUM(amount),0) FROM spends WHERE ignored=0 AND date BETWEEN ? AND ?",
+                               (pini.isoformat(), pfim.isoformat())).fetchone()[0]
+    tem_anterior = conn.execute("SELECT 1 FROM spends WHERE date <= ? LIMIT 1", (pini.isoformat(),)).fetchone() is not None
+    desde = conn.execute("SELECT MIN(date) FROM spends").fetchone()[0]
+
+    def por_cat(lst):
+        out = {}
+        for s in lst:
+            c = s.get("category") or "outros"
+            out[c] = out.get(c, 0) + s["amount"]
+        return out
+    cat, cat_ant = por_cat(itens), por_cat(ant)
+    categorias = sorted(({"cat": c, "total": round(v, 2), "anterior": round(cat_ant.get(c, 0), 2)} for c, v in cat.items()),
+                        key=lambda x: -x["total"])
+    meios = {}
+    for s in itens:
+        k = s.get("card") or "Conta (Pix e débito)"
+        meios[k] = meios.get(k, 0) + s["amount"]
+    teto = float(cfg["teto_semanal"])
+    semanas, d = [], ini
+    while d <= ate:
+        ws, we = P.week_range(d)
+        a, b = max(ws, ini), min(we, ate)
+        g = sum(s["amount"] for s in itens if a.isoformat() <= s["date"] <= b.isoformat())
+        lim = teto * ((min(we, fim) - a).days + 1) / 7  # semana cortada pelo salário: teto proporcional
+        semanas.append({"inicio": a.isoformat(), "fim": b.isoformat(), "gasto": round(g, 2), "teto": round(lim, 2),
+                        "acima": round(max(g - lim, 0), 2), "aberta": b == t and we > t})
+        d = we + timedelta(days=1)
+    teto_ate_hoje = teto / 7 * dias
+    assin = db.rows(conn, "SELECT name, amount, card FROM recurring WHERE card IS NOT NULL AND card != '' ORDER BY amount DESC")
+    return {
+        "ym": ym, "inicio": ini.isoformat(), "fim": fim.isoformat(), "ate": ate.isoformat(), "dias": dias,
+        "aberto": fim > t, "total": total, "por_dia": round(total / dias, 2),
+        "teto_semanal": teto, "teto_periodo": round(teto_ate_hoje, 2), "acima_teto": round(max(total - teto_ate_hoje, 0), 2),
+        "semanas_acima": sum(1 for w in semanas if w["acima"] > 0 and not w["aberta"]),
+        "anterior": {"ym": P.add_months(ym, -1), "mesmo_ponto": ant_total, "inteiro": round(ant_inteiro, 2),
+                     "tem_dados": tem_anterior},
+        "categorias": categorias, "semanas": semanas,
+        "maiores": [{k: s[k] for k in ("id", "date", "description", "amount", "category", "card", "source", "ignored")}
+                    for s in itens[:6]],
+        "meios": sorted(({"nome": k, "total": round(v, 2)} for k, v in meios.items()), key=lambda x: -x["total"]),
+        "assinaturas": {"total": round(sum(a["amount"] for a in assin), 2), "itens": assin},
+        "n": len(itens), "dados_desde": desde if desde and desde > ini.isoformat() else None,
+    }
+
+
 # INSS 2026 (confere com os holerites: R$ 2.579,30 -> R$ 207,81; R$ 3.479,92 -> R$ 306,17).
 # Muda todo janeiro com o salário mínimo; o erro de usar a tabela antiga é de poucos reais.
 INSS_FAIXAS = ((1621.00, 0.075), (2902.84, 0.09), (4354.27, 0.12), (8475.55, 0.14))
@@ -575,7 +650,7 @@ def summary(conn, month=None, extra=None):
         "ciclo": x, "paydays": paydays,
         "proximas": month_panel(conn, cfg, P.add_months(x, 1), t, listas=True),
         "livre": livre, "insights": insights(conn, cfg, t, proj, livre), **goals_plan(conn, proj, cfg),
-        "fgts": fgts_plan(cfg, t),
+        "fgts": fgts_plan(cfg, t), "acima_teto": _acima_teto(conn, cfg, t),
         "avulsos": db.rows(conn, "SELECT * FROM planned ORDER BY month, day, id"),
         "notificacoes": db.rows(conn, "SELECT * FROM notif_log ORDER BY sent_at DESC LIMIT 20"),
         "aparelhos": db.rows(conn, "SELECT id, label, created, last_ok, fails FROM push_subs ORDER BY id"),

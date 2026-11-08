@@ -87,6 +87,26 @@ class Rules(unittest.TestCase):
             self.assertIn("teto:2026-11-02:80", teto[0][4])     # marca o 80% junto, sem aviso duplo
             conn.rollback()
 
+    def test_new_alerts(self):
+        db.init()
+        now = datetime(2026, 11, 5, 19, 10, tzinfo=C.TZ)  # quinta, 19h: hora do aviso de ritmo
+        with db.connect() as conn:
+            conn.execute("INSERT INTO spends(date,description,amount,source,card) VALUES('2026-11-05','HELP GAS',152,'banco','PicPay')")
+            conn.execute("INSERT INTO spends(date,description,amount,source) VALUES('2026-11-04','Mercado',900,'manual')")
+            out = {o[0].split(":")[0]: o for o in notify.build(conn, now)}
+            self.assertIn("grande", out)                       # compra do banco acima de R$ 100
+            self.assertIn("Compra de R$ 152,00", out["grande"][1])
+            self.assertIn("ritmo", out)                         # gastando demais para o salário
+            self.assertIn("teto", out)
+            self.assertIn("caixinha", out["teto"][2])           # o aviso do teto fala das metas
+            # meta: atrasou em relação à última data guardada
+            conn.execute("INSERT INTO goals(name,target,saved) VALUES('Viagem',3000,0)")
+            gid = conn.execute("SELECT id FROM goals WHERE name='Viagem'").fetchone()[0]
+            db.put_setting(conn, "metas_eta", {str(gid): "2026-11"})
+            metas = [o for o in notify.build(conn, now) if o[0].startswith("meta:")]
+            self.assertTrue(metas and "atrasou" in metas[0][1])
+            conn.rollback()
+
     def test_notif_validation(self):
         v = V.notif({"enabled": "true", "rules": {"teto_alert": {"pcts": "80, 100"}, "daily_log": {"time": "20:30"}}})
         self.assertEqual(v["rules"]["teto_alert"]["pcts"], [80, 100])

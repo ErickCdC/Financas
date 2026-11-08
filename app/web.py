@@ -295,6 +295,9 @@ class Handler(BaseHTTPRequestHandler):
                 if path == "/api/summary":
                     month = (parse_qs(url.query).get("month") or [None])[0]
                     return self._json(200, finance.summary(conn, V.year_month(month) if month else None, summary_extra()))
+                if path == "/api/relatorio":
+                    ym = (parse_qs(url.query).get("ym") or [None])[0]
+                    return self._json(200, finance.relatorio(conn, db.get_cfg(conn), C.today(), V.year_month(ym) if ym else None))
                 if path == "/api/sync/status":
                     return self._json(200, bank.progress())
                 if path == "/api/export":

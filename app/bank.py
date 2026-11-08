@@ -415,8 +415,21 @@ def apply(conn, data, t):
         sal = max(incomes, key=lambda i: i["amount"])["amount"]
         cfg_month = int(income_ym[5:])
         if auto.get("salario", True) and cfg_month not in (cfg["decimo1_mes"], cfg["decimo2_mes"]) and len(incomes) == 1:
+            base = float(cfg["salario"])
+            if cfg.get("aumento_on") and income_ym >= (cfg.get("aumento_from") or "9999"):
+                # A projeção já soma o aumento em cima do salário: atualizar os dois contaria o aumento duas vezes.
+                alvo = base * (1 + float(cfg.get("aumento_pct") or 0) / 100)
+                if sal >= alvo * 0.97:
+                    db.put_setting(conn, "salario", sal)
+                    db.put_setting(conn, "aumento_on", False)
+                    events.append((f"aumento:{income_ym}", "O aumento chegou",
+                                   f"Caiu {brl(sal)}. A projeção agora usa esse salário.", "/#plano"))
+                else:
+                    events.append((f"sem_aumento:{income_ym}", "O salário veio sem o aumento",
+                                   f"Caiu {brl(sal)}, e a projeção conta com {brl(alvo)}. Se o aumento não vier, "
+                                   "desligue em Planejamento.", "/#plano"))
             # só aceita se estiver perto do salário atual (evita confundir com um Pix grande de alguém)
-            if abs(sal - cfg["salario"]) / max(cfg["salario"], 1) <= 0.3 and abs(sal - cfg["salario"]) >= 0.01:
+            elif abs(sal - base) / max(base, 1) <= 0.3 and abs(sal - base) >= 0.01:
                 db.put_setting(conn, "salario", sal)
 
     # 3) e 4) faturas: valor real e pagamento
@@ -454,8 +467,11 @@ def apply(conn, data, t):
                 total = _num(b.get("totalAmount"))
                 pre = _prepaid(results, i)
                 real = round(total + pre, 2)
-                _auto_override(conn, card, P.add_months(due[:7], -1), real,
-                               "fatura fechada" + (f" + {brl(pre)} pagos antes de fechar" if pre else ""))
+                novo = _auto_override(conn, card, P.add_months(due[:7], -1), real,
+                                      "fatura fechada" + (f" + {brl(pre)} pagos antes de fechar" if pre else ""))
+                if novo and due >= t.isoformat():
+                    events.append((f"fatura:{card}:{due}", f"Fatura {card} fechou: {brl(real)}",
+                                   f"Vence em {due[8:10]}/{due[5:7]}. Já está nas contas a pagar.", "/#contas"))
                 quitada = b.get("payment_status") == "PAID" or (pre > 0 and total <= 0.5)
                 if quitada and set_paid(conn, due[:7], f"bill:{card}", real):
                     events.append((f"paid:{due[:7]}:bill:{card}", f"Fatura {card} paga", f"{brl(real)} confirmado pelo banco.", "/#contas"))
@@ -557,10 +573,14 @@ def _auto_override(conn, card, income_ym, total, label):
     if cur and not str(cur["note"] or "").startswith(AUTO_NOTE):
         return  # valor informado por você: o banco não sobrescreve
     if total <= 0:
-        return
+        return False
+    if cur and conn.execute("SELECT ABS(amount - ?) < 0.005 FROM overrides WHERE card=? AND month=?",
+                            (total, card, income_ym)).fetchone()[0]:
+        return False
     conn.execute("INSERT INTO overrides(card,month,amount,note) VALUES(?,?,?,?) "
                  "ON CONFLICT(card,month) DO UPDATE SET amount=excluded.amount, note=excluded.note",
                  (card, income_ym, round(total, 2), AUTO_NOTE + label))
+    return True
 
 
 def _prepaid(results, i):

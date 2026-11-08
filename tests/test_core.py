@@ -26,15 +26,15 @@ class Projection(unittest.TestCase):
         cards = {c["card"]: c["total"] for c in nov["cartoes"]}
         self.assertAlmostEqual(cards["Nubank"], 206.27, places=2)
         self.assertAlmostEqual(cards["Mercado Pago"], 789.96, places=2)
-        self.assertAlmostEqual(cards["PicPay"], 7.95 + 19.90 + 344.62, places=2)  # assinaturas + RecargaPay 1/3
-        self.assertAlmostEqual(nov["fixas"], 1301.56, places=2)
+        self.assertAlmostEqual(cards["PicPay"], 29.90 + 9.50 + 14.99 + 344.62, places=2)  # assinaturas + RecargaPay 1/3
+        self.assertAlmostEqual(nov["fixas"], 1301.56 + 117.22, places=2)  # + I-Conecta
         self.assertAlmostEqual(nov["entra"], 2372 + 1280 + 214.74, places=2)
 
     def test_installments_drop_off(self):
         cfg, rec, inst, ov = base()
         dez = {c["card"]: c["total"] for c in P.project(cfg, rec, inst, ov, TODAY)["months"][1]["cartoes"]}
         self.assertAlmostEqual(dez["Nubank"], 0, places=2)
-        self.assertAlmostEqual(dez["PicPay"], 7.95 + 19.90 + 344.62, places=2)
+        self.assertAlmostEqual(dez["PicPay"], 29.90 + 9.50 + 14.99 + 344.62, places=2)
 
     def test_raise_only_when_enabled(self):
         cfg, rec, inst, ov = base()

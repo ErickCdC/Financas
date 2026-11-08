@@ -50,7 +50,7 @@ def deliver(conn, title, body, url="/", tag=None):
     ok = 0
     stamp = C.now().strftime("%Y-%m-%d %H:%M")
     msg = {"title": title, "body": body, "url": url, "tag": tag or url}
-    if (tag or "") in ("daily", "teto", "week"):
+    if (tag or "") in ("daily", "teto", "week", "grande"):
         msg["actions"] = [{"action": "add", "title": "Lançar gasto"}]
     elif (tag or "") in ("bills", "paid", "payday"):
         msg["actions"] = [{"action": "open", "title": "Ver contas"}]
@@ -69,7 +69,7 @@ def deliver(conn, title, body, url="/", tag=None):
 
 def build(conn, now):
     """Lista de (chave, título, texto, url) que deveriam sair agora."""
-    cfg, _proj, _livre = finance.context(conn, now.date(), n=1)
+    cfg, _proj, _livre = finance.context(conn, now.date(), n=6)
     rules = cfg["notif"]["rules"]
     t = now.date()
     w = finance.week_info(conn, cfg, t)
@@ -84,6 +84,10 @@ def build(conn, now):
             if top >= 100:
                 title = "Teto da semana estourado"
                 body = f"Você gastou {brl(w['gasto'])} de {brl(w['teto'])}. Passou {brl(w['estourou'])}."
+                if (rules.get("metas") or {}).get("on", True) and _proj["months"]:
+                    cx = _proj["months"][0]["caixinha"]
+                    body += (f" A caixinha deste salário caiu para {brl(cx)}." if cx > 0 else
+                             " Este salário já não tem sobra para as metas.")
             else:
                 title = f"{top}% do teto da semana usado"
                 body = (f"Restam {brl(w['restante'])} até domingo "
@@ -129,6 +133,60 @@ def build(conn, now):
                 f"{'' if diff <= 0 else ' em ' + brl(diff)}). Esta semana: teto de {brl(w['teto'])}.")
         out.append((f"week:{w['inicio']}", "Resumo da semana", body, "/#inicio", []))
 
+    r = rules.get("compra_grande") or {}
+    if r.get("on"):
+        lim = float(r.get("valor") or 100)
+        desde = (t - timedelta(days=1)).isoformat()
+        for s in db.rows(conn, "SELECT id, date, description, amount, card FROM spends WHERE ignored=0 AND source='banco' "
+                               "AND amount >= ? AND date >= ?", (lim, desde)):
+            onde = s["card"] or "conta"
+            body = (f"{s['description'][:40].strip()} · {onde}. Semana: {brl(w['gasto'])} de {brl(w['teto'])}"
+                    f"{' (passou do teto)' if w['gasto'] > w['teto'] else ''}.")
+            out.append((f"grande:{s['id']}", f"Compra de {brl(s['amount'])}", body, "/#gastos", []))
+
+    r = rules.get("ritmo") or {}
+    if r.get("on") and t.weekday() == int(r.get("weekday", 3)) and due(now, r.get("time", "19:00")) and _proj["months"]:
+        m0 = _proj["months"][0]
+        since = finance.last_payday(t, cfg)
+        dias = max((t - since).days + 1, 1)
+        gasto = conn.execute("SELECT COALESCE(SUM(amount),0) FROM spends WHERE ignored=0 AND date BETWEEN ? AND ?",
+                             (since.isoformat(), t.isoformat())).fetchone()[0]
+        fim = m0["sobra"] - gasto / dias * m0["dias"]
+        if fim < 0 and m0["dias"] > 0:
+            limite = max(m0["sobra"] / m0["dias"], 0)
+            out.append((f"ritmo:{t}", f"No ritmo atual, faltam {brl(-fim)} no fim do mês",
+                        f"Você está gastando {brl(gasto / dias)} por dia. Para fechar no zero até o salário, "
+                        f"o limite é {brl(limite)} por dia.", "/#inicio", []))
+
+    r = rules.get("metas") or {}
+    if r.get("on", True):
+        plano = finance.goals_plan(conn, _proj, cfg)
+        antes = cfg.get("metas_eta") or {}
+        for g in plano["metas"]:
+            gid = str(g["id"])
+            if g["eta"] == "pronta":
+                out.append((f"meta_ok:{gid}", f"Meta alcançada: {g['name']}", f"Você juntou {brl(g['saved'])}.", "/#plano", []))
+            elif gid in antes and g["eta"] and antes[gid] and g["eta"] != "pronta" and antes[gid] != "pronta":
+                if g["eta"] > antes[gid]:
+                    out.append((f"meta:{gid}:{g['eta']}", f"{g['name']} atrasou",
+                                f"Com a caixinha de agora, chega em {_mes(g['eta'])} (antes: {_mes(antes[gid])}).", "/#plano", []))
+                elif g["eta"] < antes[gid]:
+                    out.append((f"meta:{gid}:{g['eta']}", f"{g['name']} adiantou",
+                                f"Agora chega em {_mes(g['eta'])} (antes: {_mes(antes[gid])}).", "/#plano", []))
+
+    r = rules.get("relatorio") or {}
+    if r.get("on") and due(now, r.get("time", "09:00")) and finance.last_payday(t, cfg) == t:
+        ym = finance.P.add_months(finance.income_month(t, cfg), -1)
+        try:
+            rel = finance.relatorio(conn, cfg, t - timedelta(days=1), ym)
+        except ValueError:
+            rel = None
+        if rel and rel["n"]:
+            cats = " · ".join(f"{c['cat']} {brl(c['total'])}" for c in rel["categorias"][:3])
+            body = (f"Gastou {brl(rel['total'])} ({brl(rel['por_dia'])}/dia)"
+                    f"{', ' + brl(rel['acima_teto']) + ' acima do teto' if rel['acima_teto'] > 0 else ', dentro do teto'}. {cats}.")
+            out.append((f"relatorio:{ym}", f"Relatório de {_mes(ym)}", body, f"/#relatorio-{ym}", []))
+
     r = rules["payday"]
     if r.get("on") and due(now, r["time"]):
         if finance.last_payday(t, cfg) == t:
@@ -137,6 +195,13 @@ def build(conn, now):
                     "Atualize o caixa e marque as contas que pagar.")
             out.append((f"payday:{t}", "Dia de salário", body, "/#contas", []))
     return out
+
+
+MESES = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"]
+
+
+def _mes(ym):
+    return f"{MESES[int(ym[5:7]) - 1]}/{ym[2:4]}"
 
 
 def sync_due(cfg, now):
@@ -211,12 +276,20 @@ def _run(conn, now, result, synced):
                 mark(conn, k)
             result["enviadas"].append(title)
             changed = True
+    _guarda_metas(conn, now)
     if cfg.get("eventos_pendentes"):
         keep = n["rules"].get("bank_events", {}).get("on", True)
         left = [e for e in db.get_cfg(conn).get("eventos_pendentes") or [] if keep and not sent(conn, e[0])]
         db.put_setting(conn, "eventos_pendentes", left)
         changed = True
     return changed
+
+
+def _guarda_metas(conn, now):
+    cfg, proj, _ = finance.context(conn, now.date(), n=6)
+    atual = {str(g["id"]): g["eta"] for g in finance.goals_plan(conn, proj, cfg)["metas"]}
+    if atual != (cfg.get("metas_eta") or {}):
+        db.put_setting(conn, "metas_eta", atual)
 
 
 def test(conn):

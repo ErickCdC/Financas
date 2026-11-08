@@ -133,6 +133,10 @@ def notif(v):
         "payday": {"on": boolean, "time": hhmm},
         "auto_sync": {"on": boolean, "time": hhmm},
         "bank_events": {"on": boolean},
+        "compra_grande": {"on": boolean, "valor": num},
+        "ritmo": {"on": boolean, "weekday": posint(0, 6), "time": hhmm},
+        "metas": {"on": boolean},
+        "relatorio": {"on": boolean, "time": hhmm},
     }
     out_rules = {}
     for name, fields in spec.items():

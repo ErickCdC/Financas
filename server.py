@@ -58,7 +58,16 @@ def main():
             if len(shares) >= 2 and all(x == 100 for x in shares):  # padrão antigo: 100% em todas
                 conn.execute("UPDATE goals SET share=?", (round(100 / len(shares)),))
             feitas.add("metas_share_igual")
+        if "assinaturas_nov26" not in feitas:  # lista conferida com o extrato e confirmada em 08/11/2026
+            conn.execute("DELETE FROM recurring WHERE name IN ('Clube iFood', 'Armazenamento Gigi')")
+            for name, amount, card, words in seed.NOVAS_NOV26:
+                first = words.split(",")[0]
+                if not conn.execute("SELECT 1 FROM recurring WHERE lower(name)=lower(?) OR lower(COALESCE(match,'')) LIKE ?",
+                                    (name, f"%{first}%")).fetchone():
+                    conn.execute("INSERT INTO recurring(name,amount,card,match) VALUES(?,?,?,?)", (name, amount, card, words))
+            feitas.add("assinaturas_nov26")
         db.put_setting(conn, "migracoes", sorted(feitas))
+        bank.ignore_subscription_charges(conn)  # de novo, com a lista já atualizada
         # valor fixo antigo do PicPay (limite usado, não a fatura)
         conn.execute("DELETE FROM overrides WHERE note LIKE 'Valor do cartão em 05/11%' OR note LIKE 'Valor que o app mostra%'")
     if state == "novo" and BACKUP.enabled and not BACKUP.blocked:
