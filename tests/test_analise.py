@@ -157,3 +157,23 @@ class Apply(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class Fgts(unittest.TestCase):
+    F = {"saldo": 1285.0, "data": "2026-11-08", "mensal": 205.19, "libera": "2028-05-12", "rende_pct": 0}
+
+    def test_deposits_on_the_20th_and_13th_in_december(self):
+        self.assertEqual(finance.fgts_saldo(self.F, date(2026, 11, 19)), 1285.0)
+        self.assertEqual(finance.fgts_saldo(self.F, date(2026, 11, 20)), 1490.19)
+        self.assertEqual(finance.fgts_saldo(self.F, date(2026, 12, 20)), round(1285 + 3 * 205.19, 2))
+        # 18 depósitos + 2 de 13º até a liberação
+        self.assertEqual(finance.fgts_saldo(self.F, date(2028, 5, 12)), round(1285 + 20 * 205.19, 2))
+
+    def test_plan_and_validation(self):
+        plan = finance.fgts_plan({"fgts": self.F}, date(2026, 11, 8))
+        self.assertEqual(plan["hoje"], 1285.0)
+        self.assertEqual(plan["marcos"][-1], {"data": "2028-05-12", "saldo": plan["na_liberacao"], "libera": True})
+        from app import validate as V
+        self.assertEqual(V.fgts({"saldo": "1.285,00".replace(".", ""), "libera": ""}), {"saldo": 1285.0, "libera": None})
+        with self.assertRaises(ValueError):
+            V.fgts({"saldo": -1})

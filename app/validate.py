@@ -185,6 +185,24 @@ def salario_regra(v):
     return out
 
 
+def fgts(v):
+    """Saldo do FGTS informado, depósito mensal e quando fica liberado para a casa."""
+    if not isinstance(v, dict):
+        raise ValueError("FGTS inválido")
+    out = {}
+    for k in ("saldo", "mensal", "rende_pct"):
+        if k in v:
+            n = num(v[k])
+            if n < 0:
+                raise ValueError("valor do FGTS não pode ser negativo")
+            out[k] = n
+    if "data" in v:
+        out["data"] = iso_date(v["data"])
+    if "libera" in v:
+        out["libera"] = opt(iso_date)(v["libera"])
+    return out
+
+
 def choice(*opts):
     def fn(v):
         if v not in opts:

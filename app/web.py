@@ -80,7 +80,7 @@ def act_settings(conn, body):
         if k not in data.SETTING_FIELDS:
             continue
         val = data.SETTING_FIELDS[k](v)
-        if k in ("notif", "auto", "sync_auto", "salario_regra"):
+        if k in ("notif", "auto", "sync_auto", "salario_regra", "fgts"):
             val = db.merge(db.get_cfg(conn)[k], val)
         db.put_setting(conn, k, val)
         if k == "caixa":

@@ -18,6 +18,7 @@ const ddmm = iso => iso.slice(8, 10) + "/" + iso.slice(5, 7);
 const daysBetween = (a, b) => Math.round((parse(b) - parse(a)) / 86400000);
 const monthName = ym => { const [y, m] = ym.split("-").map(Number); return `${MES[m - 1]} ${y}`; };
 const monthOnly = ym => MES[Number(ym.slice(5, 7)) - 1];
+const dmy = iso => `${iso.slice(8, 10)}/${iso.slice(5, 7)}/${iso.slice(0, 4)}`;
 // data do salário de cada mês (último dia útil ou dia fixo), calculada no servidor
 const payday = ym => { const iso = ((S.d && S.d.paydays) || {})[ym]; return iso ? ddmm(iso) : ""; };
 // um "mês" = um salário: paga as contas daquele mês (faturas com as compras do mês, aluguel, faculdade...)
@@ -262,7 +263,8 @@ VIEWS.inicio = d => {
     <div class="stack">
       ${(d.metas || []).length ? `<section class="card"><div class="card-head"><h3>Metas</h3><button class="btn ghost sm" data-act="goto-metas">Ver metas</button></div>
         ${d.metas.map(g => `<div class="goal-mini"><div class="kv"><span>${esc(g.name)}</span><span class="num">${brl0(g.saved)} de ${brl0(g.target)}</span></div>
-          <div class="bar ok"><i data-w="${g.pct}"></i></div><div class="sub muted">${etaText(g)}</div></div>`).join("")}</section>` : ""}
+          <div class="bar ok"><i data-w="${g.pct}"></i></div><div class="sub muted">${etaText(g)}</div></div>`).join("")}
+        ${d.fgts ? `<div class="goal-mini"><div class="kv"><span>FGTS</span><span class="num">${brl0(d.fgts.hoje)}</span></div><div class="sub muted">${d.fgts.na_liberacao != null ? `~${brl0(d.fgts.na_liberacao)} em ${dmy(d.fgts.libera)}, quando libera para a casa` : `+${brl0(d.fgts.mensal)} por mês`}</div></div>` : ""}</section>` : ""}
       <section class="card"><div class="card-head"><h3>Gastos da semana</h3><span class="chip ${over ? "neg" : pct > 80 ? "warn" : "blue"}">${Math.round(pct)}% do teto</span></div>${weekBars(w)}<div class="tap-hint">Toque num dia para ver os gastos</div></section>
       <section class="card flush"><div class="card-head"><h3>Próximos vencimentos</h3></div>
         <div class="list">${venc.length ? venc.map(i => `<a class="item tap" href="#contas"><span class="ic ${i.group === "fatura" ? "blue" : ""}">${icon(i.group === "fatura" ? "card" : "bills")}</span>
@@ -406,17 +408,31 @@ function simCaixinha(m, simTeto) {
   return m.sobra - simTeto * (m.semanas_x || m.semanas);
 }
 
+function fgtsCard(f) {
+  if (!f) return `<section class="card goal"><div class="card-head"><div><div class="eyebrow">Casa própria</div><h3>FGTS</h3></div></div>
+    <p class="lead">Informe o saldo e o app soma os depósitos de cada mês sozinho.</p><div class="btn-row"><button class="btn sm" data-act="editfgts">Informar saldo</button></div></section>`;
+  return `<section class="card goal">
+    <div class="card-head"><div><div class="eyebrow">Casa própria · cresce sozinho</div><h3>FGTS</h3></div>
+      <button class="btn ghost sm" data-act="editfgts">Atualizar</button></div>
+    <div class="v-big num">${brl(f.hoje)} <span class="muted of">estimado hoje</span></div>
+    <div class="lead">+${brl(f.mensal)} por mês, mais um depósito em dezembro pelo 13º${f.rende_pct ? ` · rende ~${String(f.rende_pct).replace(".", ",")}% ao ano` : ""}.</div>
+    ${f.marcos.map(x => `<div class="kv ${x.libera ? "strong" : ""}"><span class="${x.libera ? "" : "muted"}">${x.libera ? `Libera para a casa · ${dmy(x.data)}` : `Em ${monthName(x.data.slice(0, 7))}`}</span><span class="num">~${brl0(x.saldo)}</span></div>`).join("")}
+    <div class="sub muted goal-note">Saldo informado: ${brl(f.saldo)} em ${dmy(f.data)}. Atualize quando conferir no app do FGTS.</div>
+  </section>`;
+}
+
 VIEWS.plano = d => {
   const seg = `<div class="seg seg-4">${[["proj", "Projeção"], ["metas", "Metas"], ["parcelas", "Parcelas"], ["avulsos", "Avulsos"]].map(([k, l]) => `<button data-act="plantab" data-t="${k}" class="${S.planTab === k ? "on" : ""}">${l}</button>`).join("")}</div>`;
   if (S.planTab === "metas") {
     return `<div class="monthnav">${seg}</div>
     <div class="monthnav"><span class="muted">Potes separados, guardados nesta ordem</span><button class="btn sm" data-act="addgoal">${icon("plus")}Nova meta</button></div>
-    <div class="grid cols2">${(d.metas || []).map(g => `<section class="card goal">
+    <div class="grid cols2">${fgtsCard(d.fgts)}${(d.metas || []).map(g => `<section class="card goal">
       <div class="card-head"><div><div class="eyebrow">${esc(g.kind === "casa" ? "Casa própria" : g.kind === "reserva" ? "Reserva" : "Meta")}</div><h3>${esc(g.name)}</h3></div>
         <button class="btn ghost sm" data-act="editgoal" data-id="${g.id}">Editar</button></div>
       <div class="v-big num">${brl(g.saved)} <span class="muted of">de ${brl0(g.target)}</span></div>
       <div class="bar ok"><i data-w="${g.pct}"></i></div>
       <div class="lead">${etaText(g)}${g.falta > 0 ? ` · faltam ${brl0(g.falta)}` : ""}</div>
+      ${g.kind === "casa" && d.fgts && d.fgts.na_liberacao != null ? `<div class="kv fgts-line"><span class="muted">+ FGTS liberado em ${dmy(d.fgts.libera)}</span><span class="num">~${brl0(d.fgts.na_liberacao)}</span></div>` : ""}
       ${g.note ? `<div class="sub muted goal-note">${esc(g.note)}</div>` : ""}
       <div class="btn-row"><button class="btn sm" data-act="goalsave" data-id="${g.id}">${icon("piggy")}Guardei</button><button class="btn sm ghost" data-act="goalwithdraw" data-id="${g.id}">Retirei</button></div>
     </section>`).join("") || `<div class="empty">${icon("piggy")}<div>Nenhuma meta ainda.</div></div>`}</div>
@@ -885,6 +901,20 @@ const A = {
     const p = (S.d.avulsos || []).find(x => x.id === Number(el.dataset.id)); if (!p) return;
     openSheet({ title: p.name, fields: plannedFields(p.kind), values: { ...p, day: p.day ?? "" },
       onSave: v => api("/api/planned", { ...v, id: p.id }), onDelete: () => api("/api/planned", { id: p.id, delete: true }) });
+  },
+  editfgts: () => {
+    const f = S.d.fgts || {};
+    openSheet({
+      title: "FGTS", desc: "Confira o saldo no app FGTS e informe aqui. Daqui pra frente o app soma os depósitos sozinho.",
+      fields: [
+        { name: "saldo", label: "Saldo hoje", type: "money", required: true, big: true },
+        { name: "mensal", label: "Depósito por mês", type: "money", hint: "8% do salário bruto. Com R$ 2.564,92, dá R$ 205,19." },
+        { name: "libera", label: "Liberado para a casa a partir de", type: "date", hint: "Com 3 anos de carteira assinada, somando todos os empregos" },
+        { name: "rende_pct", label: "Rendimento ao ano (%)", type: "decimal", hint: "3% mais TR; deixe 3 se não souber" },
+      ],
+      values: { saldo: f.hoje, mensal: f.mensal ?? 205.19, libera: f.libera || "", rende_pct: f.rende_pct ?? 3 },
+      onSave: v => api("/api/settings", { fgts: { ...v, data: S.d.hoje } }),
+    });
   },
   addgoal: () => openSheet({ title: "Nova meta", fields: goalFields, values: { saved: 0, ordem: (S.d.metas || []).length }, onSave: v => api("/api/goals", v) }),
   editgoal: el => { const g = S.d.metas.find(x => x.id === Number(el.dataset.id)); openSheet({ title: g.name, fields: goalFields, values: g, onSave: v => api("/api/goals", { ...v, id: g.id }), onDelete: () => api("/api/goals", { id: g.id, delete: true }) }); },

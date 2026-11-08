@@ -219,6 +219,8 @@ button.item:hover, .item.tap:hover { background: var(--surface-2); }
 .check.sq:checked::after { width: 5px; height: 9px; border-width: 0 2px 2px 0; }
 .est-toggle { display: flex; align-items: center; gap: 10px; padding: 2px 16px 12px; font-size: 13.5px; color: var(--muted); cursor: pointer; user-select: none; }
 .est-toggle .num { margin-left: auto; }
+.goal .kv.strong { font-weight: 650; }
+.goal .fgts-line { border-top: 0; padding-top: 2px; }
 
 .chip { display: inline-flex; align-items: center; gap: 4px; height: 22px; padding: 0 8px; border-radius: 99px; font-size: 11.5px; font-weight: 650; background: var(--surface-2); color: var(--text-2); white-space: nowrap; }
 .chip.blue { background: var(--primary-weak); color: var(--primary-text); }

@@ -397,6 +397,43 @@ def goals_plan(conn, proj):
     return {"metas": out, "aporte_medio": round(steady, 2)}
 
 
+def fgts_saldo(f, ate):
+    """Saldo estimado do FGTS em `ate`: depósito do mês até o dia 20, mais um em dezembro (13º),
+    e o rendimento de ~3% ao ano creditado todo dia 10."""
+    try:
+        d0 = date.fromisoformat(f.get("data") or "")
+    except ValueError:
+        return None
+    saldo, mensal = float(f.get("saldo") or 0), float(f.get("mensal") or 0)
+    juros = (1 + float(f.get("rende_pct") or 0) / 100) ** (1 / 12) - 1
+    y, m = d0.year, d0.month
+    while date(y, m, 1) <= ate:
+        if d0 < date(y, m, 10) <= ate:
+            saldo *= 1 + juros
+        if d0 < date(y, m, 20) <= ate:
+            saldo += mensal * (2 if m == 12 else 1)
+        y, m = (y, m + 1) if m < 12 else (y + 1, 1)
+    return round(saldo, 2)
+
+
+def fgts_plan(cfg, t):
+    f = cfg.get("fgts") or {}
+    hoje = fgts_saldo(f, t)
+    if hoje is None:
+        return None
+    marcos = []
+    for meses in (6, 12):
+        y, m = divmod(t.month - 1 + meses, 12)
+        d = clamp_day(t.year + y, m + 1, t.day)
+        marcos.append({"data": d.isoformat(), "saldo": fgts_saldo(f, d)})
+    libera = f.get("libera")
+    if libera:
+        marcos.append({"data": libera, "saldo": fgts_saldo(f, date.fromisoformat(libera)), "libera": True})
+    marcos.sort(key=lambda x: x["data"])
+    return {**f, "hoje": hoje, "marcos": marcos,
+            "na_liberacao": next((x["saldo"] for x in marcos if x.get("libera")), None)}
+
+
 def brl(v):
     s = f"{abs(v):,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
     return ("−R$ " if v < 0 else "R$ ") + s
@@ -415,7 +452,7 @@ def summary(conn, month=None, extra=None):
         "aumento_from", "teto_semanal", "caixa", "caixa_ref", "salario_dia", "ignore_terms", "pix_max",
         "ciclo_extra", "cartoes", "cartao_venc", "last_sync", "caixa_banco", "cartao_usado", "notif",
         "auto", "sync_auto", "salario_regra", "entradas", "last_force", "last_tick", "sync_detalhe", "ciclo_info",
-        "nome", "meta_caixinha", "teto_auto", "salario_tipo", "caixa_data")}
+        "nome", "meta_caixinha", "teto_auto", "salario_tipo", "caixa_data", "fgts")}
     public_cfg["teto_efetivo"] = cfg["teto_semanal"]
     x = income_month(t, cfg)
     paydays = {P.add_months(x, k): PD.payday_ym(P.add_months(x, k), cfg).isoformat() for k in range(-4, 10)}
@@ -434,6 +471,7 @@ def summary(conn, month=None, extra=None):
         "ciclo": x, "paydays": paydays,
         "proximas": month_panel(conn, cfg, P.add_months(x, 1), t, listas=True),
         "livre": livre, "insights": insights(conn, cfg, t, proj, livre), **goals_plan(conn, proj),
+        "fgts": fgts_plan(cfg, t),
         "avulsos": db.rows(conn, "SELECT * FROM planned ORDER BY month, day, id"),
         "notificacoes": db.rows(conn, "SELECT * FROM notif_log ORDER BY sent_at DESC LIMIT 20"),
         "aparelhos": db.rows(conn, "SELECT id, label, created, last_ok, fails FROM push_subs ORDER BY id"),

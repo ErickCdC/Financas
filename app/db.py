@@ -117,7 +117,7 @@ def get_cfg(conn):
             val = json.loads(r["value"])
         except ValueError:
             continue
-        if isinstance(cfg.get(r["key"]), dict) and isinstance(val, dict) and r["key"] in ("notif", "auto", "sync_auto", "salario_regra"):
+        if isinstance(cfg.get(r["key"]), dict) and isinstance(val, dict) and r["key"] in ("notif", "auto", "sync_auto", "salario_regra", "fgts"):
             cfg[r["key"]] = merge(cfg[r["key"]], val)
         else:
             cfg[r["key"]] = val

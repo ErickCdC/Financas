@@ -23,7 +23,7 @@ SETTING_FIELDS = {
     "cartoes": V.card_list, "cartao_venc": V.day_dict, "notif": V.notif,
     "auto": V.auto, "sync_auto": V.sync_auto, "salario_regra": V.salario_regra,
     "nome": V.text(40, False), "meta_caixinha": V.num, "teto_auto": V.boolean,
-    "salario_tipo": V.choice("util", "dia"),
+    "salario_tipo": V.choice("util", "dia"), "fgts": V.fgts,
 }
 # Guardados pelo app (não editáveis pela tela), mas fazem parte do backup.
 INTERNAL_SETTINGS = {"last_sync", "caixa_banco", "cartao_usado", "last_tick", "entradas", "last_force",
