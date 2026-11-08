@@ -110,16 +110,16 @@
   "caixa_banco": 192.7,
   "caixa_data": "2026-11-08",
   "cartao_usado": {
-   "PicPay": 1360.0,
+   "Mercado Pago": 1265.69,
    "Nubank": 206.27,
-   "Mercado Pago": 1265.69
+   "PicPay": 1360.0
   },
   "ciclo_info": {
-   "PicPay": {
-    "conta": "6d7341ae-373e-4d3b-b53b-f28126fded99",
+   "Mercado Pago": {
+    "conta": "8b778a91-1057-4662-917f-e758a49b7c3b",
     "fechou": "2026-10-29",
-    "fecha_antes": 9,
-    "compras": 310.92
+    "fecha_antes": 6,
+    "compras": 88.98
    },
    "Nubank": {
     "conta": "27be5f3e-7a39-4e21-b734-1d4439c35288",
@@ -127,11 +127,11 @@
     "fecha_antes": 7,
     "compras": 27.94
    },
-   "Mercado Pago": {
-    "conta": "8b778a91-1057-4662-917f-e758a49b7c3b",
+   "PicPay": {
+    "conta": "6d7341ae-373e-4d3b-b53b-f28126fded99",
     "fechou": "2026-10-29",
-    "fecha_antes": 6,
-    "compras": 88.98
+    "fecha_antes": 9,
+    "compras": 310.92
    }
   },
   "entradas": {
@@ -148,25 +148,25 @@
    }
   },
   "eventos_pendentes": [],
-  "last_auto_sync": "2026-11-08T07:57",
+  "last_auto_sync": "2026-11-08T08:24",
   "last_force": "2026-11-08T07:58",
-  "last_sync": "2026-11-08 07:58",
-  "last_tick": "2026-11-08 07:57",
+  "last_sync": "2026-11-08 08:26",
+  "last_tick": "2026-11-08 08:24",
   "migracoes": [
    "salario_minimo_50"
   ],
   "sync_detalhe": [
    {
-    "banco": "PicPay",
+    "banco": "Mercado Pago",
     "tipo": "conta",
-    "lidas": 0,
-    "no_app": 0
+    "lidas": 42,
+    "no_app": 7
    },
    {
-    "banco": "PicPay",
+    "banco": "Mercado Pago",
     "tipo": "cartão",
-    "lidas": 32,
-    "no_app": 30
+    "lidas": 9,
+    "no_app": 5
    },
    {
     "banco": "Nubank",
@@ -181,16 +181,16 @@
     "no_app": 16
    },
    {
-    "banco": "Mercado Pago",
+    "banco": "PicPay",
     "tipo": "conta",
-    "lidas": 42,
-    "no_app": 7
+    "lidas": 0,
+    "no_app": 0
    },
    {
-    "banco": "Mercado Pago",
+    "banco": "PicPay",
     "tipo": "cartão",
-    "lidas": 9,
-    "no_app": 5
+    "lidas": 32,
+    "no_app": 30
    }
   ]
  },
