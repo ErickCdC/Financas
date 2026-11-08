@@ -142,7 +142,8 @@
   "caixa_data": "2026-11-08",
   "cartao_usado": {
    "Nubank": 206.27,
-   "Mercado Pago": 1265.69
+   "Mercado Pago": 1265.69,
+   "PicPay": 1360.0
   },
   "ciclo_info": {
    "Nubank": {
@@ -156,6 +157,12 @@
     "fechou": "2026-10-29",
     "fecha_antes": 6,
     "compras": 88.98
+   },
+   "PicPay": {
+    "conta": "6d7341ae-373e-4d3b-b53b-f28126fded99",
+    "fechou": "2026-10-29",
+    "fecha_antes": 9,
+    "compras": 310.92
    }
   },
   "entradas": {
@@ -174,8 +181,8 @@
   "eventos_pendentes": [],
   "last_auto_sync": "2026-11-08T20:06",
   "last_force": "2026-11-08T19:13",
-  "last_sync": "2026-11-08 20:07",
-  "last_tick": "2026-11-08 20:06",
+  "last_sync": "2026-11-08 20:34",
+  "last_tick": "2026-11-08 20:33",
   "metas_eta": {
    "1": "2026-11"
   },
@@ -212,6 +219,18 @@
     "tipo": "cartão",
     "lidas": 9,
     "no_app": 5
+   },
+   {
+    "banco": "PicPay",
+    "tipo": "conta",
+    "lidas": 0,
+    "no_app": 0
+   },
+   {
+    "banco": "PicPay",
+    "tipo": "cartão",
+    "lidas": 32,
+    "no_app": 30
    }
   ]
  },
