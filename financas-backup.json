@@ -119,8 +119,8 @@
   "caixa_data": "2026-11-08",
   "cartao_usado": {
    "Nubank": 206.27,
-   "Mercado Pago": 1265.69,
-   "PicPay": 1360.0
+   "PicPay": 1360.0,
+   "Mercado Pago": 1265.69
   },
   "ciclo_info": {
    "Nubank": {
@@ -129,17 +129,17 @@
     "fecha_antes": 7,
     "compras": 27.94
    },
-   "Mercado Pago": {
-    "conta": "8b778a91-1057-4662-917f-e758a49b7c3b",
-    "fechou": "2026-10-29",
-    "fecha_antes": 6,
-    "compras": 88.98
-   },
    "PicPay": {
     "conta": "6d7341ae-373e-4d3b-b53b-f28126fded99",
     "fechou": "2026-10-29",
     "fecha_antes": 9,
     "compras": 310.92
+   },
+   "Mercado Pago": {
+    "conta": "8b778a91-1057-4662-917f-e758a49b7c3b",
+    "fechou": "2026-10-29",
+    "fecha_antes": 6,
+    "compras": 88.98
    }
   },
   "entradas": {
@@ -158,11 +158,12 @@
   "eventos_pendentes": [],
   "last_auto_sync": "2026-11-08T13:21",
   "last_force": "2026-11-08T12:28",
-  "last_sync": "2026-11-08 12:28",
-  "last_tick": "2026-11-08 13:33",
+  "last_sync": "2026-11-08 13:49",
+  "last_tick": "2026-11-08 13:48",
   "migracoes": [
    "fgts_libera_aprendiz",
    "metas_share_igual",
+   "netinjection_valor",
    "salario_minimo_50"
   ],
   "sync_detalhe": [
@@ -179,18 +180,6 @@
     "no_app": 16
    },
    {
-    "banco": "Mercado Pago",
-    "tipo": "conta",
-    "lidas": 42,
-    "no_app": 7
-   },
-   {
-    "banco": "Mercado Pago",
-    "tipo": "cartão",
-    "lidas": 9,
-    "no_app": 5
-   },
-   {
     "banco": "PicPay",
     "tipo": "conta",
     "lidas": 0,
@@ -201,6 +190,18 @@
     "tipo": "cartão",
     "lidas": 32,
     "no_app": 30
+   },
+   {
+    "banco": "Mercado Pago",
+    "tipo": "conta",
+    "lidas": 42,
+    "no_app": 7
+   },
+   {
+    "banco": "Mercado Pago",
+    "tipo": "cartão",
+    "lidas": 9,
+    "no_app": 5
    }
   ]
  },
@@ -295,7 +296,7 @@
    "id": 3,
    "name": "NetInjection",
    "card": "Mercado Pago",
-   "amount": 39.21,
+   "amount": 39.19,
    "total": 3,
    "paid_count": 2,
    "last_bill": "2026-11",
