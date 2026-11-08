@@ -321,7 +321,18 @@
   }
  ],
  "planned": [],
- "goals": [],
+ "goals": [
+  {
+   "id": 1,
+   "name": "Gigi",
+   "target": 500.0,
+   "saved": 0.0,
+   "kind": null,
+   "note": null,
+   "ordem": 0,
+   "share": 100
+  }
+ ],
  "payments": [
   {
    "month": "2026-11",
