@@ -179,12 +179,13 @@
   "last_auto_sync": "2026-11-08T14:42",
   "last_force": "2026-11-08T13:49",
   "last_sync": "2026-11-08 14:43",
-  "last_tick": "2026-11-08 14:42",
+  "last_tick": "2026-11-08 15:03",
   "metas_eta": {
    "1": "2026-11"
   },
   "migracoes": [
    "assinaturas_nov26",
+   "cobranca_mes_seguinte",
    "cobranca_valter",
    "fgts_libera_aprendiz",
    "metas_share_igual",
@@ -554,6 +555,12 @@
   },
   {
    "month": "2026-11",
+   "key": "rec:12",
+   "paid": 1,
+   "amount": null
+  },
+  {
+   "month": "2026-12",
    "key": "rec:12",
    "paid": 1,
    "amount": null
@@ -1358,20 +1365,21 @@
    "dia_fim": 5,
    "match": "valter luis",
    "nota": "Internet da casa dele",
-   "ativo": 1
+   "ativo": 1,
+   "mes_seguinte": 1
   }
  ],
  "cobranca_mes": [
   {
    "cobranca_id": 1,
-   "month": "2026-10",
+   "month": "2026-09",
    "cobrado": null,
    "recebido": "2026-11-08",
    "valor": 115.0
   },
   {
    "cobranca_id": 1,
-   "month": "2026-11",
+   "month": "2026-10",
    "cobrado": null,
    "recebido": "2026-11-05",
    "valor": 115.0
