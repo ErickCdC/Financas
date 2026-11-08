@@ -111,7 +111,7 @@
    "saldo": 1285.0,
    "data": "2026-11-08",
    "mensal": 205.19,
-   "libera": "2028-05-12",
+   "libera": "2027-10-25",
    "rende_pct": 3.0
   },
   "caixa_banco": 192.7,
@@ -158,8 +158,9 @@
   "last_auto_sync": "2026-11-08T12:27",
   "last_force": "2026-11-08T12:28",
   "last_sync": "2026-11-08 12:28",
-  "last_tick": "2026-11-08 12:30",
+  "last_tick": "2026-11-08 12:51",
   "migracoes": [
+   "fgts_libera_aprendiz",
    "salario_minimo_50"
   ],
   "sync_detalhe": [
