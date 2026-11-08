@@ -1349,5 +1349,13 @@
    "ativo": 1
   }
  ],
- "cobranca_mes": []
+ "cobranca_mes": [
+  {
+   "cobranca_id": 1,
+   "month": "2026-10",
+   "cobrado": null,
+   "recebido": "2026-11-08",
+   "valor": 115.0
+  }
+ ]
 }
