@@ -50,6 +50,11 @@ def main():
             if f.get("libera") == "2028-05-12":  # o contrato de aprendiz (2024) também conta nos 3 anos
                 db.put_setting(conn, "fgts", {**f, "libera": "2027-10-25"})
             feitas.add("fgts_libera_aprendiz")
+        if "metas_share_igual" not in feitas:
+            shares = [r[0] for r in conn.execute("SELECT share FROM goals")]
+            if len(shares) >= 2 and all(x == 100 for x in shares):  # padrão antigo: 100% em todas
+                conn.execute("UPDATE goals SET share=?", (round(100 / len(shares)),))
+            feitas.add("metas_share_igual")
         db.put_setting(conn, "migracoes", sorted(feitas))
         # valor fixo antigo do PicPay (limite usado, não a fatura)
         conn.execute("DELETE FROM overrides WHERE note LIKE 'Valor do cartão em 05/11%' OR note LIKE 'Valor que o app mostra%'")

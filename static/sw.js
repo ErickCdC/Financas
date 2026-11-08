@@ -1,5 +1,5 @@
 /* Service worker do Finanças: app instalável, abre rápido mesmo com o servidor dormindo, recebe notificações. */
-const VERSION = "fin-v2.8.2";
+const VERSION = "fin-v2.9.1";
 const SHELL = ["/", "/app.js", "/style.css", "/manifest.webmanifest", "/logo.svg", "/favicon.svg",
   "/icons/icon-192.png", "/icons/badge-96.png"];
 const DATA = "fin-data";

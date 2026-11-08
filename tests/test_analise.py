@@ -196,3 +196,40 @@ class FgtsFollowsSalary(unittest.TestCase):
         cfg.update(aumento_on=True, aumento_pct=10, aumento_from="2027-01")
         self.assertAlmostEqual(finance.fgts_deposito(cfg)(2027, 2), 0.08 * finance.bruto_de_liquido(2372 * 1.1), places=2)
         self.assertGreater(finance.fgts_deposito(cfg)(2027, 2), antes)
+
+
+class Caixinha(unittest.TestCase):
+    G = [{"id": 1, "share": 70, "target": 1000, "saved": 900}, {"id": 2, "share": 30, "target": 5000, "saved": 0},
+         {"id": 3, "share": 0, "target": 300, "saved": 0}]
+
+    def falta(self):
+        return {g["id"]: g["target"] - g["saved"] for g in self.G}
+
+    def test_one_at_a_time_spills_to_next(self):
+        partes, livre = finance.dividir(400, self.G, "ordem", self.falta())
+        self.assertEqual(partes, {1: 100, 2: 300})
+        self.assertEqual(livre, 0)
+
+    def test_percent_split_gives_finished_share_to_others(self):
+        f = self.falta()
+        partes, livre = finance.dividir(400, self.G, "divisao", f)
+        self.assertEqual(partes[1], 100)  # 70% seria 280, mas só faltavam 100
+        self.assertAlmostEqual(partes[2], 300, places=2)  # o resto vai para quem continua
+        self.assertNotIn(3, partes)  # 0% não recebe enquanto outra meta com % estiver aberta
+        self.assertEqual(livre, 0)
+
+    def test_everything_done_leaves_free_money(self):
+        partes, livre = finance.dividir(500, self.G[:1], "ordem", {1: 100})
+        self.assertEqual((partes, livre), ({1: 100}, 400))
+
+    def test_plan_with_new_goal_changes_eta(self):
+        fresh_db()
+        months = [{"ym": f"2026-{m:02d}", "caixinha": 500} for m in (11, 12)] + [{"ym": "2027-01", "caixinha": 500}]
+        with db.connect() as conn:
+            conn.execute("INSERT INTO goals(name,target,saved,ordem,share) VALUES('Reserva',1000,0,0,50)")
+            p1 = finance.goals_plan(conn, {"months": months}, {"metas_modo": "ordem"})
+            conn.execute("INSERT INTO goals(name,target,saved,ordem,share) VALUES('Viagem',1000,0,1,50)")
+            p2 = finance.goals_plan(conn, {"months": months}, {"metas_modo": "divisao"})
+        self.assertEqual(p1["metas"][0]["eta"], "2026-12")
+        self.assertEqual([m["eta"] for m in p2["metas"]], ["2027-02", "2027-02"])  # 250 + 250 por salário
+        self.assertEqual(p2["alocacao"][0]["partes"], [{"id": 1, "valor": 250.0}, {"id": 2, "valor": 250.0}])

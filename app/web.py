@@ -135,6 +135,17 @@ def act_installments(conn, body):
 
 
 def act_goals(conn, body):
+    if "distribuir" in body:  # guardar um valor nas metas, repartido pela mesma regra da projeção
+        valor = V.num(body["distribuir"])
+        if valor <= 0:
+            raise ValueError("informe um valor maior que zero")
+        metas = db.rows(conn, "SELECT * FROM goals ORDER BY ordem, id")
+        falta = {g["id"]: max(g["target"] - g["saved"], 0) for g in metas}
+        partes, livre = finance.dividir(valor, metas, db.get_cfg(conn).get("metas_modo") or "ordem", falta)
+        for gid, v in partes.items():
+            conn.execute("UPDATE goals SET saved = saved + ? WHERE id=?", (v, gid))
+        nomes = {g["id"]: g["name"] for g in metas}
+        return {"ok": True, "livre": livre, "partes": [{"name": nomes[k], "valor": v} for k, v in partes.items()]}
     if "add" in body and body.get("id"):  # "guardei R$ X" (ou retirei, com valor negativo)
         add = V.num(body["add"])
         conn.execute("UPDATE goals SET saved = MAX(0, saved + ?) WHERE id=?", (add, V.posint(1, 10**9)(body["id"])))

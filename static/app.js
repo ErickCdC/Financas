@@ -408,6 +408,63 @@ function simCaixinha(m, simTeto) {
   return m.sobra - simTeto * (m.semanas_x || m.semanas);
 }
 
+const goalColor = (d, id) => { const i = (d.metas || []).findIndex(g => g.id === id); return `gc${(i < 0 ? 0 : i) % 6}`; };
+function metasChart(d) {
+  const A = d.alocacao || [];
+  if (!A.length) return "";
+  const W = 640, H = 220, P = 28, top = 26, bottom = H - 30;
+  const scale = (bottom - top) / Math.max(...A.map(a => a.total), 1);
+  const step = (W - P * 2) / A.length, bw = Math.min(46, step * 0.5);
+  let svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Para onde vai a caixinha de cada salário"><line class="axis" x1="${P}" x2="${W - P}" y1="${bottom}" y2="${bottom}"/>`;
+  A.forEach((a, i) => {
+    const cx = P + step * i + step / 2;
+    let y = bottom;
+    const seg = (cls, v) => { const h = v * scale; if (h < 0.5) return ""; y -= h; return `<rect class="${cls}" x="${cx - bw / 2}" y="${y}" width="${bw}" height="${h}"/>`; };
+    svg += a.partes.map(p => seg(goalColor(d, p.id), p.valor)).join("") + seg("glivre", a.livre);
+    if (a.total <= 0) svg += `<rect class="glivre" x="${cx - bw / 2}" y="${bottom - 2}" width="${bw}" height="2"/>`;
+    svg += `<text class="val" x="${cx}" y="${y - 6}" text-anchor="middle">${esc(brl0(a.total).replace("R$", "").trim())}</text>`;
+    svg += `<text class="lbl" x="${cx}" y="${H - 8}" text-anchor="middle">${esc(payday(a.ym))}</text>`;
+    svg += `<rect class="hit" x="${cx - step / 2}" y="0" width="${step}" height="${H}" data-act="month" data-ym="${a.ym}"><title>${esc(monthName(a.ym))}</title></rect>`;
+  });
+  return svg + "</svg>";
+}
+function metasCaixinha(d) {
+  const A = d.alocacao || [], modo = d.metas_modo || "ordem", G = d.metas || [];
+  const total = A.reduce((s, a) => s + a.total, 0), a0 = A[0];
+  const nome = id => (G.find(g => g.id === id) || {}).name || "";
+  const livre = A.some(a => a.livre > 0.005);
+  return `<section class="card caixinha-metas">
+    <div class="card-head"><div><div class="eyebrow">Caixinha dos próximos ${A.length} salários</div><h3 class="num">${brl(total)}</h3></div>
+      <span class="chip ${d.config.aumento_on ? "blue" : ""}">${d.config.aumento_on ? "com aumento" : "sem aumento"}</span></div>
+    <div class="seg seg-2"><button data-act="metasmodo" data-m="ordem" class="${modo === "ordem" ? "on" : ""}">Uma por vez</button><button data-act="metasmodo" data-m="divisao" class="${modo === "divisao" ? "on" : ""}">Dividir em %</button></div>
+    <p class="lead">${modo === "ordem" ? "A caixinha enche uma meta por vez, na ordem de prioridade. Quando uma termina, passa para a próxima." : "Cada meta recebe a % definida nela. Quando uma termina, a parte dela vai para as outras."}</p>
+    ${G.length ? `<div class="chart">${metasChart(d)}</div>
+    <div class="legend wrap">${G.map(g => `<span><i class="${goalColor(d, g.id)}"></i>${esc(g.name)}</span>`).join("")}${livre ? `<span><i class="glivre"></i>Sem meta</span>` : ""}</div>` : ""}
+    ${a0 ? `<div class="kv strong"><span>Do salário de ${esc(payday(a0.ym))}</span><span class="num">${brl(a0.total)}</span></div>
+      ${a0.partes.map(p => `<div class="kv"><span class="muted"><i class="dot ${goalColor(d, p.id)}"></i>${esc(nome(p.id))}</span><span class="num">${brl(p.valor)}</span></div>`).join("")}
+      ${a0.livre > 0.005 ? `<div class="kv"><span class="muted"><i class="dot glivre"></i>Sem meta</span><span class="num">${brl(a0.livre)}</span></div>` : ""}` : ""}
+    <div class="btn-row"><button class="btn sm" data-act="distribuir"${G.length ? "" : " disabled"}>${icon("piggy")}Guardar nas metas</button></div>
+  </section>`;
+}
+function previewDivisao(valor, metas, modo) {
+  const falta = Object.fromEntries(metas.map(g => [g.id, Math.max(g.target - g.saved, 0)]));
+  const partes = {}; let resto = Math.max(valor, 0), ativos = metas.filter(g => falta[g.id] > 0.005);
+  if (modo === "divisao") {
+    while (resto > 0.005 && ativos.length) {
+      let pesos = Object.fromEntries(ativos.map(g => [g.id, Math.max(g.share || 0, 0)]));
+      let tot = Object.values(pesos).reduce((a, b) => a + b, 0);
+      if (tot <= 0) { pesos = Object.fromEntries(ativos.map(g => [g.id, 1])); tot = ativos.length; }
+      let dado = 0;
+      ativos.forEach(g => { const v = Math.min(resto * pesos[g.id] / tot, falta[g.id]); partes[g.id] = (partes[g.id] || 0) + v; falta[g.id] -= v; dado += v; });
+      resto -= dado; ativos = ativos.filter(g => falta[g.id] > 0.005);
+      if (dado < 0.005) break;
+    }
+  } else {
+    for (const g of ativos) { if (resto <= 0.005) break; const v = Math.min(resto, falta[g.id]); partes[g.id] = v; falta[g.id] -= v; resto -= v; }
+  }
+  return { partes, resto: Math.max(resto, 0) };
+}
+
 function fgtsCard(f) {
   if (!f) return `<section class="card goal"><div class="card-head"><div><div class="eyebrow">Casa própria</div><h3>FGTS</h3></div></div>
     <p class="lead">Informe o saldo e o app soma os depósitos de cada mês sozinho.</p><div class="btn-row"><button class="btn sm" data-act="editfgts">Informar saldo</button></div></section>`;
@@ -425,18 +482,20 @@ VIEWS.plano = d => {
   const seg = `<div class="seg seg-4">${[["proj", "Projeção"], ["metas", "Metas"], ["parcelas", "Parcelas"], ["avulsos", "Avulsos"]].map(([k, l]) => `<button data-act="plantab" data-t="${k}" class="${S.planTab === k ? "on" : ""}">${l}</button>`).join("")}</div>`;
   if (S.planTab === "metas") {
     return `<div class="monthnav">${seg}</div>
-    <div class="monthnav"><span class="muted">Potes separados, guardados nesta ordem</span><button class="btn sm" data-act="addgoal">${icon("plus")}Nova meta</button></div>
-    <div class="grid cols2">${fgtsCard(d.fgts)}${(d.metas || []).map(g => `<section class="card goal">
-      <div class="card-head"><div><div class="eyebrow">${esc(g.kind === "casa" ? "Casa própria" : g.kind === "reserva" ? "Reserva" : "Meta")}</div><h3>${esc(g.name)}</h3></div>
+    ${metasCaixinha(d)}
+    <div class="monthnav"><span class="muted">Suas metas${(d.metas_modo || "ordem") === "ordem" ? ", na ordem de prioridade" : ""}</span><button class="btn sm" data-act="addgoal">${icon("plus")}Nova meta</button></div>
+    <div class="grid cols2">${(d.metas || []).map((g, gi) => `<section class="card goal">
+      <div class="card-head"><div><div class="eyebrow"><i class="dot ${goalColor(d, g.id)}"></i>${esc(g.kind === "casa" ? "Casa própria" : g.kind === "reserva" ? "Reserva" : "Meta")}</div><h3>${esc(g.name)}</h3></div>
         <button class="btn ghost sm" data-act="editgoal" data-id="${g.id}">Editar</button></div>
       <div class="v-big num">${brl(g.saved)} <span class="muted of">de ${brl0(g.target)}</span></div>
       <div class="bar ok"><i data-w="${g.pct}"></i></div>
       <div class="lead">${etaText(g)}${g.falta > 0 ? ` · faltam ${brl0(g.falta)}` : ""}</div>
+      ${g.falta > 0 && (d.alocacao || []).length ? `<div class="sub muted">${g.proximo > 0 ? `Recebe ${brl(g.proximo)} do salário de ${esc(payday(d.alocacao[0].ym))}` : `Ainda não recebe do salário de ${esc(payday(d.alocacao[0].ym))}`} · ${(d.metas_modo || "ordem") === "divisao" ? `${d.alocacao[0].total > 0 ? Math.round(g.proximo / d.alocacao[0].total * 100) : g.share}% da caixinha` : `prioridade ${gi + 1}`}</div>` : ""}
       ${g.kind === "casa" && d.fgts && d.fgts.na_liberacao != null ? `<div class="kv fgts-line"><span class="muted">+ FGTS liberado em ${dmy(d.fgts.libera)}</span><span class="num">~${brl0(d.fgts.na_liberacao)}</span></div>` : ""}
       ${g.note ? `<div class="sub muted goal-note">${esc(g.note)}</div>` : ""}
       <div class="btn-row"><button class="btn sm" data-act="goalsave" data-id="${g.id}">${icon("piggy")}Guardei</button><button class="btn sm ghost" data-act="goalwithdraw" data-id="${g.id}">Retirei</button></div>
-    </section>`).join("") || `<div class="empty">${icon("piggy")}<div>Nenhuma meta ainda.</div></div>`}</div>
-    <p class="lead">Previsão usando a caixinha projetada de cada mês (média de ${brl0(d.aporte_medio)}/mês nos últimos meses da projeção). Ela muda sozinha quando você gasta menos ou recebe mais.</p>`;
+    </section>`).join("") || `<div class="empty">${icon("piggy")}<div>Nenhuma meta ainda.</div></div>`}${fgtsCard(d.fgts)}</div>
+    <p class="lead">A previsão usa a caixinha projetada de cada salário (depois dos próximos meses, a média de ${brl0(d.aporte_medio)}/mês). Ela muda sozinha quando você gasta menos, recebe mais ou cria outra meta.</p>`;
   }
   if (S.planTab === "avulsos") {
     const groups = {};
@@ -467,16 +526,11 @@ VIEWS.plano = d => {
   <div class="grid cols2">
     <div class="stack">
       <section class="card">
-        <div class="card-head"><div><div class="eyebrow">Caixinha em ${d.proj.months.length} meses</div><h3 class="num" id="simacc">${P.acc}</h3></div>
-          <span class="chip ${c.aumento_on ? "blue" : ""}">${c.aumento_on ? "com aumento" : "sem aumento"}</span></div>
-        <div class="chart" id="simchart">${P.chart}</div>
-        <div class="legend"><span><i class="lg-bar"></i>Caixinha de cada salário</span><span><i class="lg-acc"></i>Acumulado</span><span>Toque num mês</span></div>
-        <div class="tap-hint">Cada barra é um salário: ele paga as contas daquele mês e o que você gasta até ele cair.</div>
-      </section>
-      <section class="card">
         <div class="card-head"><h3>Simular teto semanal</h3><b class="num" id="simlabel">${brl0(sim)}/sem</b></div>
         <input class="range" type="range" min="0" max="200" step="5" value="${sim}" data-act-input="sim" aria-label="Teto semanal simulado">
         <div class="lead">${c.teto_auto ? `Teto automático ligado: o app ajusta o teto de cada mês para guardar ${brl0(c.meta_caixinha)}. Arraste para comparar com um teto fixo.` : `Arraste para ver quanto sobra. O teto atual é ${brl0(c.teto_semanal)}.`}</div>
+        <div class="kv"><span class="muted">Caixinha nos próximos ${d.proj.months.length} salários</span><b class="num" id="simacc">${P.acc}</b></div>
+        <div class="sub muted">Para onde ela vai: <button class="linkbtn" data-act="goto-metas">ver nas Metas</button></div>
         <div id="simbtns">${P.btns}</div>
         <div class="setting"><div class="body"><div class="t">Contar com o aumento</div><div class="sub">${c.aumento_pct}% a partir de ${esc(monthName(c.aumento_from))}</div></div>
           <label class="switch"><input type="checkbox" data-set="aumento_on" data-kind="bool" ${c.aumento_on ? "checked" : ""}><span></span></label></div>
@@ -869,12 +923,13 @@ const plannedFields = kind => [
 ];
 const goalFields = [
   { name: "name", label: "Nome", required: true }, { name: "target", label: "Valor da meta", type: "money", required: true },
-  { name: "saved", label: "Já guardado", type: "money" }, { name: "ordem", label: "Prioridade (0 = primeiro)", type: "number", min: 0, max: 100 },
+  { name: "saved", label: "Já guardado", type: "money" }, { name: "ordem", label: "Prioridade (0 = primeiro)", type: "number", min: 0, max: 100, hint: "No modo Uma por vez, a caixinha enche nessa ordem" },
+  { name: "share", label: "Parte da caixinha (%)", type: "number", min: 0, max: 100, hint: "No modo Dividir em %. Se as partes não somarem 100, o app divide proporcionalmente entre as metas que ainda não terminaram" },
   { name: "note", label: "Observação" },
 ];
 const A = {
   refresh: () => load(),
-  "goto-metas": () => { S.planTab = "metas"; location.hash = "#plano"; },
+  "goto-metas": () => { S.planTab = "metas"; if (location.hash === "#plano") { render(); scrollTo(0, 0); } else location.hash = "#plano"; },
   "goto-proximas": () => { S.month = S.d.proximas.ym; location.hash = "#contas"; load({ silent: true }); },
   fatura: el => {
     const p = S.d.proximas, i = p && p.items.find(x => x.group === "fatura" && x.card === el.dataset.card);
@@ -915,7 +970,31 @@ const A = {
       onSave: v => api("/api/settings", { fgts: { ...v, data: S.d.hoje } }),
     });
   },
-  addgoal: () => openSheet({ title: "Nova meta", fields: goalFields, values: { saved: 0, ordem: (S.d.metas || []).length }, onSave: v => api("/api/goals", v) }),
+  metasmodo: async el => {
+    if (el.classList.contains("on")) return;
+    try { await api("/api/settings", { metas_modo: el.dataset.m }); await load({ silent: true }); } catch (e) { toast(e.message); }
+  },
+  distribuir: () => {
+    const G = S.d.metas || [], modo = S.d.metas_modo || "ordem", a0 = (S.d.alocacao || [])[0];
+    openSheet({
+      title: "Guardar nas metas", saveLabel: "Guardar",
+      desc: modo === "ordem" ? "O valor enche as metas na ordem de prioridade." : "O valor é repartido pela % de cada meta.",
+      fields: [{ name: "valor", label: "Quanto você guardou", type: "money", required: true, big: true }],
+      values: { valor: a0 ? Math.max(a0.total, 0) : "" },
+      onMount: box => {
+        const inp = box.querySelector(".form-grid input"), out = document.createElement("div");
+        out.className = "card split-preview"; box.querySelector(".form-grid").after(out);
+        const upd = () => {
+          const { partes, resto } = previewDivisao(parseMoney(inp.value) || 0, G, modo);
+          out.innerHTML = G.filter(g => partes[g.id] > 0.005).map(g => `<div class="kv"><span class="muted"><i class="dot ${goalColor(S.d, g.id)}"></i>${esc(g.name)}</span><span class="num">${brl(partes[g.id])}</span></div>`).join("")
+            + (resto > 0.005 ? `<div class="kv"><span class="muted">Sobra (metas completas)</span><span class="num">${brl(resto)}</span></div>` : "") || `<div class="muted">Digite um valor.</div>`;
+        };
+        inp.addEventListener("input", upd); upd();
+      },
+      onSave: async v => { const r = await api("/api/goals", { distribuir: v.valor }); return r.partes.length ? `Guardado em ${r.partes.map(p => p.name).join(", ")}` : "Todas as metas já estão completas"; },
+    });
+  },
+  addgoal: () => openSheet({ title: "Nova meta", fields: goalFields, values: { saved: 0, ordem: (S.d.metas || []).length, share: Math.round(100 / ((S.d.metas || []).length + 1)) }, onSave: v => api("/api/goals", v) }),
   editgoal: el => { const g = S.d.metas.find(x => x.id === Number(el.dataset.id)); openSheet({ title: g.name, fields: goalFields, values: g, onSave: v => api("/api/goals", { ...v, id: g.id }), onDelete: () => api("/api/goals", { id: g.id, delete: true }) }); },
   goalsave: el => { const g = S.d.metas.find(x => x.id === Number(el.dataset.id)); openSheet({ title: `Guardar em ${g.name}`, desc: "Some ao que já está guardado.", fields: [{ name: "add", label: "Valor", type: "money", required: true, big: true }], saveLabel: "Guardar", onSave: async v => { await api("/api/goals", { id: g.id, add: v.add }); return "Guardado!"; } }); },
   goalwithdraw: el => { const g = S.d.metas.find(x => x.id === Number(el.dataset.id)); openSheet({ title: `Retirar de ${g.name}`, fields: [{ name: "add", label: "Valor", type: "money", required: true, big: true }], saveLabel: "Retirar", onSave: v => api("/api/goals", { id: g.id, add: -Math.abs(v.add) }) }); },
@@ -1052,7 +1131,7 @@ document.addEventListener("input", e => {
   if (e.target.dataset.actInput === "sim") {
     S.simTeto = Number(e.target.value);
     const P = simParts(S.d, S.simTeto);
-    $("#simacc").innerHTML = P.acc; $("#simchart").innerHTML = P.chart; $("#simbtns").innerHTML = P.btns;
+    $("#simacc").innerHTML = P.acc; $("#simbtns").innerHTML = P.btns;
     $("#simmonths").innerHTML = P.months; $("#simlabel").textContent = brl0(S.simTeto) + "/sem";
   }
 });

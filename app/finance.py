@@ -362,39 +362,78 @@ def insights(conn, cfg, t, proj, livre):
     return out
 
 
-def goals_plan(conn, proj):
-    """Previsão de quando cada meta chega, guardando a caixinha prevista na ordem das metas."""
+def dividir(valor, metas, modo, falta):
+    """Reparte `valor` entre as metas que ainda faltam. `falta` ({id: quanto falta}) é atualizado.
+    modo "ordem": enche uma meta por vez, na ordem de prioridade.
+    modo "divisao": cada meta recebe sua % (campo share), proporcional entre as que não terminaram;
+    a parte de quem termina vai para as outras. Devolve ({id: valor}, o que sobrou sem meta)."""
+    partes, resto = {}, max(float(valor or 0), 0.0)
+    ativos = [g for g in metas if falta.get(g["id"], 0) > 0.005]
+    if modo == "divisao":
+        while resto > 0.005 and ativos:
+            pesos = {g["id"]: max(float(g.get("share") or 0), 0) for g in ativos}
+            tot = sum(pesos.values())
+            if tot <= 0:
+                pesos, tot = {g["id"]: 1.0 for g in ativos}, float(len(ativos))
+            dado = 0.0
+            for g in ativos:
+                v = min(resto * pesos[g["id"]] / tot, falta[g["id"]])
+                partes[g["id"]] = partes.get(g["id"], 0) + v
+                falta[g["id"]] -= v
+                dado += v
+            resto -= dado
+            ativos = [g for g in ativos if falta[g["id"]] > 0.005]
+            if dado < 0.005:
+                break
+    else:
+        for g in ativos:
+            if resto <= 0.005:
+                break
+            v = min(resto, falta[g["id"]])
+            partes[g["id"]] = v
+            falta[g["id"]] -= v
+            resto -= v
+    return {k: round(v, 2) for k, v in partes.items() if v > 0.004}, round(max(resto, 0), 2)
+
+
+def goals_plan(conn, proj, cfg=None):
+    """Para onde vai a caixinha prevista de cada salário e quando cada meta chega."""
     goals = db.rows(conn, "SELECT * FROM goals ORDER BY ordem, id")
-    series = [max(m["caixinha"], 0) for m in proj["months"]]
+    modo = (cfg or {}).get("metas_modo") or "ordem"
+    months = proj["months"]
+    series = [max(m["caixinha"], 0) for m in months]
     tail = series[-3:] if len(series) >= 3 else series
     steady = sum(tail) / len(tail) if tail else 0
-    cur = proj["months"][0]["ym"] if proj["months"] else None
-    pool = list(series)
+    cur = months[0]["ym"] if months else None
+    falta = {g["id"]: max(g["target"] - g["saved"], 0) for g in goals}
+    eta, alocacao, recebe = {}, [], {g["id"]: [] for g in goals}
+    for i in range(600):
+        if not cur or not any(v > 0.005 for v in falta.values()):
+            break
+        v = series[i] if i < len(series) else steady
+        if i >= len(series) and v <= 0:
+            break
+        partes, livre = dividir(v, goals, modo, falta)
+        ym = P.add_months(cur, i)
+        if i < len(series):
+            alocacao.append({"ym": ym, "total": round(v, 2), "livre": livre,
+                             "partes": [{"id": g["id"], "valor": partes[g["id"]]} for g in goals if partes.get(g["id"])]})
+            for g in goals:
+                recebe[g["id"]].append(partes.get(g["id"], 0))
+        for gid, val in partes.items():
+            if val > 0 and falta[gid] <= 0.005 and gid not in eta:
+                eta[gid] = ym
+    for i in range(len(alocacao), len(series)):  # metas todas prontas: a caixinha fica livre
+        alocacao.append({"ym": P.add_months(cur, i), "total": round(series[i], 2), "livre": round(series[i], 2), "partes": []})
     out = []
-    month_idx = 0
-    carry = 0.0
     for g in goals:
-        falta = max(g["target"] - g["saved"], 0)
-        eta = None
-        if falta <= 0:
-            eta = "pronta"
-        elif steady > 0 or any(pool[month_idx:]):
-            need = falta - carry
-            i = month_idx
-            while need > 0 and i < 600:
-                v = pool[i] if i < len(pool) else steady
-                if v <= 0 and i >= len(pool):
-                    break
-                need -= v
-                i += 1
-            if need <= 0:
-                eta = P.add_months(cur, i - 1) if cur else None
-                carry = -need
-                month_idx = i
+        e = "pronta" if g["target"] - g["saved"] <= 0 else eta.get(g["id"])
         pct = 0 if g["target"] <= 0 else min(g["saved"] / g["target"] * 100, 100)
-        out.append({**g, "falta": round(falta, 2), "pct": round(pct, 1), "eta": eta,
-                    "meses": (P.months_between(cur, eta) + 1) if eta and eta != "pronta" and cur else None})
-    return {"metas": out, "aporte_medio": round(steady, 2)}
+        r = recebe[g["id"]]
+        out.append({**g, "falta": round(max(g["target"] - g["saved"], 0), 2), "pct": round(pct, 1), "eta": e,
+                    "meses": (P.months_between(cur, e) + 1) if e and e != "pronta" and cur else None,
+                    "proximo": round(r[0], 2) if r else 0, "no_periodo": round(sum(r), 2)})
+    return {"metas": out, "aporte_medio": round(steady, 2), "metas_modo": modo, "alocacao": alocacao}
 
 
 # INSS 2026 (confere com os holerites: R$ 2.579,30 -> R$ 207,81; R$ 3.479,92 -> R$ 306,17).
@@ -504,7 +543,7 @@ def summary(conn, month=None, extra=None):
         "aumento_from", "teto_semanal", "caixa", "caixa_ref", "salario_dia", "ignore_terms", "pix_max",
         "ciclo_extra", "cartoes", "cartao_venc", "last_sync", "caixa_banco", "cartao_usado", "notif",
         "auto", "sync_auto", "salario_regra", "entradas", "last_force", "last_tick", "sync_detalhe", "ciclo_info",
-        "nome", "meta_caixinha", "teto_auto", "salario_tipo", "caixa_data", "fgts")}
+        "nome", "meta_caixinha", "teto_auto", "salario_tipo", "caixa_data", "fgts", "metas_modo")}
     public_cfg["teto_efetivo"] = cfg["teto_semanal"]
     x = income_month(t, cfg)
     paydays = {P.add_months(x, k): PD.payday_ym(P.add_months(x, k), cfg).isoformat() for k in range(-4, 10)}
@@ -522,7 +561,7 @@ def summary(conn, month=None, extra=None):
         "recorrentes": recurring, "overrides": ov_rows, "proj": proj, "config": public_cfg,
         "ciclo": x, "paydays": paydays,
         "proximas": month_panel(conn, cfg, P.add_months(x, 1), t, listas=True),
-        "livre": livre, "insights": insights(conn, cfg, t, proj, livre), **goals_plan(conn, proj),
+        "livre": livre, "insights": insights(conn, cfg, t, proj, livre), **goals_plan(conn, proj, cfg),
         "fgts": fgts_plan(cfg, t),
         "avulsos": db.rows(conn, "SELECT * FROM planned ORDER BY month, day, id"),
         "notificacoes": db.rows(conn, "SELECT * FROM notif_log ORDER BY sent_at DESC LIMIT 20"),
