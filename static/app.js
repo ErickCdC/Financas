@@ -195,7 +195,8 @@ function faturaDetail(i, panel) {
       <div class="kv total"><span>${i.estimated ? "Previsto" : "Valor da fatura"}</span><span class="num">${i.amount == null ? "—" : brl(i.amount)}</span></div></div>` : "";
   const nota = i.nota && String(i.nota).startsWith("Banco: ") ? `<p class="lead">${esc(i.nota.replace("Banco: ", "Valor do banco: "))}.</p>` : "";
   const per = i.compras_de ? `Compras de ${ddmm(i.compras_de)} a ${ddmm(i.ate || i.fecha)} · fecha ${ddmm(i.fecha)} · vence ${ddmm(i.due)}` : (i.due ? `Vence ${ddmm(i.due)}` : "");
-  const head = `<h2 class="sec">Compras deste ciclo${lista.length ? ` · ${lista.length}` : ""}<span class="num">${brl(lista.reduce((a, s) => a + s.amount, 0))}</span></h2>`;
+  const head = `<h2 class="sec">Compras deste ciclo${lista.length ? ` · ${lista.length}` : ""}<span class="num">${brl(lista.reduce((a, s) => a + s.amount, 0))}</span></h2>`
+    + (i.lista_desde ? `<p class="lead">O app só tem as compras a partir de ${ddmm(i.lista_desde)}, então a lista não fecha com o valor da fatura${i.estimated ? "" : ", que veio do banco"}.</p>` : "");
   openDetail({
     eyebrow: `${i.name} · contas de ${monthOnly(panel.ref)}`,
     title: `${i.amount == null ? "—" : brl(i.amount)} ${status}`, sub: per,
@@ -287,7 +288,7 @@ VIEWS.contas = d => {
     return `<div class="group-label">${title}</div>` + its.map(i => `<div class="item">
       <input type="checkbox" class="check" data-chg="paid" data-key="${esc(i.key)}" ${i.paid ? "checked" : ""} aria-label="Marcar ${esc(i.name)} como paga">
       <div class="body"><div class="t">${esc(i.name)}</div>
-        ${i.compras_de ? `<div class="sub period">Compras de ${ddmm(i.compras_de)} a ${ddmm(i.ate || i.fecha)} · vence ${ddmm(i.due)}${i.compras ? ` · até agora ${brl(i.compras)}` : ""}</div>` : ""}
+        ${i.compras_de ? `<div class="sub period">Compras de ${ddmm(i.compras_de)} a ${ddmm(i.ate || i.fecha)} · vence ${ddmm(i.due)}${i.compras && i.estimated ? ` · até agora ${brl(i.compras)}` : ""}</div>` : ""}
         <div class="sub">${dueChip(i, t)}${i.estimated && i.amount != null ? ` <span class="chip">previsto</span>` : ""}${i.used != null && !i.paid ? ` <span class="muted">· usado no cartão ${brl(i.used)}</span>` : ""}</div>
         ${i.parts && i.parts.length ? `<details class="parts"><summary>Ver composição (${i.parts.length})</summary><div class="pl">${i.parts.map(p => `<div><span>${esc(p.name)}</span><span class="num">${brl(p.amount)}</span></div>`).join("")}</div></details>` : ""}
       </div>

@@ -50,6 +50,9 @@ def main():
             if f.get("libera") == "2028-05-12":  # o contrato de aprendiz (2024) também conta nos 3 anos
                 db.put_setting(conn, "fgts", {**f, "libera": "2027-10-25"})
             feitas.add("fgts_libera_aprendiz")
+        if "netinjection_valor" not in feitas:  # parcela real no Mercado Pago: R$ 39,19
+            conn.execute("UPDATE installments SET amount=39.19 WHERE name LIKE 'NetInjection%' AND ABS(amount-39.21)<0.005")
+            feitas.add("netinjection_valor")
         if "metas_share_igual" not in feitas:
             shares = [r[0] for r in conn.execute("SELECT share FROM goals")]
             if len(shares) >= 2 and all(x == 100 for x in shares):  # padrão antigo: 100% em todas

@@ -64,6 +64,15 @@ def bill_period(cfg, card, y, m):
     py, pm = (y, m - 1) if m > 1 else (y - 1, 12)
     close = due - timedelta(days=int(off))
     prev_close = clamp_day(py, pm, int(day)) - timedelta(days=int(off))
+    # O dia do fechamento varia (PicPay: 26 a 29). Perto do último fechamento real, vale a data do banco:
+    # sem isso, uma compra de 27/10 que já estava na fatura de 05/11 entrava de novo na de 05/12.
+    fechou = ((cfg.get("ciclo_info") or {}).get(card) or {}).get("fechou")
+    if fechou:
+        f = date.fromisoformat(fechou)
+        if abs((f - prev_close).days) <= 5:
+            prev_close = f
+        elif abs((f - close).days) <= 5:
+            close = f
     return {"compras_de": prev_close.isoformat(), "ate": (close - timedelta(days=1)).isoformat(),
             "fecha": close.isoformat()}
 
@@ -129,6 +138,10 @@ def month_panel(conn, cfg, ym, t, purchases=None, listas=False):
                 "compras": purchases.get((c, inc), 0), "nota": (ov.get((c, inc)) or {}).get("note"), **per}
         if listas and per:
             # as compras que somam em "compras" (mesmo filtro de card_purchases)
+            # o app só tem as compras a partir da primeira sincronização: avisa quando o ciclo começou antes
+            desde = conn.execute("SELECT MIN(date) FROM spends WHERE card=? AND ext_id IS NOT NULL", (c,)).fetchone()[0]
+            if desde and desde > per["compras_de"]:
+                item["lista_desde"] = desde
             item["lista"] = db.rows(conn, "SELECT id, date, description, amount, category, source, ignored, card "
                                           f"FROM spends WHERE {NA_FATURA} AND card=? AND date BETWEEN ? AND ? "
                                           "ORDER BY date DESC, id DESC LIMIT 300", (c, per["compras_de"], per["ate"]))
