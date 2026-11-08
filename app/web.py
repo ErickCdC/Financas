@@ -153,6 +153,30 @@ def act_goals(conn, body):
     return crud(conn, "goals", data.GOAL_SPEC, body, optional=("saved", "kind", "note", "ordem", "share"))
 
 
+def act_cobrancas(conn, body):
+    """Cadastro das cobranças e o status de cada mês (cobrei / recebi / desfazer)."""
+    acao = body.get("acao")
+    if acao:
+        cid, month = V.posint(1, 10**9)(body.get("id")), V.year_month(body.get("month"))
+        conn.execute("INSERT OR IGNORE INTO cobranca_mes(cobranca_id, month) VALUES(?,?)", (cid, month))
+        hoje = C.today().isoformat()
+        if acao == "cobrei":
+            conn.execute("UPDATE cobranca_mes SET cobrado=COALESCE(cobrado, ?) WHERE cobranca_id=? AND month=?", (hoje, cid, month))
+        elif acao == "recebi":
+            valor = V.opt(V.num)(body.get("valor"))
+            conn.execute("UPDATE cobranca_mes SET recebido=?, valor=? WHERE cobranca_id=? AND month=?",
+                         (V.opt(V.iso_date)(body.get("data")) or hoje, valor, cid, month))
+        elif acao == "desfazer":
+            conn.execute("UPDATE cobranca_mes SET recebido=NULL, valor=NULL, cobrado=NULL WHERE cobranca_id=? AND month=?",
+                         (cid, month))
+        else:
+            raise ValueError("ação inválida")
+        return {"ok": True}
+    if body.get("delete"):
+        conn.execute("DELETE FROM cobranca_mes WHERE cobranca_id=?", (V.posint(1, 10**9)(body.get("id")),))
+    return crud(conn, "cobrancas", data.COBRANCA_SPEC, body, optional=("valor", "conta_id", "match", "nota", "ativo"))
+
+
 def act_spends(conn, body):
     r = crud(conn, "spends", data.SPEND_SPEC, body, optional=("category", "ignored", "card"))
     # Confere o teto logo depois de um lançamento (sem travar a resposta).
@@ -202,6 +226,7 @@ POST_ROUTES = {
     "/api/spends": act_spends,
     "/api/planned": lambda c, b: crud(c, "planned", data.PLANNED_SPEC, b, optional=("day", "note", "done")),
     "/api/goals": act_goals,
+    "/api/cobrancas": act_cobrancas,
     "/api/import": data.restore,
     "/api/push/subscribe": act_subscribe,
     "/api/push/unsubscribe": act_unsubscribe,
@@ -295,6 +320,9 @@ class Handler(BaseHTTPRequestHandler):
                 if path == "/api/summary":
                     month = (parse_qs(url.query).get("month") or [None])[0]
                     return self._json(200, finance.summary(conn, V.year_month(month) if month else None, summary_extra()))
+                if path == "/api/cobrancas":
+                    ym = (parse_qs(url.query).get("ym") or [None])[0]
+                    return self._json(200, finance.cobrancas_mes(conn, C.today(), V.year_month(ym) if ym else None))
                 if path == "/api/relatorio":
                     ym = (parse_qs(url.query).get("ym") or [None])[0]
                     return self._json(200, finance.relatorio(conn, db.get_cfg(conn), C.today(), V.year_month(ym) if ym else None))

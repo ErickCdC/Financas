@@ -233,3 +233,46 @@ class Caixinha(unittest.TestCase):
         self.assertEqual(p1["metas"][0]["eta"], "2026-12")
         self.assertEqual([m["eta"] for m in p2["metas"]], ["2027-02", "2027-02"])  # 250 + 250 por salário
         self.assertEqual(p2["alocacao"][0]["partes"], [{"id": 1, "valor": 250.0}, {"id": 2, "valor": 250.0}])
+
+
+class Cobrancas(unittest.TestCase):
+    def setUp(self):
+        fresh_db()
+        with db.connect() as conn:
+            for k, v in S.DEFAULT_SETTINGS.items():
+                db.put_setting(conn, k, v)
+            conn.execute("INSERT INTO recurring(name,amount,match) VALUES('Aluguel',850,'isabela')")
+            conn.execute("INSERT INTO recurring(name,amount,match) VALUES('I-Conecta',117.22,'i-conecta')")
+            self.conta = conn.execute("SELECT id FROM recurring WHERE name='I-Conecta'").fetchone()[0]
+            conn.execute("INSERT INTO cobrancas(nome,pessoa,valor,conta_id,dia_ini,dia_fim,match) "
+                         "VALUES('I-Conecta','Valter',115,?,1,5,'valter luis')", (self.conta,))
+
+    def test_reimbursed_bill_is_out_of_the_totals(self):
+        with db.connect() as conn:
+            p = finance.month_panel(conn, db.get_cfg(conn), "2026-12", date(2026, 11, 8))
+        ic = next(i for i in p["items"] if i["name"] == "I-Conecta")
+        self.assertEqual(ic["reembolso"]["pessoa"], "Valter")
+        self.assertEqual(p["totais"]["fixa"], 850)
+        self.assertNotIn(117.22, [p["falta"] - x for x in (0,)])  # falta não inclui a I-Conecta
+        self.assertEqual(round(p["falta"] - p["totais"]["fatura"] - p["totais"]["avulsa"], 2), 850)
+
+    def test_pix_marks_received_and_ignores_other_valter(self):
+        conta = {"id": "c", "type": "BANK", "bank": "Mercado Pago", "balance": 0, "credit": {}, "bills": None, "tx": [
+            tx("a", "2026-11-06T01:03:54Z", "Pix recebido VALTER LUIS DE CASTRO", 115, "CREDIT"),
+            tx("b", "2026-10-26T22:44:22Z", "Pix recebido LUCAS VALTER CAMARA DE CASTRO", 23, "CREDIT")]}
+        with db.connect() as conn:
+            res, events = bank.apply(conn, {"accounts": [conta]}, date(2026, 11, 6))
+            nov = finance.cobrancas_mes(conn, date(2026, 11, 6))["itens"][0]
+            out = finance.cobrancas_mes(conn, date(2026, 11, 6), "2026-10")["itens"][0]
+        self.assertEqual((nov["recebido"], nov["recebido_valor"], nov["estado"]), ("2026-11-05", 115, "recebido"))
+        self.assertIsNone(out["recebido"])  # o Pix do Lucas não conta
+        self.assertTrue(any(e[1] == "Valter pagou R$ 115,00" for e in events))
+
+    def test_states_through_the_month(self):
+        with db.connect() as conn:
+            est = lambda d: finance.cobrancas_mes(conn, d, "2026-12")["itens"][0]["estado"]
+            self.assertEqual(est(date(2026, 11, 30)), "futuro")
+            self.assertEqual(est(date(2026, 12, 2)), "cobrar")
+            conn.execute("INSERT INTO cobranca_mes(cobranca_id, month, cobrado) VALUES(1, '2026-12', '2026-12-02')")
+            self.assertEqual(est(date(2026, 12, 3)), "cobrado")
+            self.assertEqual(est(date(2026, 12, 7)), "atrasado")

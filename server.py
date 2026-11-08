@@ -66,6 +66,12 @@ def main():
                                     (name, f"%{first}%")).fetchone():
                     conn.execute("INSERT INTO recurring(name,amount,card,match) VALUES(?,?,?,?)", (name, amount, card, words))
             feitas.add("assinaturas_nov26")
+        if "cobranca_valter" not in feitas:  # o Valter reembolsa a I-Conecta (R$ 115 por Pix, entre o dia 1 e o 5)
+            conta = conn.execute("SELECT id FROM recurring WHERE name='I-Conecta'").fetchone()
+            if conta and not conn.execute("SELECT 1 FROM cobrancas WHERE conta_id=?", (conta[0],)).fetchone():
+                conn.execute("INSERT INTO cobrancas(nome, pessoa, valor, conta_id, dia_ini, dia_fim, match, nota) "
+                             "VALUES('I-Conecta', 'Valter', 115, ?, 1, 5, 'valter luis', 'Internet da casa dele')", (conta[0],))
+            feitas.add("cobranca_valter")
         db.put_setting(conn, "migracoes", sorted(feitas))
         bank.ignore_subscription_charges(conn)  # de novo, com a lista já atualizada
         # valor fixo antigo do PicPay (limite usado, não a fatura)

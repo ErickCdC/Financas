@@ -113,6 +113,7 @@ def month_panel(conn, cfg, ym, t, purchases=None, listas=False):
     def due(day):
         return due_date(ym, day, cfg)
 
+    reemb = reembolsadas(conn)
     for r in recurring:
         if r["card"]:
             continue
@@ -120,7 +121,8 @@ def month_panel(conn, cfg, ym, t, purchases=None, listas=False):
         has = bool(p and p["amount"] is not None)
         items.append({"key": f"rec:{r['id']}", "group": "fixa", "name": r["name"],
                       "amount": p["amount"] if has else r["amount"], "estimated": not has,
-                      "paid": bool(p and p["paid"]), "parts": [], "due": due(r.get("due_day"))})
+                      "paid": bool(p and p["paid"]), "parts": [], "due": due(r.get("due_day")),
+                      **({"reembolso": reemb[r["id"]]} if r["id"] in reemb else {})})
     inc = P.add_months(ym, -1)
     if purchases is None:
         purchases = card_purchases(conn, cfg, t, [inc])
@@ -152,8 +154,10 @@ def month_panel(conn, cfg, ym, t, purchases=None, listas=False):
                       "note": p.get("note")})
     order = {"fixa": 0, "avulsa": 1, "fatura": 2}
     items.sort(key=lambda i: (order[i["group"]], i["due"] or "9999", i["name"]))
-    falta = round(sum(i["amount"] for i in items if not i["paid"] and i["amount"] is not None), 2)
-    pago = round(sum(i["amount"] for i in items if i["paid"] and i["amount"] is not None), 2)
+    conta = [i for i in items if not i.get("reembolso")]  # quem reembolsa paga: não sai do seu bolso
+    falta = round(sum(i["amount"] for i in conta if not i["paid"] and i["amount"] is not None), 2)
+    pago = round(sum(i["amount"] for i in conta if i["paid"] and i["amount"] is not None), 2)
+    totais = {g: round(sum(i["amount"] or 0 for i in conta if i["group"] == g), 2) for g in ("fixa", "avulsa", "fatura")}
     sem_valor = sum(1 for i in items if i["amount"] is None and not i["paid"])
     # período em que essas contas são pagas: do salário de referência até a véspera do próximo
     p0 = PD.payday_ym(ref, cfg)
@@ -162,7 +166,7 @@ def month_panel(conn, cfg, ym, t, purchases=None, listas=False):
         "SELECT date, SUM(amount) AS t FROM spends WHERE ignored=0 AND date BETWEEN ? AND ? GROUP BY date",
         (p0.isoformat(), p1.isoformat()))}
     entradas = db.rows(conn, "SELECT * FROM planned WHERE kind='entrada' AND month=? ORDER BY day, id", (ref,))
-    return {"ym": ym, "ref": ref, "label": P.label(ref), "items": items, "falta": falta, "pago": pago,
+    return {"ym": ym, "ref": ref, "label": P.label(ref), "items": items, "falta": falta, "pago": pago, "totais": totais,
             "sem_valor": sem_valor, "total": round(falta + pago, 2), "gastos_dia": gastos_dia,
             "salario": p0.isoformat(), "periodo": [p0.isoformat(), p1.isoformat()],
             "entradas_avulsas": entradas}
@@ -276,7 +280,8 @@ def context(conn, t, n=6):
     """Configuração efetiva + projeção. Com teto automático, o teto da semana sai da projeção."""
     raw = db.get_cfg(conn)
     cfg = effective_cfg(raw, t)
-    recurring = db.rows(conn, "SELECT * FROM recurring ORDER BY id")
+    recurring = [r for r in db.rows(conn, "SELECT * FROM recurring ORDER BY id")
+                 if r["card"] or r["id"] not in reembolsadas(conn)]  # reembolsada: quem paga é outra pessoa
     inst = db.rows(conn, "SELECT * FROM installments ORDER BY id")
     ov = {(r["card"], r["month"]): r for r in db.rows(conn, "SELECT * FROM overrides")}
     planned = db.rows(conn, "SELECT * FROM planned ORDER BY month, day, id")
@@ -447,6 +452,49 @@ def goals_plan(conn, proj, cfg=None):
                     "meses": (P.months_between(cur, e) + 1) if e and e != "pronta" and cur else None,
                     "proximo": round(r[0], 2) if r else 0, "no_periodo": round(sum(r), 2)})
     return {"metas": out, "aporte_medio": round(steady, 2), "metas_modo": modo, "alocacao": alocacao}
+
+
+def reembolsadas(conn):
+    """Contas fixas que outra pessoa reembolsa todo mês: {id da conta: {pessoa, cobranca}}."""
+    return {r["conta_id"]: {"pessoa": r["pessoa"], "cobranca": r["id"]} for r in db.rows(
+        conn, "SELECT id, conta_id, pessoa FROM cobrancas WHERE ativo=1 AND conta_id IS NOT NULL")}
+
+
+def cobranca_valor(conn, c):
+    """Valor fixo da cobrança ou, sem valor, o último valor pago da conta ligada."""
+    if c.get("valor") is not None:
+        return float(c["valor"])
+    if c.get("conta_id"):
+        row = conn.execute("SELECT amount FROM payments WHERE key=? AND amount IS NOT NULL ORDER BY month DESC LIMIT 1",
+                           (f"rec:{c['conta_id']}",)).fetchone()
+        if row:
+            return float(row[0])
+        row = conn.execute("SELECT amount FROM recurring WHERE id=?", (c["conta_id"],)).fetchone()
+        if row:
+            return float(row[0])
+    return 0.0
+
+
+def cobrancas_mes(conn, t, ym=None):
+    """Cobranças do mês (calendário): quanto, de quem, quando cobrar e em que pé está."""
+    ym = ym or P.ym_of(t)
+    y, m = map(int, ym.split("-"))
+    st = {r["cobranca_id"]: r for r in db.rows(conn, "SELECT * FROM cobranca_mes WHERE month=?", (ym,))}
+    contas = {r["id"]: r["name"] for r in db.rows(conn, "SELECT id, name FROM recurring")}
+    itens = []
+    for c in db.rows(conn, "SELECT * FROM cobrancas WHERE ativo=1 ORDER BY dia_ini, id"):
+        ini, fim = clamp_day(y, m, int(c["dia_ini"])), clamp_day(y, m, int(c["dia_fim"]))
+        s = st.get(c["id"]) or {}
+        estado = ("recebido" if s.get("recebido") else "futuro" if t < ini else
+                  ("cobrado" if s.get("cobrado") else "cobrar") if t <= fim else "atrasado")
+        itens.append({**c, "valor_mes": round(cobranca_valor(conn, c), 2), "ym": ym, "ini": ini.isoformat(),
+                      "fim": fim.isoformat(), "estado": estado, "cobrado": s.get("cobrado"),
+                      "recebido": s.get("recebido"), "recebido_valor": s.get("valor"),
+                      "conta": contas.get(c.get("conta_id"))})
+    total = round(sum(i["valor_mes"] for i in itens), 2)
+    recebido = round(sum((i["recebido_valor"] or i["valor_mes"]) for i in itens if i["recebido"]), 2)
+    return {"ym": ym, "itens": itens, "total": total, "recebido": recebido,
+            "pendente": round(sum(i["valor_mes"] for i in itens if not i["recebido"]), 2)}
 
 
 def _acima_teto(conn, cfg, t):
@@ -623,7 +671,9 @@ def summary(conn, month=None, extra=None):
     raw = db.get_cfg(conn)
     cfg, proj, livre = context(conn, t)
     month = resolve_month(conn, cfg, t, month)
-    recurring = db.rows(conn, "SELECT * FROM recurring ORDER BY id")
+    reemb = reembolsadas(conn)
+    recurring = [{**r, **({"reembolso": reemb[r["id"]]} if r["id"] in reemb else {})}
+                 for r in db.rows(conn, "SELECT * FROM recurring ORDER BY id")]
     ov_rows = db.rows(conn, "SELECT * FROM overrides ORDER BY month, card")
     parc = parcelas(conn, t)
     public_cfg = {k: raw.get(k) for k in (
@@ -650,7 +700,7 @@ def summary(conn, month=None, extra=None):
         "ciclo": x, "paydays": paydays,
         "proximas": month_panel(conn, cfg, P.add_months(x, 1), t, listas=True),
         "livre": livre, "insights": insights(conn, cfg, t, proj, livre), **goals_plan(conn, proj, cfg),
-        "fgts": fgts_plan(cfg, t), "acima_teto": _acima_teto(conn, cfg, t),
+        "fgts": fgts_plan(cfg, t), "acima_teto": _acima_teto(conn, cfg, t), "cobrancas": cobrancas_mes(conn, t),
         "avulsos": db.rows(conn, "SELECT * FROM planned ORDER BY month, day, id"),
         "notificacoes": db.rows(conn, "SELECT * FROM notif_log ORDER BY sent_at DESC LIMIT 20"),
         "aparelhos": db.rows(conn, "SELECT id, label, created, last_ok, fails FROM push_subs ORDER BY id"),

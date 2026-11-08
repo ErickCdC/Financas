@@ -137,6 +137,7 @@ def notif(v):
         "ritmo": {"on": boolean, "weekday": posint(0, 6), "time": hhmm},
         "metas": {"on": boolean},
         "relatorio": {"on": boolean, "time": hhmm},
+        "cobrancas": {"on": boolean, "time": hhmm},
     }
     out_rules = {}
     for name, fields in spec.items():

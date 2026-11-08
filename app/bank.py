@@ -432,6 +432,30 @@ def apply(conn, data, t):
             elif abs(sal - base) / max(base, 1) <= 0.3 and abs(sal - base) >= 0.01:
                 db.put_setting(conn, "salario", sal)
 
+    # cobranças: o Pix de quem reembolsa marca o mês como recebido
+    for c in db.rows(conn, "SELECT * FROM cobrancas WHERE ativo=1"):
+        words = [w.strip().lower() for w in (c.get("match") or c["pessoa"]).split(",") if w.strip()]
+        valor = finance.cobranca_valor(conn, c)
+        for a in data["accounts"]:
+            if a["type"] != "BANK":
+                continue
+            for x in sorted(a["tx"], key=lambda x: str(x.get("date") or "")):
+                d = local_date(x.get("date"))
+                amt = _num(x.get("amount"))
+                low = str(x.get("description") or "").lower()
+                if x.get("type") != "CREDIT" or not d or amt < 0.5 * valor or not any(w in low for w in words):
+                    continue
+                ym_c = d[:7]
+                cur = conn.execute("SELECT recebido FROM cobranca_mes WHERE cobranca_id=? AND month=?", (c["id"], ym_c)).fetchone()
+                if cur and cur["recebido"]:
+                    continue
+                conn.execute("INSERT INTO cobranca_mes(cobranca_id, month, recebido, valor) VALUES(?,?,?,?) "
+                             "ON CONFLICT(cobranca_id, month) DO UPDATE SET recebido=excluded.recebido, valor=excluded.valor",
+                             (c["id"], ym_c, d, round(amt, 2)))
+                if (t - date.fromisoformat(d)).days <= 3:
+                    events.append((f"cobranca:{c['id']}:{ym_c}", f"{c['pessoa']} pagou {brl(amt)}",
+                                   f"{c['nome']} de {P.label(ym_c)}.", "/#contas/receber"))
+
     # 3) e 4) faturas: valor real e pagamento
     ciclo = {}
     venc_novo = dict(cfg.get("cartao_venc") or {})

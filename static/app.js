@@ -103,6 +103,7 @@ function route() {
   if (S.d) render();
   window.scrollTo(0, 0);
   if (sub === "novo" && S.d) { history.replaceState(null, "", "#" + S.view); A.addspend(); }
+  if (v === "contas" && sub === "receber") { S.contasTab = "receber"; history.replaceState(null, "", "#contas"); if (S.d) render(); }
   if (S.pendingRel != null && S.d) { const ym = S.pendingRel; S.pendingRel = null; openRelatorio(ym || undefined); }
 }
 window.addEventListener("hashchange", route);
@@ -241,6 +242,7 @@ VIEWS.inicio = d => {
   const pct = w.teto ? (w.gasto / w.teto) * 100 : 0;
   const alerts = [];
   if (d.config.caixa_desatualizado) alerts.push(notice("warn", "alert", `<b>Atualize seu caixa.</b> O saldo informado é de outro mês, então a projeção está sem ele.`, `<div><a class="btn sm secondary" href="#ajustes">Atualizar caixa</a></div>`));
+  ((d.cobrancas || {}).itens || []).filter(i => ["cobrar", "atrasado"].includes(i.estado)).forEach(i => alerts.push(notice(i.estado === "atrasado" ? "warn" : "", "bills", `<b>${i.estado === "atrasado" ? `${esc(i.pessoa)} ainda não pagou` : `Cobrar ${esc(i.pessoa)}`}:</b> ${esc(i.nome)} ${brl(i.valor_mes)}${i.estado === "cobrar" ? ` até ${ddmm(i.fim)}` : ""}.`, `<div><a class="btn sm secondary" href="#contas/receber">Ver cobranças</a></div>`)));
   if (!S.pushOn && "Notification" in window && Notification.permission !== "denied") alerts.push(notice("", "bell", `<b>Ative as notificações</b> para receber lembretes de contas e do teto da semana.`, `<div><button class="btn sm" data-act="pushon">Ativar neste aparelho</button></div>`));
   if (!d.backup.ativo) alerts.push(notice("warn", "cloud", `<b>Backup automático desligado.</b> No Render grátis os dados podem sumir quando o servidor reinicia.`, `<div><a class="btn sm secondary" href="#ajustes">Ver como ligar</a></div>`));
   else if (d.backup.pausado) alerts.push(notice("warn", "cloud", `<b>Backup pausado:</b> ${esc(d.backup.erro || "erro ao ler o GitHub")}. Evite editar até voltar.`));
@@ -278,20 +280,22 @@ VIEWS.inicio = d => {
 VIEWS.contas = d => {
   const m = d.mes, t = d.hoje;
   const pct = m.total ? (m.pago / m.total) * 100 : 0;
+  if (S.contasTab === "receber") return receberView(d);
+  const tot = m.totais || {};
   const group = (title, g) => {
     const its = m.items.filter(i => i.group === g);
     if (!its.length) return "";
-    return `<div class="group-label">${title}</div>` + its.map(i => `<div class="item">
+    return `<div class="group-label row"><span>${title}</span><span class="num">${brl(tot[g] || 0)}</span></div>` + its.map(i => `<div class="item${i.reembolso ? " reemb" : ""}">
       <input type="checkbox" class="check" data-chg="paid" data-key="${esc(i.key)}" ${i.paid ? "checked" : ""} aria-label="Marcar ${esc(i.name)} como paga">
       <div class="body"><div class="t">${esc(i.name)}</div>
         ${i.compras_de ? `<div class="sub period">Compras de ${ddmm(i.compras_de)} a ${ddmm(i.ate || i.fecha)} · vence ${ddmm(i.due)}${i.compras && i.estimated ? ` · até agora ${brl(i.compras)}` : ""}</div>` : ""}
-        <div class="sub">${dueChip(i, t)}${i.estimated && i.amount != null ? ` <span class="chip">previsto</span>` : ""}${i.used != null && !i.paid ? ` <span class="muted">· usado no cartão ${brl(i.used)}</span>` : ""}</div>
+        <div class="sub">${dueChip(i, t)}${i.estimated && i.amount != null ? ` <span class="chip">previsto</span>` : ""}${i.reembolso ? ` <span class="chip blue">${esc(i.reembolso.pessoa)} reembolsa · não conta</span>` : ""}</div>
         ${i.parts && i.parts.length ? `<details class="parts"><summary>Ver composição (${i.parts.length})</summary><div class="pl">${i.parts.map(p => `<div><span>${esc(p.name)}</span><span class="num">${brl(p.amount)}</span></div>`).join("")}</div></details>` : ""}
       </div>
       ${i.group === "avulsa" ? `<button class="btn ghost sm num" data-act="editplanned" data-id="${i.key.slice(5)}"><span>${brl(i.amount)}</span></button>` : `<button class="btn ghost sm num" data-act="editamt" data-key="${esc(i.key)}" data-name="${esc(i.name)}" data-amount="${i.amount ?? ""}" data-est="${i.estimated ? 1 : 0}"><span class="${i.estimated ? "est" : ""}">${i.amount == null ? "informar" : brl(i.amount)}</span></button>`}
     </div>`).join("");
   };
-  return `
+  return `${contasTabs(d)}
   <div class="monthnav"><button class="iconbtn" data-act="mnav" data-d="-1" aria-label="Mês anterior">${icon("left")}</button>
     <div class="m-wrap"><div class="m">Contas de ${esc(monthName(m.ref))}</div><div class="m-sub">Pagas com o salário de ${ddmm(m.salario)}</div></div><button class="iconbtn" data-act="mnav" data-d="1" aria-label="Próximo mês">${icon("right")}</button></div>
   <div class="grid cols2">
@@ -301,6 +305,9 @@ VIEWS.contas = d => {
         <div class="num"><span class="v-big">${brl(m.falta)}</span></div>
         <div class="bar ok"><i data-w="${pct}"></i></div>
         <div class="lead">Pago ${brl(m.pago)} de ${brl(m.total)}${m.sem_valor ? ` · ${m.sem_valor} sem valor` : ""}</div>
+        <div class="kv"><span class="muted">Cartões</span><span class="num">${brl(tot.fatura || 0)}</span></div>
+        <div class="kv"><span class="muted">Contas fixas</span><span class="num">${brl(tot.fixa || 0)}</span></div>
+        ${tot.avulsa ? `<div class="kv"><span class="muted">Avulsas</span><span class="num">${brl(tot.avulsa)}</span></div>` : ""}
       </section>
     </div>
     <div class="stack">
@@ -463,6 +470,61 @@ function previewDivisao(valor, metas, modo) {
   return { partes, resto: Math.max(resto, 0) };
 }
 
+function contasTabs(d) {
+  const c = d.cobrancas || { itens: [] };
+  const pend = c.itens.filter(i => ["cobrar", "atrasado"].includes(i.estado)).length;
+  return `<div class="seg seg-2 tabs-top"><button data-act="contastab" data-t="pagar" class="${S.contasTab !== "receber" ? "on" : ""}">A pagar</button><button data-act="contastab" data-t="receber" class="${S.contasTab === "receber" ? "on" : ""}">A receber${pend ? ` <span class="dotn">${pend}</span>` : ""}</button></div>`;
+}
+const ESTADO = { futuro: ["", "a cobrar"], cobrar: ["warn", "cobrar agora"], cobrado: ["blue", "cobrado, aguardando"], atrasado: ["neg", "atrasado"], recebido: ["pos", "recebido"] };
+function receberView(d) {
+  const c = S.rec && S.rec.ym ? S.rec : d.cobrancas;
+  const pct = c.total ? c.recebido / c.total * 100 : 0;
+  const row = i => { const [tone, txt] = ESTADO[i.estado]; return `<div class="item">
+      <input type="checkbox" class="check" data-act="recebi" data-id="${i.id}" data-ym="${i.ym}" data-v="${i.valor_mes}" ${i.recebido ? "checked" : ""} aria-label="Recebido de ${esc(i.pessoa)}">
+      <div class="body"><div class="t">${esc(i.nome)} · ${esc(i.pessoa)}</div>
+        <div class="sub"><span class="chip ${tone}">${txt}</span> ${i.recebido ? `em ${ddmm(i.recebido)}${i.recebido_valor != null && Math.abs(i.recebido_valor - i.valor_mes) > 0.005 ? ` · ${brl(i.recebido_valor)}` : ""}` : `cobrar de ${ddmm(i.ini)} a ${ddmm(i.fim)}${i.cobrado ? ` · cobrado ${ddmm(i.cobrado)}` : ""}`}</div>
+        ${i.conta ? `<div class="sub muted">Reembolsa a conta ${esc(i.conta)}${i.nota ? ` · ${esc(i.nota)}` : ""}</div>` : i.nota ? `<div class="sub muted">${esc(i.nota)}</div>` : ""}
+        ${!i.recebido ? `<div class="btn-row"><button class="btn sm" data-act="cobrar" data-id="${i.id}" data-ym="${i.ym}">${icon("send")}Cobrar</button></div>` : ""}
+      </div>
+      <button class="btn ghost sm num" data-act="editcob" data-id="${i.id}"><span>${brl(i.valor_mes)}</span></button>
+    </div>`; };
+  return `${contasTabs(d)}
+  <div class="monthnav"><button class="iconbtn" data-act="recnav" data-d="-1" aria-label="Mês anterior">${icon("left")}</button>
+    <div class="m-wrap"><div class="m">A receber em ${esc(monthName(c.ym))}</div><div class="m-sub">O Pix de quem paga é reconhecido sozinho</div></div><button class="iconbtn" data-act="recnav" data-d="1" aria-label="Próximo mês">${icon("right")}</button></div>
+  <div class="grid cols2">
+    <div class="stack"><section class="card">
+      <div class="eyebrow">Falta receber</div><div class="num"><span class="v-big">${brl(c.pendente)}</span></div>
+      <div class="bar ok"><i data-w="${pct}"></i></div>
+      <div class="lead">Recebido ${brl(c.recebido)} de ${brl(c.total)}</div>
+    </section></div>
+    <div class="stack">
+      <div class="monthnav"><span class="muted">Cobranças do mês</span><button class="btn sm secondary" data-act="addcob">${icon("plus")}Cobrança</button></div>
+      <section class="card flush"><div class="list">${c.itens.length ? c.itens.map(row).join("") : `<div class="empty">${icon("bills")}<div>Nenhuma cobrança. Cadastre o que alguém te reembolsa todo mês.</div></div>`}</div></section>
+    </div>
+  </div>`;
+}
+
+function findCob(id, ym) {
+  const lists = [S.rec, S.d.cobrancas].filter(Boolean);
+  for (const l of lists) { const i = l.itens.find(x => x.id === Number(id) && (!ym || x.ym === ym)); if (i) return i; }
+  return null;
+}
+async function recAction(body) { try { await api("/api/cobrancas", body); await reloadRec(); } catch (e) { toast(e.message); } }
+async function reloadRec() { const ym = S.rec && S.rec.ym; await load({ silent: true }); if (ym) { S.rec = await api("/api/cobrancas?ym=" + ym); render(); } }
+function cobFields() {
+  return [
+    { name: "nome", label: "O que", required: true, placeholder: "Ex.: internet, parte do aluguel" },
+    { name: "pessoa", label: "Quem paga", required: true },
+    { name: "conta_id", label: "Reembolsa uma conta fixa?", type: "select", options: [["", "Não"], ...(S.d.recorrentes || []).filter(r => !r.card).map(r => [String(r.id), r.name])], hint: "Se sim, essa conta deixa de contar nos seus totais" },
+    { name: "valor", label: "Valor", type: "money", hint: "Vazio = o último valor pago da conta ligada" },
+    { name: "dia_ini", label: "Cobrar a partir do dia", type: "number", min: 1, max: 31 },
+    { name: "dia_fim", label: "Prazo até o dia", type: "number", min: 1, max: 31 },
+    { name: "match", label: "Como o Pix aparece no extrato", hint: "Parte do nome de quem paga. Ex.: valter luis" },
+    { name: "nota", label: "Observação" },
+  ];
+}
+function cobBody(v) { return { ...v, conta_id: v.conta_id ? Number(v.conta_id) : null, valor: v.valor === "" || v.valor == null ? null : v.valor }; }
+
 function avulsosHtml(d) {
   const groups = {};
   (d.avulsos || []).forEach(p => (groups[p.month] = groups[p.month] || []).push(p));
@@ -590,7 +652,7 @@ VIEWS.ajustes = d => {
   const sel = (path, v, opts) => `<select data-set="${path}" data-kind="int">${opts.replace(`value="${v}"`, `value="${v}" selected`)}</select>`;
   const lastTick = c.last_tick || null;
   const ligados = Object.values(r).filter(x => x && x.on).length;
-  const fixasMes = d.recorrentes.filter(x => !x.card).reduce((a, x) => a + x.amount, 0);
+  const fixasMes = d.recorrentes.filter(x => !x.card && !x.reembolso).reduce((a, x) => a + x.amount, 0);
   const assinMes = d.recorrentes.filter(x => x.card).reduce((a, x) => a + x.amount, 0);
   return `
   <div class="stack settings">
@@ -608,6 +670,7 @@ VIEWS.ajustes = d => {
       <div class="setting"><div class="body"><div class="t">Compra grande</div><div class="sub">Avisa quando o banco mostrar uma compra a partir deste valor</div></div><div class="ctrl"><div class="money"><input class="sm-in" inputmode="decimal" data-set="notif.rules.compra_grande.valor" data-kind="num" value="${(r.compra_grande || {}).valor ?? 100}" aria-label="Valor"></div>${sw("notif.rules.compra_grande.on", (r.compra_grande || {}).on)}</div></div>
       <div class="setting"><div class="body"><div class="t">Ritmo do mês</div><div class="sub">Se, no ritmo atual, o dinheiro não fecha até o salário</div></div><div class="ctrl">${sel("notif.rules.ritmo.weekday", (r.ritmo || {}).weekday ?? 3, DSEM_LONG.map((x, i) => `<option value="${(i + 6) % 7}">${x}</option>`).join(""))}${timeIn("notif.rules.ritmo.time", (r.ritmo || {}).time || "19:00")}${sw("notif.rules.ritmo.on", (r.ritmo || {}).on)}</div></div>
       <div class="setting"><div class="body"><div class="t">Metas</div><div class="sub">Quando uma meta atrasa, adianta ou é alcançada</div></div>${sw("notif.rules.metas.on", (r.metas || { on: true }).on)}</div>
+      <div class="setting"><div class="body"><div class="t">Cobranças</div><div class="sub">No dia de cobrar e quando alguém atrasar</div></div><div class="ctrl">${timeIn("notif.rules.cobrancas.time", (r.cobrancas || {}).time || "09:00")}${sw("notif.rules.cobrancas.on", (r.cobrancas || { on: true }).on)}</div></div>
       <div class="setting"><div class="body"><div class="t">Relatório do mês</div><div class="sub">No dia do salário: quanto gastou, onde e contra o teto</div></div><div class="ctrl">${timeIn("notif.rules.relatorio.time", (r.relatorio || {}).time || "09:00")}${sw("notif.rules.relatorio.on", (r.relatorio || {}).on)}</div></div>
       <div class="setting"><div class="body"><div class="t">Dia do salário</div><div class="sub">Quanto guardar e o que pagar</div></div><div class="ctrl">${timeIn("notif.rules.payday.time", r.payday.time)}${sw("notif.rules.payday.on", r.payday.on)}</div></div>
       ${d.sync_disponivel ? `<div class="setting"><div class="body"><div class="t">Eventos do banco</div><div class="sub">Salário recebido, fatura ou conta paga</div></div>${sw("notif.rules.bank_events.on", (r.bank_events || { on: true }).on)}</div>` : ""}
@@ -641,7 +704,7 @@ VIEWS.ajustes = d => {
       <div class="btn-row pad"><button class="btn ghost sm" data-act="addrec">${icon("plus")}Nova</button></div>
     <div class="list">${d.recorrentes.map(x => `<button class="item" data-act="editrec" data-id="${x.id}">
       <span class="ic ${x.card ? "blue" : ""}">${icon(x.card ? "card" : "bills")}</span>
-      <span class="body"><span class="t">${esc(x.name)}</span><span class="sub">${x.card ? "na fatura " + esc(x.card) : "paga direto"}${x.due_day ? ` · vence dia ${x.due_day}` : x.card ? "" : " · sem dia de vencimento"}${!x.card && x.match ? " · automático" : ""}</span></span>
+      <span class="body"><span class="t">${esc(x.name)}</span><span class="sub">${x.card ? "na fatura " + esc(x.card) : "paga direto"}${x.due_day ? ` · vence dia ${x.due_day}` : x.card ? "" : " · sem dia de vencimento"}${!x.card && x.match ? " · automático" : ""}${x.reembolso ? ` · ${esc(x.reembolso.pessoa)} reembolsa` : ""}</span></span>
       <span class="amt num">${brl(x.amount)}</span></button>`).join("")}</div>`)}
     ${sgroup("banco", "bank", "Banco e sincronização", d.sync_disponivel ? `Última: ${esc(fmtStamp(c.last_sync) || "nunca")}` : "Sem conexão com o banco", `
     
@@ -959,6 +1022,32 @@ const A = {
   fatura: el => {
     const p = S.d.proximas, i = p && p.items.find(x => x.group === "fatura" && x.card === el.dataset.card);
     if (i) faturaDetail(i, p);
+  },
+  contastab: el => { S.contasTab = el.dataset.t; S.rec = null; render(); scrollTo(0, 0); },
+  recnav: async el => {
+    const cur = (S.rec && S.rec.ym) || S.d.cobrancas.ym;
+    try { S.rec = await api("/api/cobrancas?ym=" + addMonths(cur, Number(el.dataset.d))); render(); } catch (e) { toast(e.message); }
+  },
+  recebi: async el => {
+    const i = findCob(el.dataset.id, el.dataset.ym);
+    if (i && i.recebido) { await recAction({ acao: "desfazer", id: i.id, month: i.ym }); return; }
+    openSheet({ title: `Recebi de ${i ? i.pessoa : ""}`, fields: [{ name: "valor", label: "Valor recebido", type: "money", required: true, big: true }, { name: "data", label: "Data", type: "date" }],
+      values: { valor: Number(el.dataset.v), data: S.d.hoje }, saveLabel: "Marcar recebido",
+      onSave: async v => { await api("/api/cobrancas", { acao: "recebi", id: Number(el.dataset.id), month: el.dataset.ym, valor: v.valor, data: v.data }); await reloadRec(); return "Marcado como recebido"; } });
+  },
+  cobrar: async el => {
+    const i = findCob(el.dataset.id, el.dataset.ym); if (!i) return;
+    const txt = `Oi ${i.pessoa}! ${i.conta ? `A conta ${i.conta}` : i.nome} de ${monthOnly(i.ym)} deu ${brl(i.valor_mes)}. Pode me mandar o Pix? Obrigado!`;
+    try { if (navigator.share) await navigator.share({ text: txt }); else window.open("https://wa.me/?text=" + encodeURIComponent(txt), "_blank", "noopener"); }
+    catch (_) { return; }  // cancelou o compartilhamento
+    await recAction({ acao: "cobrei", id: i.id, month: i.ym });
+  },
+  addcob: () => openSheet({ title: "Nova cobrança", desc: "Algo que alguém te paga todo mês.", fields: cobFields(), values: { dia_ini: 1, dia_fim: 5 }, onSave: v => api("/api/cobrancas", cobBody(v)).then(reloadRec) }),
+  editcob: el => {
+    const i = findCob(el.dataset.id); if (!i) return;
+    openSheet({ title: i.nome, fields: cobFields(), values: { ...i, conta_id: i.conta_id ? String(i.conta_id) : "", valor: i.valor },
+      onSave: v => api("/api/cobrancas", { ...cobBody(v), id: i.id }).then(reloadRec),
+      onDelete: () => api("/api/cobrancas", { id: i.id, delete: true }).then(reloadRec) });
   },
   contasview: el => { S.contasView = el.dataset.v; store.set("fin-contas", S.contasView); render(); },
   calday: el => {

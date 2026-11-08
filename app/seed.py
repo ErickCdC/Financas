@@ -54,6 +54,7 @@ DEFAULT_SETTINGS = {
             "ritmo": {"on": True, "weekday": 3, "time": "19:00"},
             "metas": {"on": True},
             "relatorio": {"on": True, "time": "09:00"},
+            "cobrancas": {"on": True, "time": "09:00"},
         },
     },
 }

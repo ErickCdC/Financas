@@ -13,6 +13,8 @@ TABLES = {
     "spends": ["id", "date", "description", "amount", "category", "source", "ext_id", "ignored", "card"],
     "push_subs": ["id", "endpoint", "p256dh", "auth", "label", "created", "last_ok", "fails"],
     "notif_log": ["key", "sent_at", "title", "body"],
+    "cobrancas": ["id", "nome", "pessoa", "valor", "conta_id", "dia_ini", "dia_fim", "match", "nota", "ativo"],
+    "cobranca_mes": ["cobranca_id", "month", "cobrado", "recebido", "valor"],
 }
 SETTING_FIELDS = {
     "salario": V.num, "decimo1": V.num, "decimo2": V.num,
@@ -39,6 +41,9 @@ PLANNED_SPEC = {"kind": V.choice("saida", "entrada"), "name": V.text(60), "amoun
                 "day": V.opt(V.posint(1, 31)), "note": V.text(120, False), "done": V.boolint}
 GOAL_SPEC = {"name": V.text(60), "target": V.num, "saved": V.num, "kind": V.text(20, False),
              "note": V.text(160, False), "ordem": V.posint(0, 100), "share": V.posint(0, 100)}
+COBRANCA_SPEC = {"nome": V.text(60), "pessoa": V.text(60), "valor": V.opt(V.num), "conta_id": V.opt(V.posint(1, 10**9)),
+                 "dia_ini": V.posint(1, 31), "dia_fim": V.posint(1, 31), "match": V.text(120, False),
+                 "nota": V.text(160, False), "ativo": V.boolint}
 SPEND_SPEC = {"date": V.iso_date, "description": V.text(120), "amount": V.num,
               "category": V.text(30, False), "ignored": V.boolint, "card": V.text(30, False)}
 
@@ -79,10 +84,13 @@ def restore(conn, body):
         "planned": {"id": V.posint(1, 10**9), **PLANNED_SPEC},
         "goals": {"id": V.posint(1, 10**9), **GOAL_SPEC},
         "notif_log": {"key": V.text(120), "sent_at": V.text(20), "title": V.text(200, False), "body": V.text(500, False)},
+        "cobrancas": {"id": V.posint(1, 10**9), **COBRANCA_SPEC},
+        "cobranca_mes": {"cobranca_id": V.posint(1, 10**9), "month": V.year_month, "cobrado": V.opt(V.iso_date),
+                         "recebido": V.opt(V.iso_date), "valor": V.opt(V.num)},
     }
     parsed = {}
     for t, spec in specs.items():
-        lst = body.get(t, [])
+        lst = body.get(t, [])  # backups antigos não têm as tabelas novas: lista vazia
         if not isinstance(lst, list) or len(lst) > 50000:
             raise ValueError(f"lista inválida: {t}")
         parsed[t] = [{c: fn(r.get(c)) for c, fn in spec.items() if c in r} for r in lst if isinstance(r, dict)]

@@ -37,6 +37,13 @@ CREATE TABLE IF NOT EXISTS goals(
   id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, target REAL NOT NULL, saved REAL NOT NULL DEFAULT 0,
   kind TEXT, note TEXT, ordem INTEGER NOT NULL DEFAULT 0, share INTEGER NOT NULL DEFAULT 100);
 CREATE TABLE IF NOT EXISTS notif_log(key TEXT PRIMARY KEY, sent_at TEXT NOT NULL, title TEXT, body TEXT);
+CREATE TABLE IF NOT EXISTS cobrancas(
+  id INTEGER PRIMARY KEY AUTOINCREMENT, nome TEXT NOT NULL, pessoa TEXT NOT NULL, valor REAL, conta_id INTEGER,
+  dia_ini INTEGER NOT NULL DEFAULT 1, dia_fim INTEGER NOT NULL DEFAULT 5, match TEXT, nota TEXT,
+  ativo INTEGER NOT NULL DEFAULT 1);
+CREATE TABLE IF NOT EXISTS cobranca_mes(
+  cobranca_id INTEGER NOT NULL, month TEXT NOT NULL, cobrado TEXT, recebido TEXT, valor REAL,
+  PRIMARY KEY(cobranca_id, month));
 """
 
 # Chamado depois de qualquer escrita, para o backup automático (definido em backup.py).

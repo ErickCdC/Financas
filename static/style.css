@@ -583,3 +583,10 @@ h2.sec { display: flex; align-items: center; gap: 8px; }
 /* relatório */
 .wk { padding: 6px 0; }
 .wk .bar { height: 6px; margin-top: 4px; }
+
+/* Contas: totais nos grupos, abas A pagar / A receber */
+.group-label.row { display: flex; justify-content: space-between; align-items: baseline; }
+.tabs-top { margin-bottom: 12px; }
+.dotn { display: inline-grid; place-items: center; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: var(--neg); color: #fff; font-size: 11px; font-weight: 700; margin-left: 4px; }
+.item.reemb .btn.num span { color: var(--muted); text-decoration: line-through; }
+.item .btn-row { margin-top: 8px; }

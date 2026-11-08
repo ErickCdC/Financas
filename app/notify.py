@@ -5,7 +5,7 @@ pelo GitHub Actions (que também acorda o servidor no Render grátis).
 Cada aviso tem uma chave única em notif_log, então nunca sai repetido.
 """
 import threading
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 
 from . import config as C
 from . import db, finance, push
@@ -186,6 +186,18 @@ def build(conn, now):
             body = (f"Gastou {brl(rel['total'])} ({brl(rel['por_dia'])}/dia)"
                     f"{', ' + brl(rel['acima_teto']) + ' acima do teto' if rel['acima_teto'] > 0 else ', dentro do teto'}. {cats}.")
             out.append((f"relatorio:{ym}", f"Relatório de {_mes(ym)}", body, f"/#relatorio-{ym}", []))
+
+    r = rules.get("cobrancas") or {}
+    if r.get("on") and due(now, r.get("time", "09:00")):
+        for c in finance.cobrancas_mes(conn, t)["itens"]:
+            if c["recebido"]:
+                continue
+            if t.isoformat() == c["ini"]:
+                out.append((f"cobrar:{c['id']}:{c['ym']}", f"Dia de cobrar {c['pessoa']}",
+                            f"{c['nome']}: {brl(c['valor_mes'])}. Prazo até dia {int(c['fim'][8:10])}.", "/#contas/receber", []))
+            elif t > date.fromisoformat(c["fim"]):
+                out.append((f"atraso:{c['id']}:{c['ym']}", f"{c['pessoa']} ainda não pagou",
+                            f"{c['nome']}: {brl(c['valor_mes'])} (prazo era dia {int(c['fim'][8:10])}).", "/#contas/receber", []))
 
     r = rules["payday"]
     if r.get("on") and due(now, r["time"]):
