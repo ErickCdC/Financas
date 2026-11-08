@@ -82,6 +82,22 @@
     },
     "bank_events": {
      "on": true
+    },
+    "compra_grande": {
+     "on": true,
+     "valor": 100.0
+    },
+    "ritmo": {
+     "on": true,
+     "weekday": 3,
+     "time": "19:00"
+    },
+    "metas": {
+     "on": true
+    },
+    "relatorio": {
+     "on": true,
+     "time": "09:00"
     }
    }
   },
@@ -156,11 +172,15 @@
    }
   },
   "eventos_pendentes": [],
-  "last_auto_sync": "2026-11-08T13:48",
+  "last_auto_sync": "2026-11-08T14:15",
   "last_force": "2026-11-08T13:49",
   "last_sync": "2026-11-08 13:49",
-  "last_tick": "2026-11-08 13:48",
+  "last_tick": "2026-11-08 14:29",
+  "metas_eta": {
+   "1": "2026-12"
+  },
   "migracoes": [
+   "assinaturas_nov26",
    "fgts_libera_aprendiz",
    "metas_share_igual",
    "netinjection_valor",
@@ -247,28 +267,44 @@
    "match": "anthropic,claude"
   },
   {
-   "id": 6,
-   "name": "Clube iFood",
-   "amount": 7.95,
-   "card": "PicPay",
-   "due_day": null,
-   "match": "ifood club,clube ifood"
-  },
-  {
-   "id": 7,
-   "name": "Armazenamento Gigi",
-   "amount": 19.9,
-   "card": "PicPay",
-   "due_day": null,
-   "match": null
-  },
-  {
    "id": 8,
    "name": "Academia",
    "amount": 100.0,
    "card": null,
    "due_day": 1,
    "match": "Jussiara"
+  },
+  {
+   "id": 9,
+   "name": "Banco MCP",
+   "amount": 29.9,
+   "card": "PicPay",
+   "due_day": null,
+   "match": "banco mcp"
+  },
+  {
+   "id": 10,
+   "name": "Seguro carteira",
+   "amount": 9.5,
+   "card": "PicPay",
+   "due_day": null,
+   "match": "segurocarteir,seguro carteira"
+  },
+  {
+   "id": 11,
+   "name": "Google One",
+   "amount": 14.99,
+   "card": "PicPay",
+   "due_day": null,
+   "match": "google one"
+  },
+  {
+   "id": 12,
+   "name": "I-Conecta",
+   "amount": 117.22,
+   "card": null,
+   "due_day": null,
+   "match": "i-conecta"
   }
  ],
  "installments": [
@@ -853,10 +889,10 @@
    "date": "2026-10-23",
    "description": "BANCO MCP                .CAMPO GRAN MS",
    "amount": 29.9,
-   "category": "outros",
+   "category": "assinatura",
    "source": "banco",
    "ext_id": "6d7341ae-373e-4d3b-b53b-f28126fded99:3bcac943-5cbd-49cc-9552-864c42f1912c",
-   "ignored": 0,
+   "ignored": 1,
    "card": "PicPay"
   },
   {
@@ -1051,10 +1087,10 @@
    "date": "2026-10-19",
    "description": "SEGUROCARTEIR",
    "amount": 9.5,
-   "category": "outros",
+   "category": "assinatura",
    "source": "banco",
    "ext_id": "6d7341ae-373e-4d3b-b53b-f28126fded99:9ab530ea-995a-49e4-9dd7-c28bc56bc01f",
-   "ignored": 0,
+   "ignored": 1,
    "card": "PicPay"
   },
   {
@@ -1117,10 +1153,10 @@
    "date": "2026-10-15",
    "description": "Google One               .SAO PAULO  BRA",
    "amount": 14.99,
-   "category": "outros",
+   "category": "assinatura",
    "source": "banco",
    "ext_id": "6d7341ae-373e-4d3b-b53b-f28126fded99:8971932e-c5e8-4840-ae74-74346cab094c",
-   "ignored": 0,
+   "ignored": 1,
    "card": "PicPay"
   },
   {
