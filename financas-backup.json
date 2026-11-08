@@ -114,6 +114,7 @@
    "libera": "2027-10-25",
    "rende_pct": 3.0
   },
+  "metas_modo": "ordem",
   "caixa_banco": 192.7,
   "caixa_data": "2026-11-08",
   "cartao_usado": {
@@ -161,6 +162,7 @@
   "last_tick": "2026-11-08 13:33",
   "migracoes": [
    "fgts_libera_aprendiz",
+   "metas_share_igual",
    "salario_minimo_50"
   ],
   "sync_detalhe": [
