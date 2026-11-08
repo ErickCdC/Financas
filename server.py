@@ -45,6 +45,11 @@ def main():
             if regra.get("minimo_pct") == 60:  # set/26 caiu R$ 1.390 (59% do salário) e passaria batido
                 db.put_setting(conn, "salario_regra", {**regra, "minimo_pct": 50})
             feitas.add("salario_minimo_50")
+        if "fgts_libera_aprendiz" not in feitas:
+            f = db.get_cfg(conn).get("fgts") or {}
+            if f.get("libera") == "2028-05-12":  # o contrato de aprendiz (2024) também conta nos 3 anos
+                db.put_setting(conn, "fgts", {**f, "libera": "2027-10-25"})
+            feitas.add("fgts_libera_aprendiz")
         db.put_setting(conn, "migracoes", sorted(feitas))
         # valor fixo antigo do PicPay (limite usado, não a fatura)
         conn.execute("DELETE FROM overrides WHERE note LIKE 'Valor do cartão em 05/11%' OR note LIKE 'Valor que o app mostra%'")

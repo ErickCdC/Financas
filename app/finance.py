@@ -421,15 +421,14 @@ def fgts_plan(cfg, t):
     hoje = fgts_saldo(f, t)
     if hoje is None:
         return None
-    marcos = []
-    for meses in (6, 12):
-        y, m = divmod(t.month - 1 + meses, 12)
-        d = clamp_day(t.year + y, m + 1, t.day)
-        marcos.append({"data": d.isoformat(), "saldo": fgts_saldo(f, d)})
+    def depois(d, meses):
+        y, m = divmod(d.month - 1 + meses, 12)
+        return clamp_day(d.year + y, m + 1, d.day)
     libera = f.get("libera")
-    if libera:
-        marcos.append({"data": libera, "saldo": fgts_saldo(f, date.fromisoformat(libera)), "libera": True})
-    marcos.sort(key=lambda x: x["data"])
+    # daqui a 6 meses, na liberação e um ano depois dela (ou daqui a 6 e 12 meses, sem data)
+    datas = [depois(t, 6)] + ([date.fromisoformat(libera), depois(date.fromisoformat(libera), 12)] if libera else [depois(t, 12)])
+    marcos = [{"data": d.isoformat(), "saldo": fgts_saldo(f, d), **({"libera": True} if d.isoformat() == libera else {})}
+              for d in sorted(set(datas)) if d > t]
     return {**f, "hoje": hoje, "marcos": marcos,
             "na_liberacao": next((x["saldo"] for x in marcos if x.get("libera")), None)}
 

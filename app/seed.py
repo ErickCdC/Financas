@@ -29,8 +29,9 @@ DEFAULT_SETTINGS = {
     "nome": "Erick",
     "meta_caixinha": 0.0,
     # FGTS: saldo informado em 08/11/2026 (depois do saque calamidade). Depósito = 8% do salário base
-    # (R$ 2.564,92 no holerite); liberado para a casa com 3 anos de carteira (admissão 12/05/2025).
-    "fgts": {"saldo": 1285.0, "data": "2026-11-08", "mensal": 205.19, "libera": "2028-05-12", "rende_pct": 3.0},   # quanto guardar por mês (usado pelo teto automático)
+    # (R$ 2.564,92 no holerite). Liberado para a casa com 3 anos de carteira somados: aprendiz de
+    # 18/03/2024 a 04/10/2024 (6 meses e 17 dias) + Starnav desde 12/05/2025 -> por volta de 25/10/2027.
+    "fgts": {"saldo": 1285.0, "data": "2026-11-08", "mensal": 205.19, "libera": "2027-10-25", "rende_pct": 3.0},   # quanto guardar por mês (usado pelo teto automático)
     "teto_auto": False,     # se ligado, o teto semanal se ajusta para sobrar a meta
     # Automação a cada sincronização com o banco
     "auto": {"caixa": True, "salario": True, "pagamentos": True, "faturas": True, "parcelas": True},
