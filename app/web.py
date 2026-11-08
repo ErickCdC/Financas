@@ -174,7 +174,7 @@ def act_cobrancas(conn, body):
         return {"ok": True}
     if body.get("delete"):
         conn.execute("DELETE FROM cobranca_mes WHERE cobranca_id=?", (V.posint(1, 10**9)(body.get("id")),))
-    return crud(conn, "cobrancas", data.COBRANCA_SPEC, body, optional=("valor", "conta_id", "match", "nota", "ativo"))
+    return crud(conn, "cobrancas", data.COBRANCA_SPEC, body, optional=("valor", "conta_id", "match", "nota", "ativo", "mes_seguinte"))
 
 
 def act_spends(conn, body):

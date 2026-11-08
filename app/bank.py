@@ -445,9 +445,8 @@ def apply(conn, data, t):
                 low = str(x.get("description") or "").lower()
                 if x.get("type") != "CREDIT" or not d or amt < 0.5 * valor or not any(w in low for w in words):
                     continue
-                ym_c = d[:7]
-                cur = conn.execute("SELECT recebido FROM cobranca_mes WHERE cobranca_id=? AND month=?", (c["id"], ym_c)).fetchone()
-                if cur and cur["recebido"]:
+                ym_c = _referencia(conn, c, d, x)
+                if not ym_c:
                     continue
                 conn.execute("INSERT INTO cobranca_mes(cobranca_id, month, recebido, valor) VALUES(?,?,?,?) "
                              "ON CONFLICT(cobranca_id, month) DO UPDATE SET recebido=excluded.recebido, valor=excluded.valor",
@@ -605,6 +604,23 @@ def _auto_override(conn, card, income_ym, total, label):
                  "ON CONFLICT(card,month) DO UPDATE SET amount=excluded.amount, note=excluded.note",
                  (card, income_ym, round(total, 2), AUTO_NOTE + label))
     return True
+
+
+def _referencia(conn, c, d, x):
+    """A que mês de referência um Pix recebido em `d` paga. Com cobrança no mês seguinte, o Pix de 05/11 paga
+    outubro. Se essa referência já foi paga, tenta a seguinte (pagou adiantado) e a anterior (atrasado)."""
+    base = P.add_months(d[:7], -1 if c.get("mes_seguinte") else 0)
+    for ym in (base, P.add_months(base, 1), P.add_months(base, -1)):
+        row = conn.execute("SELECT recebido FROM cobranca_mes WHERE cobranca_id=? AND month=?", (c["id"], ym)).fetchone()
+        if row and row["recebido"]:
+            if row["recebido"] == d:  # o mesmo Pix lido de novo
+                return None
+            continue
+        ini, _fim = finance.janela_cobranca(c, ym)
+        if ym != base and abs((date.fromisoformat(d) - ini).days) > 40:
+            continue
+        return ym
+    return None
 
 
 def _prepaid(results, i):

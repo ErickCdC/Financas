@@ -13,7 +13,7 @@ TABLES = {
     "spends": ["id", "date", "description", "amount", "category", "source", "ext_id", "ignored", "card"],
     "push_subs": ["id", "endpoint", "p256dh", "auth", "label", "created", "last_ok", "fails"],
     "notif_log": ["key", "sent_at", "title", "body"],
-    "cobrancas": ["id", "nome", "pessoa", "valor", "conta_id", "dia_ini", "dia_fim", "match", "nota", "ativo"],
+    "cobrancas": ["id", "nome", "pessoa", "valor", "conta_id", "dia_ini", "dia_fim", "match", "nota", "ativo", "mes_seguinte"],
     "cobranca_mes": ["cobranca_id", "month", "cobrado", "recebido", "valor"],
 }
 SETTING_FIELDS = {
@@ -43,7 +43,7 @@ GOAL_SPEC = {"name": V.text(60), "target": V.num, "saved": V.num, "kind": V.text
              "note": V.text(160, False), "ordem": V.posint(0, 100), "share": V.posint(0, 100)}
 COBRANCA_SPEC = {"nome": V.text(60), "pessoa": V.text(60), "valor": V.opt(V.num), "conta_id": V.opt(V.posint(1, 10**9)),
                  "dia_ini": V.posint(1, 31), "dia_fim": V.posint(1, 31), "match": V.text(120, False),
-                 "nota": V.text(160, False), "ativo": V.boolint}
+                 "nota": V.text(160, False), "ativo": V.boolint, "mes_seguinte": V.boolint}
 SPEND_SPEC = {"date": V.iso_date, "description": V.text(120), "amount": V.num,
               "category": V.text(30, False), "ignored": V.boolint, "card": V.text(30, False)}
 

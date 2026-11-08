@@ -189,15 +189,15 @@ def build(conn, now):
 
     r = rules.get("cobrancas") or {}
     if r.get("on") and due(now, r.get("time", "09:00")):
-        for c in finance.cobrancas_mes(conn, t)["itens"]:
-            if c["recebido"]:
-                continue
+        for c in finance.cobrancas_pendentes(conn, t):
             if t.isoformat() == c["ini"]:
                 out.append((f"cobrar:{c['id']}:{c['ym']}", f"Dia de cobrar {c['pessoa']}",
-                            f"{c['nome']}: {brl(c['valor_mes'])}. Prazo até dia {int(c['fim'][8:10])}.", "/#contas/receber", []))
+                            f"{c['nome']} de {_mes(c['ym'])}: {brl(c['valor_mes'])}. Prazo até dia {int(c['fim'][8:10])}.",
+                            "/#contas/receber", []))
             elif t > date.fromisoformat(c["fim"]):
                 out.append((f"atraso:{c['id']}:{c['ym']}", f"{c['pessoa']} ainda não pagou",
-                            f"{c['nome']}: {brl(c['valor_mes'])} (prazo era dia {int(c['fim'][8:10])}).", "/#contas/receber", []))
+                            f"{c['nome']} de {_mes(c['ym'])}: {brl(c['valor_mes'])} (prazo era dia {int(c['fim'][8:10])}).",
+                            "/#contas/receber", []))
 
     r = rules["payday"]
     if r.get("on") and due(now, r["time"]):

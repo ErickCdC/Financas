@@ -276,3 +276,43 @@ class Cobrancas(unittest.TestCase):
             conn.execute("INSERT INTO cobranca_mes(cobranca_id, month, cobrado) VALUES(1, '2026-12', '2026-12-02')")
             self.assertEqual(est(date(2026, 12, 3)), "cobrado")
             self.assertEqual(est(date(2026, 12, 7)), "atrasado")
+
+
+class CobrancaMesSeguinte(Cobrancas):
+    """A I-Conecta de novembro o Valter paga entre 1 e 5 de dezembro."""
+    def setUp(self):
+        super().setUp()
+        with db.connect() as conn:
+            conn.execute("UPDATE cobrancas SET mes_seguinte=1")
+
+    def _pix(self, conn, d, i="a"):
+        conta = {"id": "c", "type": "BANK", "bank": "Mercado Pago", "balance": 0, "credit": {}, "bills": None,
+                 "tx": [tx(i, d, "Pix recebido VALTER LUIS DE CASTRO", 115, "CREDIT")]}
+        return bank.apply(conn, {"accounts": [conta]}, date.fromisoformat(d[:10]))
+
+    def test_pix_marks_received_and_ignores_other_valter(self):
+        with db.connect() as conn:
+            self._pix(conn, "2026-11-06T01:03:54Z")
+            out = finance.cobrancas_mes(conn, date(2026, 11, 8), "2026-10")["itens"][0]
+            nov = finance.cobrancas_mes(conn, date(2026, 11, 8), "2026-11")["itens"][0]
+        self.assertEqual((out["recebido"], out["estado"]), ("2026-11-05", "recebido"))  # o Pix de 05/11 paga outubro
+        self.assertEqual((nov["estado"], nov["ini"], nov["fim"]), ("futuro", "2026-12-01", "2026-12-05"))
+
+    def test_states_through_the_month(self):
+        with db.connect() as conn:
+            est = lambda d: finance.cobrancas_mes(conn, d, "2026-11")["itens"][0]["estado"]
+            self.assertEqual(est(date(2026, 11, 30)), "futuro")
+            self.assertEqual(est(date(2026, 12, 2)), "cobrar")
+            self.assertEqual(est(date(2026, 12, 7)), "atrasado")
+            self.assertEqual([i["ym"] for i in finance.cobrancas_pendentes(conn, date(2026, 12, 2))], ["2026-11"])
+            atras = finance.cobrancas_pendentes(conn, date(2026, 11, 8))  # sem Pix, outubro venceu dia 05/11
+            self.assertEqual([(i["ym"], i["estado"]) for i in atras], [("2026-10", "atrasado")])
+
+    def test_late_and_early_payments(self):
+        with db.connect() as conn:
+            self._pix(conn, "2026-12-03T12:00:00Z", "a")   # novembro, no prazo
+            self._pix(conn, "2026-12-20T12:00:00Z", "b")   # adiantou dezembro
+            self._pix(conn, "2026-12-20T12:00:00Z", "b")   # o mesmo Pix lido de novo
+            got = {ym: finance.cobrancas_mes(conn, date(2026, 12, 21), ym)["itens"][0]["recebido"]
+                   for ym in ("2026-10", "2026-11", "2026-12")}
+        self.assertEqual(got, {"2026-10": None, "2026-11": "2026-12-03", "2026-12": "2026-12-20"})

@@ -242,7 +242,7 @@ VIEWS.inicio = d => {
   const pct = w.teto ? (w.gasto / w.teto) * 100 : 0;
   const alerts = [];
   if (d.config.caixa_desatualizado) alerts.push(notice("warn", "alert", `<b>Atualize seu caixa.</b> O saldo informado é de outro mês, então a projeção está sem ele.`, `<div><a class="btn sm secondary" href="#ajustes">Atualizar caixa</a></div>`));
-  ((d.cobrancas || {}).itens || []).filter(i => ["cobrar", "atrasado"].includes(i.estado)).forEach(i => alerts.push(notice(i.estado === "atrasado" ? "warn" : "", "bills", `<b>${i.estado === "atrasado" ? `${esc(i.pessoa)} ainda não pagou` : `Cobrar ${esc(i.pessoa)}`}:</b> ${esc(i.nome)} ${brl(i.valor_mes)}${i.estado === "cobrar" ? ` até ${ddmm(i.fim)}` : ""}.`, `<div><a class="btn sm secondary" href="#contas/receber">Ver cobranças</a></div>`)));
+  (d.cobrancas_pendentes || []).forEach(i => alerts.push(notice(i.estado === "atrasado" ? "warn" : "", "bills", `<b>${i.estado === "atrasado" ? `${esc(i.pessoa)} ainda não pagou` : `Cobrar ${esc(i.pessoa)}`}:</b> ${esc(i.nome)} de ${esc(monthOnly(i.ym))} ${brl(i.valor_mes)}${i.estado === "cobrar" ? ` até ${ddmm(i.fim)}` : ""}.`, `<div><a class="btn sm secondary" href="#contas/receber">Ver cobranças</a></div>`)));
   if (!S.pushOn && "Notification" in window && Notification.permission !== "denied") alerts.push(notice("", "bell", `<b>Ative as notificações</b> para receber lembretes de contas e do teto da semana.`, `<div><button class="btn sm" data-act="pushon">Ativar neste aparelho</button></div>`));
   if (!d.backup.ativo) alerts.push(notice("warn", "cloud", `<b>Backup automático desligado.</b> No Render grátis os dados podem sumir quando o servidor reinicia.`, `<div><a class="btn sm secondary" href="#ajustes">Ver como ligar</a></div>`));
   else if (d.backup.pausado) alerts.push(notice("warn", "cloud", `<b>Backup pausado:</b> ${esc(d.backup.erro || "erro ao ler o GitHub")}. Evite editar até voltar.`));
@@ -471,8 +471,7 @@ function previewDivisao(valor, metas, modo) {
 }
 
 function contasTabs(d) {
-  const c = d.cobrancas || { itens: [] };
-  const pend = c.itens.filter(i => ["cobrar", "atrasado"].includes(i.estado)).length;
+  const pend = (d.cobrancas_pendentes || []).length;
   return `<div class="seg seg-2 tabs-top"><button data-act="contastab" data-t="pagar" class="${S.contasTab !== "receber" ? "on" : ""}">A pagar</button><button data-act="contastab" data-t="receber" class="${S.contasTab === "receber" ? "on" : ""}">A receber${pend ? ` <span class="dotn">${pend}</span>` : ""}</button></div>`;
 }
 const ESTADO = { futuro: ["", "a cobrar"], cobrar: ["warn", "cobrar agora"], cobrado: ["blue", "cobrado, aguardando"], atrasado: ["neg", "atrasado"], recebido: ["pos", "recebido"] };
@@ -490,7 +489,7 @@ function receberView(d) {
     </div>`; };
   return `${contasTabs(d)}
   <div class="monthnav"><button class="iconbtn" data-act="recnav" data-d="-1" aria-label="Mês anterior">${icon("left")}</button>
-    <div class="m-wrap"><div class="m">A receber em ${esc(monthName(c.ym))}</div><div class="m-sub">O Pix de quem paga é reconhecido sozinho</div></div><button class="iconbtn" data-act="recnav" data-d="1" aria-label="Próximo mês">${icon("right")}</button></div>
+    <div class="m-wrap"><div class="m">Referente a ${esc(monthName(c.ym))}</div><div class="m-sub">O Pix de quem paga é reconhecido sozinho</div></div><button class="iconbtn" data-act="recnav" data-d="1" aria-label="Próximo mês">${icon("right")}</button></div>
   <div class="grid cols2">
     <div class="stack"><section class="card">
       <div class="eyebrow">Falta receber</div><div class="num"><span class="v-big">${brl(c.pendente)}</span></div>
@@ -498,7 +497,7 @@ function receberView(d) {
       <div class="lead">Recebido ${brl(c.recebido)} de ${brl(c.total)}</div>
     </section></div>
     <div class="stack">
-      <div class="monthnav"><span class="muted">Cobranças do mês</span><button class="btn sm secondary" data-act="addcob">${icon("plus")}Cobrança</button></div>
+      <div class="monthnav"><span class="muted">Cobranças de ${esc(monthOnly(c.ym))}</span><button class="btn sm secondary" data-act="addcob">${icon("plus")}Cobrança</button></div>
       <section class="card flush"><div class="list">${c.itens.length ? c.itens.map(row).join("") : `<div class="empty">${icon("bills")}<div>Nenhuma cobrança. Cadastre o que alguém te reembolsa todo mês.</div></div>`}</div></section>
     </div>
   </div>`;
@@ -517,13 +516,14 @@ function cobFields() {
     { name: "pessoa", label: "Quem paga", required: true },
     { name: "conta_id", label: "Reembolsa uma conta fixa?", type: "select", options: [["", "Não"], ...(S.d.recorrentes || []).filter(r => !r.card).map(r => [String(r.id), r.name])], hint: "Se sim, essa conta deixa de contar nos seus totais" },
     { name: "valor", label: "Valor", type: "money", hint: "Vazio = o último valor pago da conta ligada" },
+    { name: "mes_seguinte", label: "Quando cobra", type: "select", options: [["1", "No mês seguinte (a de novembro em dezembro)"], ["0", "No próprio mês"]] },
     { name: "dia_ini", label: "Cobrar a partir do dia", type: "number", min: 1, max: 31 },
     { name: "dia_fim", label: "Prazo até o dia", type: "number", min: 1, max: 31 },
     { name: "match", label: "Como o Pix aparece no extrato", hint: "Parte do nome de quem paga. Ex.: valter luis" },
     { name: "nota", label: "Observação" },
   ];
 }
-function cobBody(v) { return { ...v, conta_id: v.conta_id ? Number(v.conta_id) : null, valor: v.valor === "" || v.valor == null ? null : v.valor }; }
+function cobBody(v) { return { ...v, conta_id: v.conta_id ? Number(v.conta_id) : null, valor: v.valor === "" || v.valor == null ? null : v.valor, mes_seguinte: v.mes_seguinte === "0" ? 0 : 1 }; }
 
 function avulsosHtml(d) {
   const groups = {};
@@ -1042,10 +1042,10 @@ const A = {
     catch (_) { return; }  // cancelou o compartilhamento
     await recAction({ acao: "cobrei", id: i.id, month: i.ym });
   },
-  addcob: () => openSheet({ title: "Nova cobrança", desc: "Algo que alguém te paga todo mês.", fields: cobFields(), values: { dia_ini: 1, dia_fim: 5 }, onSave: v => api("/api/cobrancas", cobBody(v)).then(reloadRec) }),
+  addcob: () => openSheet({ title: "Nova cobrança", desc: "Algo que alguém te paga todo mês.", fields: cobFields(), values: { dia_ini: 1, dia_fim: 5, mes_seguinte: "1" }, onSave: v => api("/api/cobrancas", cobBody(v)).then(reloadRec) }),
   editcob: el => {
     const i = findCob(el.dataset.id); if (!i) return;
-    openSheet({ title: i.nome, fields: cobFields(), values: { ...i, conta_id: i.conta_id ? String(i.conta_id) : "", valor: i.valor },
+    openSheet({ title: i.nome, fields: cobFields(), values: { ...i, conta_id: i.conta_id ? String(i.conta_id) : "", valor: i.valor, mes_seguinte: i.mes_seguinte ? "1" : "0" },
       onSave: v => api("/api/cobrancas", { ...cobBody(v), id: i.id }).then(reloadRec),
       onDelete: () => api("/api/cobrancas", { id: i.id, delete: true }).then(reloadRec) });
   },

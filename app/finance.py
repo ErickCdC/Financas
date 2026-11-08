@@ -475,18 +475,24 @@ def cobranca_valor(conn, c):
     return 0.0
 
 
+def janela_cobranca(c, ym):
+    """Quando cobrar a referência `ym`: dia_ini..dia_fim do mesmo mês ou do seguinte (ex.: a I-Conecta de
+    novembro o Valter paga entre 1 e 5 de dezembro)."""
+    y, m = map(int, P.add_months(ym, 1 if c.get("mes_seguinte") else 0).split("-"))
+    return clamp_day(y, m, int(c["dia_ini"])), clamp_day(y, m, int(c["dia_fim"]))
+
+
 def cobrancas_mes(conn, t, ym=None):
-    """Cobranças do mês (calendário): quanto, de quem, quando cobrar e em que pé está."""
+    """Cobranças de um mês de referência: quanto, de quem, quando cobrar e em que pé está."""
     ym = ym or P.ym_of(t)
-    y, m = map(int, ym.split("-"))
     st = {r["cobranca_id"]: r for r in db.rows(conn, "SELECT * FROM cobranca_mes WHERE month=?", (ym,))}
     contas = {r["id"]: r["name"] for r in db.rows(conn, "SELECT id, name FROM recurring")}
     itens = []
     for c in db.rows(conn, "SELECT * FROM cobrancas WHERE ativo=1 ORDER BY dia_ini, id"):
-        ini, fim = clamp_day(y, m, int(c["dia_ini"])), clamp_day(y, m, int(c["dia_fim"]))
+        ini, fim = janela_cobranca(c, ym)
         s = st.get(c["id"]) or {}
-        estado = ("recebido" if s.get("recebido") else "futuro" if t < ini else
-                  ("cobrado" if s.get("cobrado") else "cobrar") if t <= fim else "atrasado")
+        estado = ("recebido" if s.get("recebido") else "atrasado" if t > fim else
+                  "cobrado" if s.get("cobrado") else "futuro" if t < ini else "cobrar")
         itens.append({**c, "valor_mes": round(cobranca_valor(conn, c), 2), "ym": ym, "ini": ini.isoformat(),
                       "fim": fim.isoformat(), "estado": estado, "cobrado": s.get("cobrado"),
                       "recebido": s.get("recebido"), "recebido_valor": s.get("valor"),
@@ -495,6 +501,16 @@ def cobrancas_mes(conn, t, ym=None):
     recebido = round(sum((i["recebido_valor"] or i["valor_mes"]) for i in itens if i["recebido"]), 2)
     return {"ym": ym, "itens": itens, "total": total, "recebido": recebido,
             "pendente": round(sum(i["valor_mes"] for i in itens if not i["recebido"]), 2)}
+
+
+def cobrancas_pendentes(conn, t):
+    """O que dá para cobrar agora ou já atrasou (janela aberta nos últimos 40 dias), de qualquer referência."""
+    out = []
+    for ym in (P.add_months(P.ym_of(t), -1), P.ym_of(t)):
+        for i in cobrancas_mes(conn, t, ym)["itens"]:
+            if i["estado"] in ("cobrar", "atrasado") and (t - date.fromisoformat(i["ini"])).days <= 40:
+                out.append(i)
+    return out
 
 
 def _acima_teto(conn, cfg, t):
@@ -701,6 +717,7 @@ def summary(conn, month=None, extra=None):
         "proximas": month_panel(conn, cfg, P.add_months(x, 1), t, listas=True),
         "livre": livre, "insights": insights(conn, cfg, t, proj, livre), **goals_plan(conn, proj, cfg),
         "fgts": fgts_plan(cfg, t), "acima_teto": _acima_teto(conn, cfg, t), "cobrancas": cobrancas_mes(conn, t),
+        "cobrancas_pendentes": cobrancas_pendentes(conn, t),
         "avulsos": db.rows(conn, "SELECT * FROM planned ORDER BY month, day, id"),
         "notificacoes": db.rows(conn, "SELECT * FROM notif_log ORDER BY sent_at DESC LIMIT 20"),
         "aparelhos": db.rows(conn, "SELECT id, label, created, last_ok, fails FROM push_subs ORDER BY id"),

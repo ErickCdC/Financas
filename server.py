@@ -19,6 +19,7 @@ def main():
           f"{' (PAUSADO: ' + BACKUP.last_error + ')' if BACKUP.blocked else ''}")
     with db.connect() as conn:  # ajustes de dados antigos
         from app import bank, seed
+        from app import projection as P
         for name, words in seed.MATCH.items():
             conn.execute("UPDATE recurring SET match=? WHERE name=? AND (match IS NULL OR match='')", (words, name))
         for r in db.rows(conn, "SELECT id, category FROM spends WHERE source='banco'"):
@@ -69,9 +70,18 @@ def main():
         if "cobranca_valter" not in feitas:  # o Valter reembolsa a I-Conecta (R$ 115 por Pix, entre o dia 1 e o 5)
             conta = conn.execute("SELECT id FROM recurring WHERE name='I-Conecta'").fetchone()
             if conta and not conn.execute("SELECT 1 FROM cobrancas WHERE conta_id=?", (conta[0],)).fetchone():
-                conn.execute("INSERT INTO cobrancas(nome, pessoa, valor, conta_id, dia_ini, dia_fim, match, nota) "
-                             "VALUES('I-Conecta', 'Valter', 115, ?, 1, 5, 'valter luis', 'Internet da casa dele')", (conta[0],))
+                conn.execute("INSERT INTO cobrancas(nome, pessoa, valor, conta_id, dia_ini, dia_fim, match, nota, mes_seguinte) "
+                             "VALUES('I-Conecta', 'Valter', 115, ?, 1, 5, 'valter luis', 'Internet da casa dele', 1)", (conta[0],))
             feitas.add("cobranca_valter")
+        if "cobranca_mes_seguinte" not in feitas:  # a I-Conecta de novembro o Valter paga entre 1 e 5 de dezembro
+            for c in db.rows(conn, "SELECT id FROM cobrancas WHERE pessoa='Valter' AND nome='I-Conecta'"):
+                conn.execute("UPDATE cobrancas SET mes_seguinte=1 WHERE id=?", (c["id"],))
+                for r in db.rows(conn, "SELECT * FROM cobranca_mes WHERE cobranca_id=? ORDER BY month", (c["id"],)):
+                    conn.execute("DELETE FROM cobranca_mes WHERE cobranca_id=? AND month=?", (c["id"], r["month"]))
+                    if r["recebido"]:  # Pix gravado no mês em que caiu: pertence ao mês anterior
+                        conn.execute("INSERT OR REPLACE INTO cobranca_mes(cobranca_id, month, cobrado, recebido, valor) "
+                                     "VALUES(?,?,?,?,?)", (c["id"], P.add_months(r["month"], -1), r["cobrado"], r["recebido"], r["valor"]))
+            feitas.add("cobranca_mes_seguinte")
         db.put_setting(conn, "migracoes", sorted(feitas))
         bank.ignore_subscription_charges(conn)  # de novo, com a lista já atualizada
         # valor fixo antigo do PicPay (limite usado, não a fatura)

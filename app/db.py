@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS notif_log(key TEXT PRIMARY KEY, sent_at TEXT NOT NULL
 CREATE TABLE IF NOT EXISTS cobrancas(
   id INTEGER PRIMARY KEY AUTOINCREMENT, nome TEXT NOT NULL, pessoa TEXT NOT NULL, valor REAL, conta_id INTEGER,
   dia_ini INTEGER NOT NULL DEFAULT 1, dia_fim INTEGER NOT NULL DEFAULT 5, match TEXT, nota TEXT,
-  ativo INTEGER NOT NULL DEFAULT 1);
+  ativo INTEGER NOT NULL DEFAULT 1, mes_seguinte INTEGER NOT NULL DEFAULT 0);
 CREATE TABLE IF NOT EXISTS cobranca_mes(
   cobranca_id INTEGER NOT NULL, month TEXT NOT NULL, cobrado TEXT, recebido TEXT, valor REAL,
   PRIMARY KEY(cobranca_id, month));
@@ -90,6 +90,9 @@ def migrate(conn):
         conn.execute("ALTER TABLE installments ADD COLUMN last_bill TEXT")
     if "original" not in icols:
         conn.execute("ALTER TABLE installments ADD COLUMN original REAL")
+    ccols = {r[1] for r in conn.execute("PRAGMA table_info(cobrancas)")}
+    if "mes_seguinte" not in ccols:
+        conn.execute("ALTER TABLE cobrancas ADD COLUMN mes_seguinte INTEGER NOT NULL DEFAULT 0")
 
 
 def is_empty(conn):
