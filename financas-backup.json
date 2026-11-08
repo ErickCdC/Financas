@@ -34,7 +34,7 @@
   "ciclo_extra": {
    "Nubank": 27.94,
    "Mercado Pago": 88.98,
-   "PicPay": 303.42
+   "PicPay": 310.92
   },
   "cartoes": [
    "Nubank",
@@ -108,30 +108,30 @@
   "teto_auto": false,
   "salario_tipo": "util",
   "caixa_banco": 192.7,
-  "caixa_data": "2026-11-07",
+  "caixa_data": "2026-11-08",
   "cartao_usado": {
    "PicPay": 1360.0,
-   "Mercado Pago": 1265.69,
-   "Nubank": 206.27
+   "Nubank": 206.27,
+   "Mercado Pago": 1265.69
   },
   "ciclo_info": {
    "PicPay": {
     "conta": "6d7341ae-373e-4d3b-b53b-f28126fded99",
     "fechou": "2026-10-29",
     "fecha_antes": 9,
-    "compras": 303.42
-   },
-   "Mercado Pago": {
-    "conta": "8b778a91-1057-4662-917f-e758a49b7c3b",
-    "fechou": "2026-10-29",
-    "fecha_antes": 6,
-    "compras": 88.98
+    "compras": 310.92
    },
    "Nubank": {
     "conta": "27be5f3e-7a39-4e21-b734-1d4439c35288",
     "fechou": "2026-10-25",
     "fecha_antes": 7,
     "compras": 27.94
+   },
+   "Mercado Pago": {
+    "conta": "8b778a91-1057-4662-917f-e758a49b7c3b",
+    "fechou": "2026-10-29",
+    "fecha_antes": 6,
+    "compras": 88.98
    }
   },
   "entradas": {
@@ -148,10 +148,10 @@
    }
   },
   "eventos_pendentes": [],
-  "last_auto_sync": "2026-11-07T22:49",
+  "last_auto_sync": "2026-11-08T07:30",
   "last_force": "2026-11-07T21:55",
-  "last_sync": "2026-11-07 22:50",
-  "last_tick": "2026-11-07 22:49",
+  "last_sync": "2026-11-08 07:58",
+  "last_tick": "2026-11-08 07:57",
   "migracoes": [
    "salario_minimo_50"
   ],
@@ -165,20 +165,8 @@
    {
     "banco": "PicPay",
     "tipo": "cartão",
-    "lidas": 31,
-    "no_app": 29
-   },
-   {
-    "banco": "Mercado Pago",
-    "tipo": "conta",
-    "lidas": 42,
-    "no_app": 7
-   },
-   {
-    "banco": "Mercado Pago",
-    "tipo": "cartão",
-    "lidas": 9,
-    "no_app": 5
+    "lidas": 32,
+    "no_app": 30
    },
    {
     "banco": "Nubank",
@@ -191,6 +179,18 @@
     "tipo": "cartão",
     "lidas": 18,
     "no_app": 16
+   },
+   {
+    "banco": "Mercado Pago",
+    "tipo": "conta",
+    "lidas": 42,
+    "no_app": 7
+   },
+   {
+    "banco": "Mercado Pago",
+    "tipo": "cartão",
+    "lidas": 9,
+    "no_app": 5
    }
   ]
  },
@@ -1155,6 +1155,17 @@
    "ext_id": "8b778a91-1057-4662-917f-e758a49b7c3b:9a73e16d-a280-4a0c-b930-83f64beca3a9",
    "ignored": 0,
    "card": "Mercado Pago"
+  },
+  {
+   "id": 58,
+   "date": "2026-11-05",
+   "description": "BB BURGER                .CASIMIRO D BRA",
+   "amount": 7.5,
+   "category": "comida",
+   "source": "banco",
+   "ext_id": "6d7341ae-373e-4d3b-b53b-f28126fded99:822d15ec-5a8e-481a-9c16-1d7ccee3f809",
+   "ignored": 0,
+   "card": "PicPay"
   }
  ],
  "push_subs": [
