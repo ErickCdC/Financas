@@ -53,7 +53,7 @@
    "rules": {
     "daily_log": {
      "on": true,
-     "time": "20:30"
+     "time": "08:00"
     },
     "teto_alert": {
      "on": true,
