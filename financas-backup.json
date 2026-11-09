@@ -142,8 +142,8 @@
   "caixa_data": "2026-11-09",
   "cartao_usado": {
    "Nubank": 206.27,
-   "Mercado Pago": 1265.69,
-   "PicPay": 1382.0
+   "PicPay": 1382.0,
+   "Mercado Pago": 1265.69
   },
   "ciclo_info": {
    "Nubank": {
@@ -152,17 +152,17 @@
     "fecha_antes": 7,
     "compras": 27.94
    },
-   "Mercado Pago": {
-    "conta": "8b778a91-1057-4662-917f-e758a49b7c3b",
-    "fechou": "2026-10-29",
-    "fecha_antes": 6,
-    "compras": 88.98
-   },
    "PicPay": {
     "conta": "6d7341ae-373e-4d3b-b53b-f28126fded99",
     "fechou": "2026-10-29",
     "fecha_antes": 9,
     "compras": 310.92
+   },
+   "Mercado Pago": {
+    "conta": "8b778a91-1057-4662-917f-e758a49b7c3b",
+    "fechou": null,
+    "fecha_antes": null,
+    "compras": 88.98
    }
   },
   "entradas": {
@@ -179,10 +179,10 @@
    }
   },
   "eventos_pendentes": [],
-  "last_auto_sync": "2026-11-09T12:27",
+  "last_auto_sync": "2026-11-09T12:54",
   "last_force": "2026-11-09T12:29",
-  "last_sync": "2026-11-09 12:29",
-  "last_tick": "2026-11-09 12:27",
+  "last_sync": "2026-11-09 12:56",
+  "last_tick": "2026-11-09 12:54",
   "metas_eta": {
    "1": "2026-11"
   },
@@ -209,18 +209,6 @@
     "no_app": 16
    },
    {
-    "banco": "Mercado Pago",
-    "tipo": "conta",
-    "lidas": 43,
-    "no_app": 7
-   },
-   {
-    "banco": "Mercado Pago",
-    "tipo": "cartão",
-    "lidas": 9,
-    "no_app": 5
-   },
-   {
     "banco": "PicPay",
     "tipo": "conta",
     "lidas": 0,
@@ -231,6 +219,18 @@
     "tipo": "cartão",
     "lidas": 31,
     "no_app": 30
+   },
+   {
+    "banco": "Mercado Pago",
+    "tipo": "conta",
+    "lidas": 43,
+    "no_app": 7
+   },
+   {
+    "banco": "Mercado Pago",
+    "tipo": "cartão",
+    "lidas": 9,
+    "no_app": 5
    }
   ]
  },
