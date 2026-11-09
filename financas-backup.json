@@ -182,7 +182,7 @@
   "last_auto_sync": "2026-11-09T08:24",
   "last_force": "2026-11-09T08:28",
   "last_sync": "2026-11-09 08:28",
-  "last_tick": "2026-11-09 08:24",
+  "last_tick": "2026-11-09 08:30",
   "metas_eta": {
    "1": "2026-11"
   },
@@ -1255,7 +1255,7 @@
    "auth": "-LZCogkbAIUGPprhqKSGMw",
    "label": "Android · Chrome",
    "created": "2026-11-06 17:47",
-   "last_ok": "2026-11-09 08:00",
+   "last_ok": "2026-11-09 08:30",
    "fails": 0
   }
  ],
@@ -1361,6 +1361,12 @@
    "sent_at": "2026-11-09 08:00",
    "title": "Lançou seus gastos de hoje?",
    "body": "Nada lançado hoje. Restam R$ 50,00 na semana."
+  },
+  {
+   "key": "week:2026-11-09",
+   "sent_at": "2026-11-09 08:30",
+   "title": "Resumo da semana",
+   "body": "Semana passada: R$ 71,48 (acima do teto em R$ 21,48). Esta semana: teto de R$ 50,00."
   }
  ],
  "cobrancas": [
