@@ -179,10 +179,10 @@
    }
   },
   "eventos_pendentes": [],
-  "last_auto_sync": "2026-11-08T22:48",
+  "last_auto_sync": "2026-11-09T07:57",
   "last_force": "2026-11-08T21:55",
   "last_sync": "2026-11-08 22:48",
-  "last_tick": "2026-11-09 06:23",
+  "last_tick": "2026-11-09 08:00",
   "metas_eta": {
    "1": "2026-11"
   },
@@ -1255,7 +1255,7 @@
    "auth": "-LZCogkbAIUGPprhqKSGMw",
    "label": "Android · Chrome",
    "created": "2026-11-06 17:47",
-   "last_ok": "2026-11-08 15:04",
+   "last_ok": "2026-11-09 08:00",
    "fails": 0
   }
  ],
@@ -1355,6 +1355,12 @@
    "sent_at": "2026-11-08 14:43",
    "title": "Gigi adiantou",
    "body": "Agora chega em nov/26 (antes: dez/26)."
+  },
+  {
+   "key": "daily:2026-11-09",
+   "sent_at": "2026-11-09 08:00",
+   "title": "Lançou seus gastos de hoje?",
+   "body": "Nada lançado hoje. Restam R$ 50,00 na semana."
   }
  ],
  "cobrancas": [
