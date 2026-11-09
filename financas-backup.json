@@ -10,7 +10,7 @@
   "aumento_pct": 25.0,
   "aumento_from": "2027-01",
   "teto_semanal": 50.0,
-  "caixa": 192.7,
+  "caixa": 192.79,
   "caixa_ref": "2026-11",
   "salario_dia": 30,
   "salario_data": "2026-10-30",
@@ -138,7 +138,7 @@
   "banco_incidentes": [
    "PicPay - Transações de cartão de crédito não sendo retornada"
   ],
-  "caixa_banco": 192.7,
+  "caixa_banco": 192.79,
   "caixa_data": "2026-11-09",
   "cartao_usado": {
    "Nubank": 206.27,
@@ -181,8 +181,8 @@
   "eventos_pendentes": [],
   "last_auto_sync": "2026-11-09T12:00",
   "last_force": "2026-11-09T08:28",
-  "last_sync": "2026-11-09 08:28",
-  "last_tick": "2026-11-09 12:05",
+  "last_sync": "2026-11-09 12:29",
+  "last_tick": "2026-11-09 12:27",
   "metas_eta": {
    "1": "2026-11"
   },
@@ -211,7 +211,7 @@
    {
     "banco": "Mercado Pago",
     "tipo": "conta",
-    "lidas": 42,
+    "lidas": 43,
     "no_app": 7
    },
    {
@@ -229,7 +229,7 @@
    {
     "banco": "PicPay",
     "tipo": "cartão",
-    "lidas": 32,
+    "lidas": 31,
     "no_app": 30
    }
   ]
