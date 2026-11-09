@@ -10,7 +10,7 @@
   "aumento_pct": 25.0,
   "aumento_from": "2027-01",
   "teto_semanal": 50.0,
-  "caixa": 193.19,
+  "caixa": 192.27,
   "caixa_ref": "2026-11",
   "salario_dia": 30,
   "salario_data": "2026-10-30",
@@ -138,31 +138,24 @@
   "banco_incidentes": [
    "PicPay - Transações de cartão de crédito não sendo retornada"
   ],
-  "caixa_banco": 193.19,
+  "caixa_banco": 192.27,
   "caixa_data": "2026-11-09",
   "cartao_usado": {
-   "Mercado Pago": 1265.69,
    "PicPay": 1382.0,
-   "Nubank": 206.27
+   "Mercado Pago": 1265.69
   },
   "ciclo_info": {
-   "Mercado Pago": {
-    "conta": "8b778a91-1057-4662-917f-e758a49b7c3b",
-    "fechou": "2026-10-29",
-    "fecha_antes": 6,
-    "compras": 88.98
-   },
    "PicPay": {
     "conta": "6d7341ae-373e-4d3b-b53b-f28126fded99",
     "fechou": "2026-10-29",
     "fecha_antes": 9,
     "compras": 310.92
    },
-   "Nubank": {
-    "conta": "27be5f3e-7a39-4e21-b734-1d4439c35288",
-    "fechou": "2026-10-25",
-    "fecha_antes": 7,
-    "compras": 27.94
+   "Mercado Pago": {
+    "conta": "8b778a91-1057-4662-917f-e758a49b7c3b",
+    "fechou": "2026-10-29",
+    "fecha_antes": 6,
+    "compras": 88.98
    }
   },
   "entradas": {
@@ -179,10 +172,10 @@
    }
   },
   "eventos_pendentes": [],
-  "last_auto_sync": "2026-11-09T15:36",
+  "last_auto_sync": "2026-11-09T16:03",
   "last_force": "2026-11-09T15:12",
-  "last_sync": "2026-11-09 15:11",
-  "last_tick": "2026-11-09 15:41",
+  "last_sync": "2026-11-09 16:05",
+  "last_tick": "2026-11-09 16:03",
   "metas_eta": {
    "1": "2026-11"
   },
@@ -197,18 +190,6 @@
   ],
   "sync_detalhe": [
    {
-    "banco": "Mercado Pago",
-    "tipo": "conta",
-    "lidas": 45,
-    "no_app": 8
-   },
-   {
-    "banco": "Mercado Pago",
-    "tipo": "cartão",
-    "lidas": 9,
-    "no_app": 5
-   },
-   {
     "banco": "PicPay",
     "tipo": "conta",
     "lidas": 0,
@@ -221,16 +202,16 @@
     "no_app": 30
    },
    {
-    "banco": "Nubank",
+    "banco": "Mercado Pago",
     "tipo": "conta",
-    "lidas": 0,
-    "no_app": 0
+    "lidas": 45,
+    "no_app": 8
    },
    {
-    "banco": "Nubank",
+    "banco": "Mercado Pago",
     "tipo": "cartão",
-    "lidas": 18,
-    "no_app": 16
+    "lidas": 9,
+    "no_app": 5
    }
   ]
  },
