@@ -10,7 +10,7 @@
   "aumento_pct": 25.0,
   "aumento_from": "2027-01",
   "teto_semanal": 50.0,
-  "caixa": 192.79,
+  "caixa": 193.19,
   "caixa_ref": "2026-11",
   "salario_dia": 30,
   "salario_data": "2026-10-30",
@@ -138,19 +138,19 @@
   "banco_incidentes": [
    "PicPay - Transações de cartão de crédito não sendo retornada"
   ],
-  "caixa_banco": 192.79,
+  "caixa_banco": 193.19,
   "caixa_data": "2026-11-09",
   "cartao_usado": {
-   "Nubank": 206.27,
+   "Mercado Pago": 1265.69,
    "PicPay": 1382.0,
-   "Mercado Pago": 1265.69
+   "Nubank": 206.27
   },
   "ciclo_info": {
-   "Nubank": {
-    "conta": "27be5f3e-7a39-4e21-b734-1d4439c35288",
-    "fechou": "2026-10-25",
-    "fecha_antes": 7,
-    "compras": 27.94
+   "Mercado Pago": {
+    "conta": "8b778a91-1057-4662-917f-e758a49b7c3b",
+    "fechou": "2026-10-29",
+    "fecha_antes": 6,
+    "compras": 88.98
    },
    "PicPay": {
     "conta": "6d7341ae-373e-4d3b-b53b-f28126fded99",
@@ -158,11 +158,11 @@
     "fecha_antes": 9,
     "compras": 310.92
    },
-   "Mercado Pago": {
-    "conta": "8b778a91-1057-4662-917f-e758a49b7c3b",
-    "fechou": "2026-10-29",
-    "fecha_antes": 6,
-    "compras": 88.98
+   "Nubank": {
+    "conta": "27be5f3e-7a39-4e21-b734-1d4439c35288",
+    "fechou": "2026-10-25",
+    "fecha_antes": 7,
+    "compras": 27.94
    }
   },
   "entradas": {
@@ -179,10 +179,10 @@
    }
   },
   "eventos_pendentes": [],
-  "last_auto_sync": "2026-11-09T13:48",
+  "last_auto_sync": "2026-11-09T14:42",
   "last_force": "2026-11-09T13:50",
-  "last_sync": "2026-11-09 13:50",
-  "last_tick": "2026-11-09 13:48",
+  "last_sync": "2026-11-09 14:44",
+  "last_tick": "2026-11-09 14:42",
   "metas_eta": {
    "1": "2026-11"
   },
@@ -197,16 +197,16 @@
   ],
   "sync_detalhe": [
    {
-    "banco": "Nubank",
+    "banco": "Mercado Pago",
     "tipo": "conta",
-    "lidas": 0,
-    "no_app": 0
+    "lidas": 45,
+    "no_app": 8
    },
    {
-    "banco": "Nubank",
+    "banco": "Mercado Pago",
     "tipo": "cartão",
-    "lidas": 18,
-    "no_app": 16
+    "lidas": 9,
+    "no_app": 5
    },
    {
     "banco": "PicPay",
@@ -221,16 +221,16 @@
     "no_app": 30
    },
    {
-    "banco": "Mercado Pago",
+    "banco": "Nubank",
     "tipo": "conta",
-    "lidas": 43,
-    "no_app": 7
+    "lidas": 0,
+    "no_app": 0
    },
    {
-    "banco": "Mercado Pago",
+    "banco": "Nubank",
     "tipo": "cartão",
-    "lidas": 9,
-    "no_app": 5
+    "lidas": 18,
+    "no_app": 16
    }
   ]
  },
@@ -1245,6 +1245,17 @@
    "ext_id": "6d7341ae-373e-4d3b-b53b-f28126fded99:822d15ec-5a8e-481a-9c16-1d7ccee3f809",
    "ignored": 0,
    "card": "PicPay"
+  },
+  {
+   "id": 59,
+   "date": "2026-11-09",
+   "description": "Pagamento com Pix BYTEDANCE BRASIL TECNOLOGIA LTDA.",
+   "amount": 24.6,
+   "category": "outros",
+   "source": "banco",
+   "ext_id": "40bb4be3-1095-40f0-92da-8c9f80c5767c:0f6e3eed-df9d-4544-95ed-6beef47c9024",
+   "ignored": 0,
+   "card": null
   }
  ],
  "push_subs": [
