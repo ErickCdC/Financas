@@ -82,6 +82,10 @@ def main():
                         conn.execute("INSERT OR REPLACE INTO cobranca_mes(cobranca_id, month, cobrado, recebido, valor) "
                                      "VALUES(?,?,?,?,?)", (c["id"], P.add_months(r["month"], -1), r["cobrado"], r["recebido"], r["valor"]))
             feitas.add("cobranca_mes_seguinte")
+        if "habitos_padrao" not in feitas:  # módulo Saúde: começa com água e sono
+            from app import vida
+            vida.semear_habitos(conn)
+            feitas.add("habitos_padrao")
         db.put_setting(conn, "migracoes", sorted(feitas))
         bank.ignore_subscription_charges(conn)  # de novo, com a lista já atualizada
         # valor fixo antigo do PicPay (limite usado, não a fatura)

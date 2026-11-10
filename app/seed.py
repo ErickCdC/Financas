@@ -55,9 +55,23 @@ DEFAULT_SETTINGS = {
             "metas": {"on": True},
             "relatorio": {"on": True, "time": "09:00"},
             "cobrancas": {"on": True, "time": "09:00"},
+            "agenda": {"on": True, "time": "08:00"},    # lembretes, tarefas e provas do dia
+            "treino": {"on": True, "time": "18:00"},    # quando precisa treinar hoje para bater a meta
+            "habitos": {"on": True, "time": "21:00"},   # hábitos que ainda não bateram a meta do dia
         },
     },
+    # Saúde: treinos na semana (dias com treino) para bater a meta
+    "saude": {"meta_semana": 4},
+    # Agenda: pastas das notas e tarefas, cursos da faculdade e com quantos dias de antecedência avisar
+    "agenda": {"pastas": ["Trabalho", "Pessoal", "Faculdade"],
+               "cursos": ["Engenharia Elétrica (IFF)", "Engenharia de Produção (UCAM)"],
+               "avisos": [3, 1]},
 }
+
+HABITOS_PADRAO = [  # nome, unidade, meta por dia, passo do botão +
+    ("Água", "copos", 8, 1),
+    ("Sono", "h", 7, 0.5),
+]
 
 RECURRING = [  # nome, valor, cartão (None = paga direto da conta)
     ("Aluguel", 850.00, None),

@@ -44,7 +44,38 @@ CREATE TABLE IF NOT EXISTS cobrancas(
 CREATE TABLE IF NOT EXISTS cobranca_mes(
   cobranca_id INTEGER NOT NULL, month TEXT NOT NULL, cobrado TEXT, recebido TEXT, valor REAL,
   PRIMARY KEY(cobranca_id, month));
+-- arquivos enviados (bioimpedância, fotos): o conteúdo fica aqui e, com backup ligado, no GitHub
+CREATE TABLE IF NOT EXISTS arquivos(
+  id INTEGER PRIMARY KEY AUTOINCREMENT, nome TEXT NOT NULL, mime TEXT NOT NULL, tamanho INTEGER NOT NULL,
+  hash TEXT NOT NULL, criado TEXT NOT NULL, dados BLOB, enviado INTEGER NOT NULL DEFAULT 0);
+-- módulo Saúde
+CREATE TABLE IF NOT EXISTS treinos(
+  id INTEGER PRIMARY KEY AUTOINCREMENT, date TEXT NOT NULL, tipo TEXT NOT NULL, foco TEXT, minutos INTEGER,
+  nota TEXT, arquivo_id INTEGER, criado TEXT);
+CREATE INDEX IF NOT EXISTS treinos_date ON treinos(date);
+CREATE TABLE IF NOT EXISTS avaliacoes(
+  id INTEGER PRIMARY KEY AUTOINCREMENT, date TEXT NOT NULL, tipo TEXT NOT NULL, arquivo_id INTEGER, nota TEXT);
+CREATE TABLE IF NOT EXISTS avaliacao_valores(
+  avaliacao_id INTEGER NOT NULL, campo TEXT NOT NULL, valor REAL NOT NULL, PRIMARY KEY(avaliacao_id, campo));
+CREATE TABLE IF NOT EXISTS habitos(
+  id INTEGER PRIMARY KEY AUTOINCREMENT, nome TEXT NOT NULL, unidade TEXT, meta REAL NOT NULL DEFAULT 1,
+  passo REAL NOT NULL DEFAULT 1, ordem INTEGER NOT NULL DEFAULT 0, ativo INTEGER NOT NULL DEFAULT 1);
+CREATE TABLE IF NOT EXISTS habito_dia(
+  habito_id INTEGER NOT NULL, date TEXT NOT NULL, valor REAL NOT NULL, PRIMARY KEY(habito_id, date));
+-- módulo Agenda
+CREATE TABLE IF NOT EXISTS notas(
+  id INTEGER PRIMARY KEY AUTOINCREMENT, pasta TEXT NOT NULL, titulo TEXT NOT NULL, texto TEXT, quando TEXT,
+  avisos TEXT, feito INTEGER NOT NULL DEFAULT 0, fixada INTEGER NOT NULL DEFAULT 0, criado TEXT NOT NULL, atualizado TEXT);
+CREATE TABLE IF NOT EXISTS tarefas(
+  id INTEGER PRIMARY KEY AUTOINCREMENT, pasta TEXT NOT NULL, titulo TEXT NOT NULL, prazo TEXT, nota TEXT,
+  importante INTEGER NOT NULL DEFAULT 0, feito_em TEXT, criado TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS facul(
+  id INTEGER PRIMARY KEY AUTOINCREMENT, curso TEXT NOT NULL, disciplina TEXT NOT NULL, tipo TEXT NOT NULL,
+  titulo TEXT, data TEXT NOT NULL, nota REAL, nota_max REAL, feito INTEGER NOT NULL DEFAULT 0, obs TEXT);
 """
+
+# Ajustes que são dicionários: o salvo é mesclado sobre o padrão (chaves novas ganham o valor padrão).
+DICT_SETTINGS = ("notif", "auto", "sync_auto", "salario_regra", "fgts", "saude", "agenda")
 
 # Chamado depois de qualquer escrita, para o backup automático (definido em backup.py).
 on_write = []
@@ -127,7 +158,7 @@ def get_cfg(conn):
             val = json.loads(r["value"])
         except ValueError:
             continue
-        if isinstance(cfg.get(r["key"]), dict) and isinstance(val, dict) and r["key"] in ("notif", "auto", "sync_auto", "salario_regra", "fgts"):
+        if isinstance(cfg.get(r["key"]), dict) and isinstance(val, dict) and r["key"] in DICT_SETTINGS:
             cfg[r["key"]] = merge(cfg[r["key"]], val)
         else:
             cfg[r["key"]] = val

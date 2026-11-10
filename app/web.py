@@ -10,7 +10,7 @@ import time
 from http.server import BaseHTTPRequestHandler
 from urllib.parse import parse_qs, urlparse
 
-from . import bank, data, db, finance, notify, push
+from . import bank, data, db, finance, notify, push, vida
 from . import config as C
 from . import validate as V
 from .backup import BACKUP
@@ -21,6 +21,7 @@ STATIC = {
     "/": ("index.html", "text/html; charset=utf-8"),
     "/index.html": ("index.html", "text/html; charset=utf-8"),
     "/app.js": ("app.js", "text/javascript; charset=utf-8"),
+    "/modulos.js": ("modulos.js", "text/javascript; charset=utf-8"),
     "/style.css": ("style.css", "text/css; charset=utf-8"),
     "/sw.js": ("sw.js", "text/javascript; charset=utf-8"),
     "/manifest.webmanifest": ("manifest.webmanifest", "application/manifest+json"),
@@ -80,7 +81,7 @@ def act_settings(conn, body):
         if k not in data.SETTING_FIELDS:
             continue
         val = data.SETTING_FIELDS[k](v)
-        if k in ("notif", "auto", "sync_auto", "salario_regra", "fgts"):
+        if k in db.DICT_SETTINGS:
             val = db.merge(db.get_cfg(conn)[k], val)
         db.put_setting(conn, k, val)
         if k == "caixa":
@@ -231,7 +232,17 @@ POST_ROUTES = {
     "/api/push/subscribe": act_subscribe,
     "/api/push/unsubscribe": act_unsubscribe,
     "/api/push/test": lambda c, b: notify.test(c),
+    # Saúde e Agenda
+    "/api/treinos": vida.act_treino,
+    "/api/avaliacoes": vida.act_avaliacao,
+    "/api/habitos": vida.act_habito,
+    "/api/habito_dia": vida.act_habito_dia,
+    "/api/notas": vida.act_nota,
+    "/api/tarefas": vida.act_tarefa,
+    "/api/facul": vida.act_facul,
+    "/api/arquivos": vida.act_arquivo,
 }
+BODY_LIMIT = {"/api/import": 8_000_000, "/api/arquivos": 12_000_000}
 
 
 def summary_extra():
@@ -326,6 +337,11 @@ class Handler(BaseHTTPRequestHandler):
                 if path == "/api/relatorio":
                     ym = (parse_qs(url.query).get("ym") or [None])[0]
                     return self._json(200, finance.relatorio(conn, db.get_cfg(conn), C.today(), V.year_month(ym) if ym else None))
+                if path == "/api/modulos":
+                    return self._json(200, vida.resumo(conn))
+                m = re.fullmatch(r"/api/arquivo/(\d{1,9})", path)
+                if m:
+                    return self._arquivo(conn, int(m.group(1)))
                 if path == "/api/sync/status":
                     return self._json(200, bank.progress())
                 if path == "/api/export":
@@ -372,7 +388,7 @@ class Handler(BaseHTTPRequestHandler):
             fn = POST_ROUTES.get(path)
             if not fn:
                 return self._json(404, {"error": "não encontrado"})
-            body = self._read_json(8_000_000 if path == "/api/import" else 200_000)
+            body = self._read_json(BODY_LIMIT.get(path, 200_000))
             with db.connect(write=True) as conn:
                 result = fn(conn, body)
             return self._json(200, result or {"ok": True})
@@ -383,6 +399,16 @@ class Handler(BaseHTTPRequestHandler):
         except sqlite3.Error as e:
             C.log("erro de banco: %s" % e)
             return self._json(500, {"error": "erro no banco de dados (%s)" % str(e)[:120]})
+
+    def _arquivo(self, conn, aid):
+        got = vida.ler_arquivo(conn, aid, BACKUP.fetch_file if BACKUP.enabled else None)
+        if not got:
+            return self._json(404, {"error": "arquivo não encontrado"})
+        raw, mime, nome = got
+        safe = re.sub(r"[^A-Za-z0-9._ -]", "_", nome)[:80] or "arquivo"  # cabeçalho HTTP só aceita latin-1
+        disp = "inline" if mime.startswith("image/") else "attachment"
+        return self._send(200, raw, mime, {"Cache-Control": "private, max-age=86400",
+                                           "Content-Disposition": f'{disp}; filename="{safe}"'})
 
     def _login(self):
         ip = self.client_address[0]

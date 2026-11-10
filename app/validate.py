@@ -138,6 +138,9 @@ def notif(v):
         "metas": {"on": boolean},
         "relatorio": {"on": boolean, "time": hhmm},
         "cobrancas": {"on": boolean, "time": hhmm},
+        "agenda": {"on": boolean, "time": hhmm},
+        "treino": {"on": boolean, "time": hhmm},
+        "habitos": {"on": boolean, "time": hhmm},
     }
     out_rules = {}
     for name, fields in spec.items():
@@ -214,3 +217,70 @@ def choice(*opts):
             raise ValueError("opção inválida")
         return v
     return fn
+
+
+def text_list(maxlen, lo, hi):
+    """Lista de textos curtos sem repetição (pastas, cursos)."""
+    def fn(v):
+        if isinstance(v, str):
+            v = re.split(r"[,\n]", v)
+        if not isinstance(v, list):
+            raise ValueError("lista inválida")
+        out = []
+        for x in v:
+            s = str(x).strip()[:maxlen]
+            if s and s.lower() not in [o.lower() for o in out]:
+                out.append(s)
+        if not lo <= len(out) <= hi:
+            raise ValueError(f"informe de {lo} a {hi} itens")
+        return out
+    return fn
+
+
+def dias_antes(v):
+    """Com quantos dias de antecedência avisar (0 = no dia). Ex.: [3, 1]."""
+    if isinstance(v, str):
+        v = [x for x in re.split(r"[,\s]+", v) if x]
+    if not isinstance(v, list) or len(v) > 5:
+        raise ValueError("avisos inválidos (até 5)")
+    return sorted({posint(0, 60)(x) for x in v}, reverse=True)
+
+
+def quando(v):
+    """Data (AAAA-MM-DD) ou data e hora (AAAA-MM-DDTHH:MM) de um lembrete."""
+    s = str(v).strip().replace(" ", "T")
+    if re.fullmatch(r"\d{4}-\d{2}-\d{2}", s):
+        return iso_date(s)
+    m = re.fullmatch(r"(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})(:\d{2})?", s)
+    if not m:
+        raise ValueError("data inválida")
+    return iso_date(m.group(1)) + "T" + hhmm(m.group(2))
+
+
+def saude(v):
+    if not isinstance(v, dict):
+        raise ValueError("ajustes de saúde inválidos")
+    out = {}
+    if "meta_semana" in v:
+        out["meta_semana"] = posint(1, 7)(v["meta_semana"])
+    return out
+
+
+def agenda(v):
+    if not isinstance(v, dict):
+        raise ValueError("ajustes da agenda inválidos")
+    out = {}
+    if "pastas" in v:
+        out["pastas"] = text_list(30, 1, 20)(v["pastas"])
+    if "cursos" in v:
+        out["cursos"] = text_list(60, 0, 6)(v["cursos"])
+    if "avisos" in v:
+        out["avisos"] = dias_antes(v["avisos"])
+    return out
+
+
+def hexhash(v):
+    s = str(v or "")
+    if not re.fullmatch(r"[0-9a-f]{64}", s):
+        raise ValueError("hash inválido")
+    return s

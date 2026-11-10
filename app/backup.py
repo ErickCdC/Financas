@@ -127,6 +127,7 @@ class GitHubBackup:
                 r = self._req("PUT", "/contents/" + quote(C.GITHUB_PATH), body)
                 self.sha = r.get("content", {}).get("sha")
                 self.last_ok, self.last_error = C.now().strftime("%Y-%m-%d %H:%M"), None
+                self._push_files()
                 return True
             except urllib.error.HTTPError as e:
                 msg = e.read().decode("utf-8", "replace")[:200]
@@ -154,6 +155,36 @@ class GitHubBackup:
                 time.sleep(2)
         C.log("backup: " + str(self.last_error))
         return False
+
+    def _push_files(self):
+        """Envia os arquivos novos (laudos, fotos) para `arquivos/<hash>` no mesmo branch."""
+        from .vida import arquivo_nome_remoto
+        with db.connect() as conn:
+            pend = db.rows(conn, "SELECT id, hash, mime FROM arquivos WHERE enviado=0 AND dados IS NOT NULL")
+        for a in pend:
+            with db.connect() as conn:
+                row = conn.execute("SELECT dados FROM arquivos WHERE id=?", (a["id"],)).fetchone()
+            if not row or row["dados"] is None:
+                continue
+            body = {"message": "arquivo " + a["hash"][:12], "content": base64.b64encode(bytes(row["dados"])).decode(),
+                    "branch": C.GITHUB_BRANCH}
+            try:
+                self._req("PUT", "/contents/" + quote(arquivo_nome_remoto(a)), body)
+            except urllib.error.HTTPError as e:
+                if e.code != 422:  # 422 = já existe (mesmo conteúdo, mesmo nome)
+                    C.log(f"backup: arquivo {a['id']} não enviado (HTTP {e.code})")
+                    continue
+            except (urllib.error.URLError, TimeoutError, OSError):
+                return
+            with db.connect() as conn:  # sem write=True: não agenda outro backup
+                conn.execute("UPDATE arquivos SET enviado=1 WHERE id=?", (a["id"],))
+
+    def fetch_file(self, path):
+        """Conteúdo de um arquivo do backup (depois de o servidor reiniciar), ou None."""
+        try:
+            return self._req("GET", "/contents/" + quote(path) + "?ref=" + quote(C.GITHUB_BRANCH), raw=True)
+        except (urllib.error.URLError, TimeoutError, OSError):
+            return None
 
     def status(self):
         return {"ativo": self.enabled, "pausado": self.blocked, "ultimo": self.last_ok, "erro": self.last_error,

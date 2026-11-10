@@ -1,6 +1,6 @@
 /* Service worker do Finanças: app instalável, abre rápido mesmo com o servidor dormindo, recebe notificações. */
-const VERSION = "fin-v3.1.2";
-const SHELL = ["/", "/app.js", "/style.css", "/manifest.webmanifest", "/logo.svg", "/favicon.svg",
+const VERSION = "fin-v4.0.0";
+const SHELL = ["/", "/app.js", "/modulos.js", "/style.css", "/manifest.webmanifest", "/logo.svg", "/favicon.svg",
   "/icons/icon-192.png", "/icons/badge-96.png"];
 const DATA = "fin-data";
 
@@ -41,7 +41,8 @@ self.addEventListener("push", e => {
 self.addEventListener("notificationclick", e => {
   e.notification.close();
   const base = (e.notification.data && e.notification.data.url) || "/#inicio";
-  const target = new URL(e.action === "add" ? "/#gastos/novo" : e.action === "open" ? "/#contas" : base, location.origin).href;
+  const target = new URL(e.action === "add" ? "/#gastos/novo" : e.action === "open" ? "/#contas" :
+    e.action === "checkin" ? "/#treino/checkin" : base, location.origin).href;
   e.waitUntil((async () => {
     const list = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
     for (const c of list) {

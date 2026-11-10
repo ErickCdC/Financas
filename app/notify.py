@@ -8,7 +8,7 @@ import threading
 from datetime import date, datetime, timedelta
 
 from . import config as C
-from . import db, finance, push
+from . import db, finance, push, vida
 
 GRACE = timedelta(hours=3)  # atraso máximo aceito para um aviso com horário marcado
 _lock = threading.Lock()
@@ -50,7 +50,9 @@ def deliver(conn, title, body, url="/", tag=None):
     ok = 0
     stamp = C.now().strftime("%Y-%m-%d %H:%M")
     msg = {"title": title, "body": body, "url": url, "tag": tag or url}
-    if (tag or "") in ("daily", "teto", "week", "grande"):
+    if (tag or "") == "treino":
+        msg["actions"] = [{"action": "checkin", "title": "Treinei hoje"}]
+    elif (tag or "") in ("daily", "teto", "week", "grande"):
         msg["actions"] = [{"action": "add", "title": "Lançar gasto"}]
     elif (tag or "") in ("bills", "paid", "payday"):
         msg["actions"] = [{"action": "open", "title": "Ver contas"}]
@@ -198,6 +200,8 @@ def build(conn, now):
                 out.append((f"atraso:{c['id']}:{c['ym']}", f"{c['pessoa']} ainda não pagou",
                             f"{c['nome']} de {_mes(c['ym'])}: {brl(c['valor_mes'])} (prazo era dia {int(c['fim'][8:10])}).",
                             "/#contas/receber", []))
+
+    out += vida.avisos(conn, now, rules, due)
 
     r = rules["payday"]
     if r.get("on") and due(now, r["time"]):

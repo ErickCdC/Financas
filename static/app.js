@@ -40,13 +40,21 @@ function parseMoney(v) {
 }
 const catIcon = c => CAT_ICON_EXTRA[c] || (CATS.find(x => x[0] === String(c || "").toLowerCase()) || [0, "tag"])[1];
 
-const NAV = [
-  ["inicio", "Início", "home"], ["contas", "Contas", "bills"], ["gastos", "Gastos", "wallet"],
-  ["plano", "Planejamento", "chart"], ["ajustes", "Ajustes", "settings"],
+// Módulos: cada um tem suas abas na barra de baixo; a troca de módulo fica no topo.
+const MODS = [
+  { id: "hoje", nome: "Hoje", ic: "sun", tabs: [["hoje", "Hoje", "sun"]] },
+  { id: "fin", nome: "Finanças", ic: "wallet", tabs: [["inicio", "Início", "home"], ["contas", "Contas", "bills"], ["gastos", "Gastos", "wallet"], ["plano", "Planejamento", "chart"]] },
+  { id: "saude", nome: "Saúde", ic: "heart", tabs: [["treino", "Treino", "dumbbell"], ["corpo", "Corpo", "ruler"], ["habitos", "Hábitos", "drop"]] },
+  { id: "agenda", nome: "Agenda", ic: "calendar", tabs: [["lembretes", "Próximos", "clock"], ["notas", "Notas", "note"], ["tarefas", "Tarefas", "list"], ["facul", "Faculdade", "cap"]] },
 ];
+const NAV = MODS.flatMap(m => m.tabs).concat([["ajustes", "Ajustes", "settings"]]);
+const modOf = v => (MODS.find(m => m.tabs.some(t => t[0] === v)) || MODS[0]);
+// botão flutuante de cada tela: [ação, rótulo]
+const FABS = { inicio: ["addspend", "Gasto"], gastos: ["addspend", "Gasto"], corpo: ["addmedida", "Medir"],
+  lembretes: ["novo", "Novo"], notas: ["addnota", "Nota"], tarefas: ["addtarefa", "Tarefa"], facul: ["addfacul", "Prova"] };
 const S0 = (() => { try { return localStorage.getItem("fin-contas"); } catch (_) { return null; } })();
 const isEst = s => s.category === "estornado"; // compra estornada e o estorno dela
-const S = { openG: new Set(), view: "inicio", month: null, d: null, planTab: "metas", filter: "semana", showEst: store.get("fin-estornos") === "1", simTeto: null, offline: false, installEvt: null, pushOn: false, contasView: S0 === "cal" ? "cal" : "lista" };
+const S = { m: null, mod: "hoje", tabs: (() => { try { return JSON.parse(store.get("fin-tabs") || "{}"); } catch (_) { return {}; } })(), openG: new Set(), view: "hoje", month: null, d: null, planTab: "metas", filter: "semana", showEst: store.get("fin-estornos") === "1", simTeto: null, offline: false, installEvt: null, pushOn: false, contasView: S0 === "cal" ? "cal" : "lista" };
 
 function toast(msg) {
   const t = $("#toast");
@@ -66,19 +74,26 @@ async function api(path, body) {
   if (!r.ok) throw new Error(j.error || "Erro " + r.status);
   return j;
 }
-async function cacheSummary(d) {
-  try { const c = await caches.open("fin-data"); await c.put("/api/summary", new Response(JSON.stringify(d), { headers: { "Content-Type": "application/json" } })); } catch (_) { /* opcional */ }
+async function cacheData(url, d) {
+  try { const c = await caches.open("fin-data"); await c.put(url, new Response(JSON.stringify(d), { headers: { "Content-Type": "application/json" } })); } catch (_) { /* opcional */ }
 }
-async function cachedSummary() {
-  try { const c = await caches.open("fin-data"); const r = await c.match("/api/summary"); return r ? r.json() : null; } catch (_) { return null; }
+async function cachedData(url) {
+  try { const c = await caches.open("fin-data"); const r = await c.match(url); return r ? r.json() : null; } catch (_) { return null; }
+}
+const cacheSummary = d => cacheData("/api/summary", d);
+const cachedSummary = () => cachedData("/api/summary");
+// Só os dados dos módulos (Saúde e Agenda): mais leve que recarregar as finanças a cada toque.
+async function reloadM() {
+  try { S.m = await api("/api/modulos"); cacheData("/api/modulos", S.m); render(); } catch (e) { toast(e.message); }
 }
 
 async function load({ silent = false } = {}) {
   const btn = $("#refreshbtn"); btn.classList.add("spin");
   const slow = setTimeout(() => { const b = $("#bootmsg"); if (b) b.textContent = "Acordando o servidor… no plano grátis isso leva até 1 minuto."; }, 3500);
   try {
-    const d = await api("/api/summary" + (S.month ? "?month=" + S.month : ""));
-    S.d = d; S.month = d.mes.ym; S.offline = false;
+    const [d, m] = await Promise.all([api("/api/summary" + (S.month ? "?month=" + S.month : "")),
+      api("/api/modulos").catch(() => S.m)]);
+    S.d = d; S.month = d.mes.ym; S.offline = false; if (m) { S.m = m; cacheData("/api/modulos", m); }
     if (d.sync_rodando && !SB.polling) setTimeout(pollSync, 50);
     if (!location.search.includes("month")) cacheSummary(d);
     render();
@@ -86,7 +101,7 @@ async function load({ silent = false } = {}) {
     syncPush();
   } catch (e) {
     if (e.message === "Faça login") return;
-    if (!S.d) { const c = await cachedSummary(); if (c) { S.d = c; S.month = c.mes.ym; S.offline = true; render(); } }
+    if (!S.d) { const c = await cachedSummary(); if (c) { S.d = c; S.month = c.mes.ym; S.m = S.m || await cachedData("/api/modulos"); S.offline = true; render(); } }
     else if (!silent) toast(e.message);
     if (S.d) { S.offline = true; $("#offline").hidden = false; }
   } finally { clearTimeout(slow); btn.classList.remove("spin"); }
@@ -98,11 +113,13 @@ function showLogin() { $("#login").hidden = false; setTimeout(() => $("#pw").foc
 function route() {
   const rel = location.hash.match(/^#relatorio(?:-(\d{4}-\d{2}))?$/);
   if (rel) { history.replaceState(null, "", "#gastos"); S.pendingRel = rel[1] || ""; }
-  const [v, sub] = (location.hash.replace("#", "") || "inicio").split("/");
-  S.view = NAV.some(n => n[0] === v) ? v : "inicio";
+  const [v, sub] = (location.hash.replace("#", "") || "hoje").split("/");
+  S.view = NAV.some(n => n[0] === v) ? v : "hoje";
+  if (S.view !== "ajustes") { S.mod = modOf(S.view).id; S.tabs[S.mod] = S.view; store.set("fin-tabs", JSON.stringify(S.tabs)); }
   if (S.d) render();
+  if (sub && S.d && typeof routeSub === "function" && routeSub(S.view, sub)) history.replaceState(null, "", "#" + S.view);
   window.scrollTo(0, 0);
-  if (sub === "novo" && S.d) { history.replaceState(null, "", "#" + S.view); A.addspend(); }
+  if (sub === "novo" && S.d && modOf(S.view).id === "fin") { history.replaceState(null, "", "#" + S.view); A.addspend(); }
   if (v === "contas" && sub === "receber") { S.contasTab = "receber"; history.replaceState(null, "", "#contas"); if (S.d) render(); }
   if (S.pendingRel != null && S.d) { const ym = S.pendingRel; S.pendingRel = null; openRelatorio(ym || undefined); }
 }
@@ -112,25 +129,39 @@ document.addEventListener("toggle", e => { const g = e.target; if (g.matches && 
 
 function render() {
   if (!S.d) return;
-  const navHtml = NAV.map(([k, label, ic]) => `<a href="#${k}" class="${S.view === k ? "on" : ""}" ${S.view === k ? 'aria-current="page"' : ""}><span class="pill">${icon(ic)}</span><span>${label}</span></a>`).join("");
-  $("#bottomnav").innerHTML = navHtml;
-  $("#sidenav").innerHTML = NAV.map(([k, label, ic]) => `<a href="#${k}" class="${S.view === k ? "on" : ""}">${icon(ic)}<span>${label}</span></a>`).join("");
+  const mod = MODS.find(m => m.id === S.mod) || MODS[0];
+  const tab = (t, cls) => `<a href="#${t[0]}" class="${cls || ""} ${S.view === t[0] ? "on" : ""}" ${S.view === t[0] ? 'aria-current="page"' : ""}>`;
+  $("#modbar").innerHTML = MODS.map(m => `<button type="button" class="mod ${m.id === mod.id && S.view !== "ajustes" ? "on" : ""}" data-act="mod" data-m="${m.id}" aria-label="${m.nome}"${m.id === mod.id ? ' aria-current="true"' : ""}>${icon(m.ic)}<span>${m.nome}</span></button>`).join("");
+  const bn = $("#bottomnav"), multi = mod.tabs.length > 1;
+  bn.hidden = !multi; document.body.classList.toggle("nonav", !multi);
+  bn.style.setProperty("--cols", mod.tabs.length);
+  bn.innerHTML = multi ? mod.tabs.map(t => `${tab(t)}<span class="pill">${icon(t[2])}</span><span>${t[1]}</span></a>`).join("") : "";
+  $("#sidenav").innerHTML = MODS.map(m => `<div class="sn-mod ${m.id === mod.id ? "on" : ""}">
+    <a href="#${S.tabs[m.id] || m.tabs[0][0]}" class="sn-head ${m.id === mod.id && S.view !== "ajustes" && m.tabs.length === 1 ? "on" : ""}">${icon(m.ic)}<span>${m.nome}</span></a>
+    ${m.id === mod.id && m.tabs.length > 1 ? `<div class="sn-tabs">${m.tabs.map(t => `${tab(t)}<span>${t[1]}</span></a>`).join("")}</div>` : ""}</div>`).join("")
+    + `<a href="#ajustes" class="sn-head ${S.view === "ajustes" ? "on" : ""}">${icon("settings")}<span>Ajustes</span></a>`;
   $("#sidefoot").innerHTML = S.d.config.last_sync ? `Banco sincronizado ${esc(S.d.config.last_sync.slice(8, 10) + "/" + S.d.config.last_sync.slice(5, 7) + " " + S.d.config.last_sync.slice(11))}` : "Uso pessoal";
   const title = NAV.find(n => n[0] === S.view)[1];
-  $("#pagetitle").textContent = S.view === "inicio" ? "" : title;
-  $("#topbar").dataset.home = S.view === "inicio" ? "1" : "0";
-  document.title = S.view === "inicio" ? "Finanças" : `${title} · Finanças`;
+  $("#pagetitle").textContent = S.view === "ajustes" ? "Ajustes" : mod.tabs.length > 1 ? `${mod.nome} · ${title}` : title;
+  $("#gearbtn").classList.toggle("on", S.view === "ajustes");
+  document.title = S.view === "ajustes" ? "Ajustes" : mod.tabs.length > 1 ? `${title} · ${mod.nome}` : title;
   $("#offline").hidden = !S.offline;
-  $("#fab").hidden = !["inicio", "gastos"].includes(S.view);
+  const fab = FABS[S.view], cta = $("#sidecta");
+  $("#fab").hidden = !fab; cta.hidden = !fab;
+  if (fab) { for (const el of [$("#fab"), cta]) { el.dataset.act = fab[0]; el.querySelector("span").textContent = el === cta && fab[0] === "addspend" ? "Lançar gasto" : fab[1]; el.setAttribute("aria-label", fab[1]); } }
   const v = $("#view");
   v.classList.remove("view"); void v.offsetWidth; v.classList.add("view");
-  v.innerHTML = VIEWS[S.view](S.d) + `<p class="foot">Estimativa pessoal · confira sempre com o extrato</p>`;
+  const needM = !["inicio", "contas", "gastos", "plano", "ajustes"].includes(S.view);
+  v.innerHTML = needM && !S.m ? `<div class="empty">${icon("cloud")}<div>Não consegui carregar este módulo.</div><button class="btn sm secondary" data-act="refresh">Tentar de novo</button></div>`
+    : VIEWS[S.view](S.d) + (mod.id === "fin" ? `<p class="foot">Estimativa pessoal · confira sempre com o extrato</p>` : "");
   applySizes(document);
 }
 
 function applySizes(root) {
   root.querySelectorAll("[data-w]").forEach(el => { el.style.width = Math.max(0, Math.min(100, Number(el.dataset.w))) + "%"; });
   root.querySelectorAll("[data-h]").forEach(el => { el.style.height = Math.max(3, Math.min(100, Number(el.dataset.h))) + "%"; });
+  root.querySelectorAll("[data-col]").forEach(el => { el.style.gridColumn = String(Number(el.dataset.col)); });
+  root.querySelectorAll("[data-weeks]").forEach(el => { el.style.setProperty("--w", Number(el.dataset.weeks)); });
 }
 
 // ---------- componentes ----------
@@ -676,6 +707,10 @@ VIEWS.ajustes = d => {
       <div class="setting"><div class="body"><div class="t">Cobranças</div><div class="sub">No dia de cobrar e quando alguém atrasar</div></div><div class="ctrl">${timeIn("notif.rules.cobrancas.time", (r.cobrancas || {}).time || "09:00")}${sw("notif.rules.cobrancas.on", (r.cobrancas || { on: true }).on)}</div></div>
       <div class="setting"><div class="body"><div class="t">Relatório do mês</div><div class="sub">No dia do salário: quanto gastou, onde e contra o teto</div></div><div class="ctrl">${timeIn("notif.rules.relatorio.time", (r.relatorio || {}).time || "09:00")}${sw("notif.rules.relatorio.on", (r.relatorio || {}).on)}</div></div>
       <div class="setting"><div class="body"><div class="t">Dia do salário</div><div class="sub">Quanto guardar e o que pagar</div></div><div class="ctrl">${timeIn("notif.rules.payday.time", r.payday.time)}${sw("notif.rules.payday.on", r.payday.on)}</div></div>
+      <div class="group-label">Agenda e saúde</div>
+      <div class="setting"><div class="body"><div class="t">Lembretes, tarefas e provas</div><div class="sub">Dias antes, no dia e perto da hora marcada</div></div><div class="ctrl">${timeIn("notif.rules.agenda.time", (r.agenda || {}).time || "08:00")}${sw("notif.rules.agenda.on", (r.agenda || { on: true }).on)}</div></div>
+      <div class="setting"><div class="body"><div class="t">Treino</div><div class="sub">Quando precisa treinar hoje para bater a meta da semana</div></div><div class="ctrl">${timeIn("notif.rules.treino.time", (r.treino || {}).time || "18:00")}${sw("notif.rules.treino.on", (r.treino || { on: true }).on)}</div></div>
+      <div class="setting"><div class="body"><div class="t">Hábitos</div><div class="sub">À noite, o que ainda não bateu a meta do dia</div></div><div class="ctrl">${timeIn("notif.rules.habitos.time", (r.habitos || {}).time || "21:00")}${sw("notif.rules.habitos.on", (r.habitos || { on: true }).on)}</div></div>
       ${d.sync_disponivel ? `<div class="setting"><div class="body"><div class="t">Eventos do banco</div><div class="sub">Salário recebido, fatura ou conta paga</div></div>${sw("notif.rules.bank_events.on", (r.bank_events || { on: true }).on)}</div>` : ""}
       <div class="setting"><div class="body"><div class="t">Agendador</div><div class="sub">${d.agendador ? `Configurado${lastTick ? ` · última verificação ${esc(lastTick.slice(8, 10) + "/" + lastTick.slice(5, 7) + " " + lastTick.slice(11))}` : ""}` : "Sem CRON_TOKEN: avisos só saem com o servidor acordado. Veja o README."}</div></div>
         <button class="btn sm secondary" data-act="notifrun">Verificar agora</button></div>
@@ -729,6 +764,14 @@ VIEWS.ajustes = d => {
       <div class="setting stack"><div class="body"><div class="t">Ignorar na sincronização</div><div class="sub">Palavras separadas por vírgula</div></div><textarea class="input" rows="3" data-set="ignore_terms" data-kind="list">${esc(c.ignore_terms.join(", "))}</textarea></div>
       <div class="setting"><div class="body"><div class="t">Pix até este valor vira gasto</div><div class="sub">Acima disso é tratado como conta</div></div><div class="money"><input class="sm-in" inputmode="decimal" data-set="pix_max" data-kind="num" value="${c.pix_max}"></div></div>
     `)}
+    ${sgroup("saude", "heart", "Saúde", `Meta de ${(c.saude || {}).meta_semana || 4} treinos por semana · ${(S.m ? S.m.saude.habitos.filter(h => h.ativo).length : 0)} hábitos`, `
+      <div class="setting"><span class="ic blue">${icon("dumbbell")}</span><div class="body"><div class="t">Meta de treinos</div><div class="sub">Dias com treino por semana (segunda a domingo)</div></div>
+        ${sel("saude.meta_semana", (c.saude || {}).meta_semana || 4, [1, 2, 3, 4, 5, 6, 7].map(x => `<option value="${x}">${x} por semana</option>`).join(""))}</div>
+      <div class="setting"><span class="ic">${icon("drop")}</span><div class="body"><div class="t">Hábitos</div><div class="sub">${S.m ? S.m.saude.habitos.map(h => esc(h.nome)).join(", ") || "Nenhum" : ""}</div></div><a class="btn sm secondary" href="#habitos">Editar</a></div>`)}
+    ${sgroup("agenda", "calendar", "Agenda", `${((c.agenda || {}).pastas || []).length} pastas · avisa ${((c.agenda || {}).avisos || []).map(x => x === 0 ? "no dia" : x + "d").join(", ") || "só no dia"} antes`, `
+      <div class="setting stack"><div class="body"><div class="t">Pastas</div><div class="sub">Para notas e tarefas, separadas por vírgula</div></div><textarea class="input" rows="2" data-set="agenda.pastas" data-kind="list">${esc(((c.agenda || {}).pastas || []).join(", "))}</textarea></div>
+      <div class="setting stack"><div class="body"><div class="t">Cursos</div><div class="sub">Usados nas provas e trabalhos da faculdade</div></div><textarea class="input" rows="2" data-set="agenda.cursos" data-kind="list">${esc(((c.agenda || {}).cursos || []).join(", "))}</textarea></div>
+      <div class="setting"><div class="body"><div class="t">Avisar antes</div><div class="sub">Dias de antecedência padrão dos lembretes (o do dia sempre sai)</div></div><input class="sm-in" data-set="agenda.avisos" data-kind="list" value="${esc(((c.agenda || {}).avisos || []).join(", "))}" aria-label="Dias antes"></div>`)}
     ${sgroup("dados", "cloud", "Dados e aparelho", `Backup ${d.backup.ativo ? (d.backup.pausado ? "pausado" : "ativo") : "desligado"} · tema, instalar, sair`, `
     
       <div class="setting"><span class="ic ${d.backup.ativo && !d.backup.pausado ? "blue" : ""}">${icon("cloud")}</span><div class="body"><div class="t">Backup automático no GitHub</div>
@@ -779,17 +822,41 @@ function suggestSpends(box) {
     if (hit && hit[1].cat && !box.querySelector(".chips-pick button.on")) pickCat(hit[1].cat);
   });
 }
-function openSheet({ title, desc, fields, values = {}, onSave, onDelete, saveLabel = "Salvar", onMount }) {
+function openSheet({ title, desc, fields, values = {}, onSave, onDelete, saveLabel = "Salvar", onMount, reload, pairs }) {
+  const after = reload || (() => load({ silent: true }));
   const ov = document.createElement("div"); ov.className = "overlay";
   const box = document.createElement("form"); box.className = "sheet"; box.setAttribute("role", "dialog"); box.setAttribute("aria-modal", "true");
   box.innerHTML = `<div class="grab"></div><h3>${esc(title)}</h3>${desc ? `<p class="desc">${esc(desc)}</p>` : ""}<div class="form-grid"></div>
     <div class="actions">${onDelete ? `<button type="button" class="btn danger" data-x="del">Excluir</button>` : ""}<button type="button" class="btn secondary" data-x="cancel">Cancelar</button><button type="submit" class="btn">${esc(saveLabel)}</button></div>`;
   const grid = box.querySelector(".form-grid");
+  if (pairs) grid.classList.add("pairs");
   const get = {};
   for (const f of fields) {
-    const wrap = document.createElement("label"); wrap.className = "field";
+    const wrap = document.createElement("label"); wrap.className = "field" + (f.full ? " full" : "");
     const v = values[f.name] ?? f.value ?? "";
-    if (f.type === "checkbox") {
+    if (f.type === "section") {
+      wrap.className = "form-sec full"; wrap.textContent = f.label; grid.append(wrap); continue;
+    } else if (f.type === "textarea") {
+      wrap.innerHTML = `<span>${esc(f.label)}</span><textarea rows="${f.rows || 4}"></textarea>`;
+      const i = wrap.querySelector("textarea"); i.value = v; if (f.placeholder) i.placeholder = f.placeholder;
+      get[f.name] = () => i.value;
+    } else if (f.type === "multichips") {
+      let cur = new Set((Array.isArray(v) ? v : []).map(String));
+      wrap.innerHTML = `<span>${esc(f.label)}</span><div class="chips-pick">${f.options.map(([val, lab]) => `<button type="button" data-v="${esc(val)}" class="${cur.has(String(val)) ? "on" : ""}">${esc(lab)}</button>`).join("")}</div>${f.hint ? `<small>${esc(f.hint)}</small>` : ""}`;
+      wrap.querySelectorAll("button").forEach(b => b.onclick = () => { cur.has(b.dataset.v) ? cur.delete(b.dataset.v) : cur.add(b.dataset.v); b.classList.toggle("on"); });
+      get[f.name] = () => [...cur].map(Number);
+    } else if (f.type === "file") {
+      let keep = v || null, file = null;
+      wrap.innerHTML = `<span>${esc(f.label)}</span><div class="filepick"><span class="fp-name muted"></span><button type="button" class="btn sm secondary" data-x="pick">${icon(f.accept === "image/*" ? "camera" : "upload")}<span>Escolher</span></button><a class="btn sm ghost" data-x="ver" target="_blank" rel="noopener" hidden>Ver</a><button type="button" class="btn sm ghost" data-x="rm" hidden>Remover</button></div><input type="file" accept="${esc(f.accept || "image/*,application/pdf")}" hidden>${f.hint ? `<small>${esc(f.hint)}</small>` : ""}`;
+      const inp = wrap.querySelector("input"), name = wrap.querySelector(".fp-name"), rm = wrap.querySelector('[data-x="rm"]');
+      const ver = wrap.querySelector('[data-x="ver"]');
+      const show = () => { name.textContent = file ? file.name : keep ? (f.keepLabel || "Arquivo anexado") : "Nenhum arquivo"; rm.hidden = !(file || keep); ver.hidden = !(keep && !file); if (keep) ver.href = "/api/arquivo/" + keep; };
+      wrap.querySelector('[data-x="pick"]').onclick = e => { e.preventDefault(); inp.click(); };
+      rm.onclick = e => { e.preventDefault(); file = null; keep = null; inp.value = ""; show(); };
+      inp.onchange = () => { if (inp.files[0]) { file = inp.files[0]; show(); } };
+      show();
+      get[f.name] = () => ({ file, keep });
+    } else if (f.type === "checkbox") {
       wrap.className = "setting"; wrap.innerHTML = `<div class="body"><div class="t">${esc(f.label)}</div>${f.hint ? `<div class="sub">${esc(f.hint)}</div>` : ""}</div><span class="switch"><input type="checkbox" ${v ? "checked" : ""}><span></span></span>`;
       const i = wrap.querySelector("input"); get[f.name] = () => i.checked;
     } else if (f.type === "chips") {
@@ -810,6 +877,12 @@ function openSheet({ title, desc, fields, values = {}, onSave, onDelete, saveLab
       if (f.type === "number") { i.inputMode = "numeric"; if (f.min != null) i.min = f.min; if (f.max != null) i.max = f.max; }
       if (f.required) i.required = true;
       if (f.placeholder) i.placeholder = f.placeholder;
+      if (f.suggest && f.suggest.length) {
+        const sg = document.createElement("div"); sg.className = "chips-pick suggest";
+        sg.innerHTML = f.suggest.map(o => `<button type="button" data-v="${esc(o)}">${esc(o)}</button>`).join("");
+        sg.querySelectorAll("button").forEach(b => b.onclick = () => { i.value = b.dataset.v; });
+        wrap.append(sg);
+      }
       get[f.name] = () => {
         if (money || f.type === "decimal") return parseMoney(i.value);
         if (f.type === "number") return i.value === "" ? null : Number(i.value);
@@ -824,20 +897,22 @@ function openSheet({ title, desc, fields, values = {}, onSave, onDelete, saveLab
   box.querySelector('[data-x="cancel"]').onclick = close;
   if (onDelete) box.querySelector('[data-x="del"]').onclick = async () => {
     if (!(await confirmSheet("Excluir este item?", "Excluir"))) return;
-    try { await onDelete(); close(); toast("Excluído"); await load({ silent: true }); } catch (e) { toast(e.message); }
+    try { await onDelete(); close(); toast("Excluído"); await after(); } catch (e) { toast(e.message); }
   };
   box.onsubmit = async e => {
     e.preventDefault();
-    const v = {}; for (const f of fields) v[f.name] = get[f.name]();
+    const v = {}; for (const f of fields) if (get[f.name]) v[f.name] = get[f.name]();
     for (const f of fields) if ((f.type === "money" || f.type === "decimal") && f.required && (v[f.name] == null || isNaN(v[f.name]))) { toast("Informe um valor válido"); return; }
+    for (const f of fields) if (f.type === "decimal" && v[f.name] != null && isNaN(v[f.name])) { toast(`${f.label}: número inválido`); return; }
+    for (const f of fields) if (f.type === "chips" && f.required && !v[f.name]) { toast(`Escolha: ${f.label}`); return; }
     const btn = box.querySelector('[type="submit"]'); btn.disabled = true;
-    try { const msg = await onSave(v); close(); buzz(); toast(typeof msg === "string" ? msg : "Salvo"); await load({ silent: true }); }
+    try { const msg = await onSave(v); close(); buzz(); toast(typeof msg === "string" ? msg : "Salvo"); await after(); }
     catch (err) { toast(err.message); btn.disabled = false; }
   };
   ov.addEventListener("click", e => { if (e.target === ov) close(); });
   ov.append(box); document.body.append(ov);
   if (onMount) try { onMount(box); } catch (_) { /* sugestões são opcionais */ }
-  const first = box.querySelector("input:not([type=checkbox]),select"); if (first && matchMedia("(pointer:fine)").matches) first.focus();
+  const first = box.querySelector("input:not([type=checkbox]):not([type=file]),select,textarea"); if (first && matchMedia("(pointer:fine)").matches) first.focus();
   else if (first && fields[0] && fields[0].big) first.focus();
 }
 
@@ -1320,5 +1395,4 @@ $("#loginform").addEventListener("submit", async e => {
   b.disabled = false; b.textContent = "Entrar";
 });
 
-route();
-load().then(route);
+document.addEventListener("DOMContentLoaded", () => { route(); load().then(route); });

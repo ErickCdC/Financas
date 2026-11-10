@@ -1,8 +1,12 @@
 # Finanças
 
-App pessoal de finanças, instalável no Chrome (PWA). Mostra as contas do mês, o teto semanal, as parcelas e a projeção da caixinha, e manda notificações configuráveis.
+App pessoal, instalável no Chrome (PWA), dividido em módulos. A troca de módulo fica no topo; cada módulo tem suas abas embaixo. Ajustes ficam na engrenagem.
 
-- **Telas:** Início, Contas, Gastos, Planejamento (projeção com simulador de teto + parcelas) e Ajustes.
+- **Hoje:** resumo de tudo — quanto ainda dá para gastar na semana, próxima conta, treinos da semana com check-in de um toque, hábitos do dia, próximos 7 dias e tarefas de hoje.
+- **Finanças:** Início, Contas, Gastos e Planejamento (projeção com simulador de teto + parcelas), ligado aos bancos.
+- **Saúde:** Treino (check-in de um toque, meta semanal, sequência de semanas, mapa dos últimos 4 meses), Corpo (peso, altura, IMC, bíceps, coxa e outras medidas com gráfico; bioimpedância com o laudo em foto ou PDF) e Hábitos (água, sono e os que você criar, com sequência de dias).
+- **Agenda:** Próximos (tudo que tem data, inclusive contas a vencer), Notas por pasta (Trabalho, Pessoal, Faculdade…) com lembrete que avisa 1, 2, 3 ou 7 dias antes e perto da hora, Tarefas com prazo e Faculdade (provas e trabalhos dos dois cursos, com contagem regressiva e médias).
+- **Arquivos:** fotos são reduzidas no aparelho (1600 px); fotos e PDFs vão para o GitHub em `arquivos/` no branch de backup, separados do JSON.
 - **Notificações:** lembrete diário de gastos, alerta do teto (80%/100%), contas a vencer, resumo semanal, dia do salário e sincronização diária com o banco (opcional). Têm horário de silêncio e cada uma pode ser ligada, desligada e ter o horário trocado.
 - **Livre até o salário:** quanto dá para gastar até o próximo salário sem ficar no vermelho, por dia, e onde você termina no ritmo atual.
 - **Teto automático (opcional):** defina quanto quer guardar por mês e o teto semanal se ajusta sozinho.
@@ -86,8 +90,9 @@ Ou com Docker: `cp .env.example .env`, preencha e rode `docker compose up -d --b
     app/push.py          Web Push (criptografia RFC 8291 + VAPID)
     app/backup.py        backup no GitHub
     app/bank.py          sincronização com o Banco MCP
+    app/vida.py          Saúde e Agenda: treinos, medidas, hábitos, notas, tarefas, faculdade, arquivos e avisos
     app/web.py           HTTP, login e segurança
-    static/              interface (PWA, service worker, ícones)
+    static/              interface (PWA, service worker, ícones); modulos.js tem Hoje, Saúde e Agenda
     tests/               testes (`python3 -m unittest discover -s tests`)
 
 ## Segurança

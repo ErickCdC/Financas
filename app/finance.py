@@ -697,7 +697,7 @@ def summary(conn, month=None, extra=None):
         "aumento_from", "teto_semanal", "caixa", "caixa_ref", "salario_dia", "ignore_terms", "pix_max",
         "ciclo_extra", "cartoes", "cartao_venc", "last_sync", "caixa_banco", "cartao_usado", "notif",
         "auto", "sync_auto", "salario_regra", "entradas", "last_force", "last_tick", "sync_detalhe", "ciclo_info",
-        "nome", "meta_caixinha", "teto_auto", "salario_tipo", "caixa_data", "fgts", "metas_modo", "banco_incidentes")}
+        "nome", "meta_caixinha", "teto_auto", "salario_tipo", "caixa_data", "fgts", "metas_modo", "banco_incidentes", "saude", "agenda")}
     public_cfg["teto_efetivo"] = cfg["teto_semanal"]
     x = income_month(t, cfg)
     paydays = {P.add_months(x, k): PD.payday_ym(P.add_months(x, k), cfg).isoformat() for k in range(-4, 10)}
