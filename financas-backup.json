@@ -10,7 +10,7 @@
   "aumento_pct": 25.0,
   "aumento_from": "2027-01",
   "teto_semanal": 50.0,
-  "caixa": 192.35,
+  "caixa": 0.0,
   "caixa_ref": "2026-11",
   "salario_dia": 30,
   "salario_data": "2026-10-30",
@@ -168,19 +168,12 @@
   "banco_incidentes": [
    "PicPay - Transações de cartão de crédito não sendo retornada"
   ],
-  "caixa_banco": 192.35,
+  "caixa_banco": 0.0,
   "caixa_data": "2026-11-10",
   "cartao_usado": {
-   "Mercado Pago": 1265.69,
    "PicPay": 1382.0
   },
   "ciclo_info": {
-   "Mercado Pago": {
-    "conta": "8b778a91-1057-4662-917f-e758a49b7c3b",
-    "fechou": "2026-10-29",
-    "fecha_antes": 6,
-    "compras": 88.98
-   },
    "PicPay": {
     "conta": "6d7341ae-373e-4d3b-b53b-f28126fded99",
     "fechou": "2026-10-29",
@@ -202,12 +195,12 @@
    }
   },
   "eventos_pendentes": [],
-  "last_auto_sync": "2026-11-10T12:27",
+  "last_auto_sync": "2026-11-10T13:21",
   "last_force": "2026-11-10T12:29",
-  "last_sync": "2026-11-10 12:28",
-  "last_tick": "2026-11-10 12:27",
+  "last_sync": "2026-11-10 13:23",
+  "last_tick": "2026-11-10 13:21",
   "metas_eta": {
-   "1": "2026-11"
+   "1": "2026-12"
   },
   "migracoes": [
    "assinaturas_nov26",
@@ -220,18 +213,6 @@
    "salario_minimo_50"
   ],
   "sync_detalhe": [
-   {
-    "banco": "Mercado Pago",
-    "tipo": "conta",
-    "lidas": 46,
-    "no_app": 8
-   },
-   {
-    "banco": "Mercado Pago",
-    "tipo": "cartão",
-    "lidas": 9,
-    "no_app": 5
-   },
    {
     "banco": "PicPay",
     "tipo": "conta",
@@ -1278,7 +1259,7 @@
    "auth": "-LZCogkbAIUGPprhqKSGMw",
    "label": "Android · Chrome",
    "created": "2026-11-06 17:47",
-   "last_ok": "2026-11-10 08:01",
+   "last_ok": "2026-11-10 13:23",
    "fails": 0
   }
  ],
@@ -1396,6 +1377,12 @@
    "sent_at": "2026-11-10 08:01",
    "title": "Lançou seus gastos de hoje?",
    "body": "Nada lançado hoje. Restam R$ 25,40 na semana."
+  },
+  {
+   "key": "meta:1:2026-12",
+   "sent_at": "2026-11-10 13:23",
+   "title": "Gigi atrasou",
+   "body": "Com a caixinha de agora, chega em dez/26 (antes: nov/26)."
   }
  ],
  "cobrancas": [
