@@ -212,7 +212,7 @@
   "last_auto_sync": "2026-11-09T22:48",
   "last_force": "2026-11-09T21:54",
   "last_sync": "2026-11-09 22:48",
-  "last_tick": "2026-11-10 06:24",
+  "last_tick": "2026-11-10 06:46",
   "metas_eta": {
    "1": "2026-11"
   },
@@ -1443,7 +1443,28 @@
   }
  ],
  "arquivos": [],
- "treinos": [],
+ "treinos": [
+  {
+   "id": 1,
+   "date": "2026-11-10",
+   "tipo": "Musculação",
+   "foco": null,
+   "minutos": null,
+   "nota": null,
+   "arquivo_id": null,
+   "criado": "2026-11-10 06:47"
+  },
+  {
+   "id": 2,
+   "date": "2026-11-10",
+   "tipo": "Musculação",
+   "foco": null,
+   "minutos": null,
+   "nota": null,
+   "arquivo_id": null,
+   "criado": "2026-11-10 06:47"
+  }
+ ],
  "avaliacoes": [],
  "avaliacao_valores": [],
  "habitos": [
