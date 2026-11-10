@@ -169,7 +169,7 @@
    "PicPay - Transações de cartão de crédito não sendo retornada"
   ],
   "caixa_banco": 193.19,
-  "caixa_data": "2026-11-09",
+  "caixa_data": "2026-11-10",
   "cartao_usado": {
    "PicPay": 1382.0,
    "Nubank": 206.27,
@@ -209,10 +209,10 @@
    }
   },
   "eventos_pendentes": [],
-  "last_auto_sync": "2026-11-10T07:57",
+  "last_auto_sync": "2026-11-10T08:24",
   "last_force": "2026-11-09T21:54",
-  "last_sync": "2026-11-09 22:48",
-  "last_tick": "2026-11-10 08:01",
+  "last_sync": "2026-11-10 08:54",
+  "last_tick": "2026-11-10 08:51",
   "metas_eta": {
    "1": "2026-11"
   },
@@ -993,7 +993,7 @@
   },
   {
    "id": 33,
-   "date": "2026-11-05",
+   "date": "2026-11-04",
    "description": "Estorno de Uber - NuPay",
    "amount": -19.91,
    "category": "estornado",
@@ -1004,7 +1004,7 @@
   },
   {
    "id": 34,
-   "date": "2026-11-05",
+   "date": "2026-11-04",
    "description": "Estorno de Uber - NuPay",
    "amount": -18.16,
    "category": "estornado",
@@ -1015,7 +1015,7 @@
   },
   {
    "id": 35,
-   "date": "2026-11-05",
+   "date": "2026-11-04",
    "description": "Estorno de Uber - NuPay",
    "amount": -11.84,
    "category": "estornado",
@@ -1037,7 +1037,7 @@
   },
   {
    "id": 37,
-   "date": "2026-10-30",
+   "date": "2026-10-29",
    "description": "Estorno de Uber - NuPay",
    "amount": -10.95,
    "category": "estornado",
@@ -1092,7 +1092,7 @@
   },
   {
    "id": 42,
-   "date": "2026-10-19",
+   "date": "2026-10-18",
    "description": "Estorno de Uber - NuPay",
    "amount": -8.8,
    "category": "estornado",
