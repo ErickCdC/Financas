@@ -212,7 +212,7 @@
   "last_auto_sync": "2026-11-11T14:15",
   "last_force": "2026-11-11T13:49",
   "last_sync": "2026-11-11 13:49",
-  "last_tick": "2026-11-11 14:22",
+  "last_tick": "2026-11-11 14:31",
   "metas_eta": {
    "1": "2026-11"
   },
@@ -222,6 +222,7 @@
    "cobranca_valter",
    "fgts_libera_aprendiz",
    "habitos_padrao",
+   "habitos_refeicoes",
    "metas_share_igual",
    "netinjection_valor",
    "salario_minimo_50"
@@ -993,7 +994,7 @@
   },
   {
    "id": 33,
-   "date": "2026-11-04",
+   "date": "2026-11-05",
    "description": "Estorno de Uber - NuPay",
    "amount": -19.91,
    "category": "estornado",
@@ -1004,7 +1005,7 @@
   },
   {
    "id": 34,
-   "date": "2026-11-04",
+   "date": "2026-11-05",
    "description": "Estorno de Uber - NuPay",
    "amount": -18.16,
    "category": "estornado",
@@ -1015,7 +1016,7 @@
   },
   {
    "id": 35,
-   "date": "2026-11-04",
+   "date": "2026-11-05",
    "description": "Estorno de Uber - NuPay",
    "amount": -11.84,
    "category": "estornado",
@@ -1037,7 +1038,7 @@
   },
   {
    "id": 37,
-   "date": "2026-10-29",
+   "date": "2026-10-30",
    "description": "Estorno de Uber - NuPay",
    "amount": -10.95,
    "category": "estornado",
@@ -1092,7 +1093,7 @@
   },
   {
    "id": 42,
-   "date": "2026-10-18",
+   "date": "2026-10-19",
    "description": "Estorno de Uber - NuPay",
    "amount": -8.8,
    "category": "estornado",
@@ -1509,6 +1510,69 @@
    "meta": 7.0,
    "passo": 0.5,
    "ordem": 1,
+   "ativo": 1
+  },
+  {
+   "id": 3,
+   "nome": "Café da manhã",
+   "unidade": "",
+   "meta": 1.0,
+   "passo": 1.0,
+   "ordem": 2,
+   "ativo": 1
+  },
+  {
+   "id": 4,
+   "nome": "Lanche da manhã",
+   "unidade": "",
+   "meta": 1.0,
+   "passo": 1.0,
+   "ordem": 3,
+   "ativo": 1
+  },
+  {
+   "id": 5,
+   "nome": "Almoço",
+   "unidade": "",
+   "meta": 1.0,
+   "passo": 1.0,
+   "ordem": 4,
+   "ativo": 1
+  },
+  {
+   "id": 6,
+   "nome": "Pré-treino",
+   "unidade": "",
+   "meta": 1.0,
+   "passo": 1.0,
+   "ordem": 5,
+   "ativo": 1
+  },
+  {
+   "id": 7,
+   "nome": "Pós-treino",
+   "unidade": "",
+   "meta": 1.0,
+   "passo": 1.0,
+   "ordem": 6,
+   "ativo": 1
+  },
+  {
+   "id": 8,
+   "nome": "Jantar",
+   "unidade": "",
+   "meta": 1.0,
+   "passo": 1.0,
+   "ordem": 7,
+   "ativo": 1
+  },
+  {
+   "id": 9,
+   "nome": "Ceia",
+   "unidade": "",
+   "meta": 1.0,
+   "passo": 1.0,
+   "ordem": 8,
    "ativo": 1
   }
  ],
