@@ -1512,6 +1512,13 @@
    "tipo": "bio",
    "arquivo_id": null,
    "nota": null
+  },
+  {
+   "id": 4,
+   "date": "2026-11-11",
+   "tipo": "medidas",
+   "arquivo_id": null,
+   "nota": null
   }
  ],
  "avaliacao_valores": [
@@ -1639,6 +1646,11 @@
    "avaliacao_id": 3,
    "campo": "tmb",
    "valor": 1444.0
+  },
+  {
+   "avaliacao_id": 4,
+   "campo": "altura",
+   "valor": 183.0
   }
  ],
  "habitos": [
