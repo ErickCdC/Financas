@@ -1490,9 +1490,9 @@
   {
    "id": 1,
    "nome": "Água",
-   "unidade": "copos",
-   "meta": 8.0,
-   "passo": 1.0,
+   "unidade": "ml",
+   "meta": 2000.0,
+   "passo": 200.0,
    "ordem": 0,
    "ativo": 1
   },
@@ -1510,7 +1510,7 @@
   {
    "habito_id": 1,
    "date": "2026-11-10",
-   "valor": 1.0
+   "valor": 200.0
   }
  ],
  "notas": [],
