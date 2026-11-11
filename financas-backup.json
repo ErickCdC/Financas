@@ -212,7 +212,7 @@
   "last_auto_sync": "2026-11-10T21:27",
   "last_force": "2026-11-10T20:34",
   "last_sync": "2026-11-10 21:29",
-  "last_tick": "2026-11-10 21:27",
+  "last_tick": "2026-11-10 21:38",
   "metas_eta": {
    "1": "2026-11"
   },
@@ -1506,7 +1506,13 @@
    "ativo": 1
   }
  ],
- "habito_dia": [],
+ "habito_dia": [
+  {
+   "habito_id": 1,
+   "date": "2026-11-10",
+   "valor": 1.0
+  }
+ ],
  "notas": [],
  "tarefas": [],
  "facul": []
