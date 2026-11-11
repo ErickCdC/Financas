@@ -209,10 +209,10 @@
    }
   },
   "eventos_pendentes": [],
-  "last_auto_sync": "2026-11-10T20:33",
+  "last_auto_sync": "2026-11-10T21:00",
   "last_force": "2026-11-10T20:34",
   "last_sync": "2026-11-10 20:34",
-  "last_tick": "2026-11-10 20:33",
+  "last_tick": "2026-11-10 21:00",
   "metas_eta": {
    "1": "2026-11"
   },
@@ -1319,7 +1319,7 @@
    "auth": "-LZCogkbAIUGPprhqKSGMw",
    "label": "Android · Chrome",
    "created": "2026-11-06 17:47",
-   "last_ok": "2026-11-10 13:23",
+   "last_ok": "2026-11-10 21:01",
    "fails": 0
   }
  ],
@@ -1443,6 +1443,12 @@
    "sent_at": "2026-11-10 13:23",
    "title": "Gigi atrasou",
    "body": "Com a caixinha de agora, chega em dez/26 (antes: nov/26)."
+  },
+  {
+   "key": "habitos:2026-11-10",
+   "sent_at": "2026-11-10 21:01",
+   "title": "Hábitos de hoje",
+   "body": "Água 0/8 copos · Sono 0/7 h"
   }
  ],
  "cobrancas": [
