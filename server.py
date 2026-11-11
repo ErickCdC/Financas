@@ -90,6 +90,10 @@ def main():
             from app import vida
             vida.semear_refeicoes(conn)
             feitas.add("habitos_refeicoes")
+        if "rotina_abc" not in feitas:  # grade de treino ABC (personal), 3x/semana + corrida avulsa
+            from app import vida
+            vida.semear_rotina(conn)
+            feitas.add("rotina_abc")
         db.put_setting(conn, "migracoes", sorted(feitas))
         bank.ignore_subscription_charges(conn)  # de novo, com a lista já atualizada
         # valor fixo antigo do PicPay (limite usado, não a fatura)

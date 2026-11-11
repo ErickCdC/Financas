@@ -70,6 +70,35 @@ class Treinos(unittest.TestCase):
             got = [x for x in vida.avisos(conn, at("2026-11-14T18:05:00"), RULES, notify.due) if x[0].startswith("treino")]
             self.assertEqual(got[0][1], "Hoje é dia de treinar")
 
+    def test_rotina_abc_checkin_and_progressao(self):
+        with db.connect() as conn:
+            vida.semear_rotina(conn)
+            self.assertEqual(vida.proximo_dia(conn), "A")  # ninguém treinou ainda: começa no A
+            ex_a = vida.rotina(conn)["A"][0]["exercicio"]
+            vida.act_treino(conn, {"tipo": "Musculação", "dia": "A",
+                                   "series": [{"exercicio": ex_a, "carga": 40, "reps": "10"}]})
+            self.assertEqual(vida.proximo_dia(conn), "B")  # roda pro próximo dia da grade
+            r = vida.rotina(conn)
+            self.assertEqual(r["A"][0]["ultimo"]["carga"], 40)
+            self.assertIsNone(r["B"][0]["ultimo"])  # ainda não fez nenhum do dia B
+            hist = vida.progresso_exercicio(conn, ex_a)
+            self.assertEqual([h["carga"] for h in hist], [40])
+            vida.act_treino(conn, {"tipo": "Corrida"})  # treino fora da grade não muda a rotação
+            self.assertEqual(vida.proximo_dia(conn), "B")
+            # resumo() expõe tudo isso pra tela
+            s = vida.resumo(conn)["saude"]
+            self.assertEqual(s["proximo_dia"], "B")
+            self.assertIn("A", s["rotina"])
+
+    def test_peso_reminder_weekly(self):
+        with db.connect() as conn:
+            got = [x for x in vida.avisos(conn, at("2026-11-15T19:05:00"), RULES, notify.due)  # domingo
+                   if x[0].startswith("peso")]
+            self.assertEqual(got[0][1], "Hora de se pesar")
+            vida.act_avaliacao(conn, {"date": "2026-11-12", "valores": {"peso": 62}})
+            got = [x for x in vida.avisos(conn, at("2026-11-15T19:05:00"), RULES, notify.due) if x[0].startswith("peso")]
+            self.assertEqual(got, [])  # pesou essa semana: sem aviso
+
 
 class Corpo(unittest.TestCase):
     def setUp(self):

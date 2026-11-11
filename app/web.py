@@ -234,6 +234,8 @@ POST_ROUTES = {
     "/api/push/test": lambda c, b: notify.test(c),
     # Saúde e Agenda
     "/api/treinos": vida.act_treino,
+    "/api/rotina": vida.act_rotina,
+    "/api/progresso": lambda c, b: {"ok": True, "historico": vida.progresso_exercicio(c, V.text(80)(b.get("exercicio")))},
     "/api/avaliacoes": vida.act_avaliacao,
     "/api/habitos": vida.act_habito,
     "/api/habito_dia": vida.act_habito_dia,

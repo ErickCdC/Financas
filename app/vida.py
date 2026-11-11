@@ -110,6 +110,7 @@ def act_treino(conn, body):
     if body.get("delete"):
         tid = V.posint(1, 10**12)(body.get("id"))
         row = conn.execute("SELECT arquivo_id FROM treinos WHERE id=?", (tid,)).fetchone()
+        conn.execute("DELETE FROM treino_series WHERE treino_id=?", (tid,))
         conn.execute("DELETE FROM treinos WHERE id=?", (tid,))
         _apaga_arquivo_solto(conn, row and row["arquivo_id"])
         return {"ok": True}
@@ -118,11 +119,70 @@ def act_treino(conn, body):
         r = _crud(conn, "treinos", data.TREINO_SPEC, body)
         if old and "arquivo_id" in body and old["arquivo_id"] != body.get("arquivo_id"):
             _apaga_arquivo_solto(conn, old["arquivo_id"])
+        if "series" in body:
+            conn.execute("DELETE FROM treino_series WHERE treino_id=?", (r["id"],))
+            for i, s in enumerate(V.series_list(body.get("series"))):
+                conn.execute("INSERT INTO treino_series(treino_id, ordem, exercicio, carga, reps) VALUES(?,?,?,?,?)",
+                             (r["id"], i, s["exercicio"], s["carga"], s["reps"]))
         return r
+    series = V.series_list(body.get("series"))
     body = {"date": C.today().isoformat(), **body}
-    r = _crud(conn, "treinos", data.TREINO_SPEC, body, optional=("foco", "minutos", "nota", "arquivo_id"))
+    r = _crud(conn, "treinos", data.TREINO_SPEC, body, optional=("foco", "minutos", "nota", "arquivo_id", "dia"))
     conn.execute("UPDATE treinos SET criado=? WHERE id=?", (_stamp(), r["id"]))
+    conn.execute("DELETE FROM treino_series WHERE treino_id=?", (r["id"],))
+    for i, s in enumerate(series):
+        conn.execute("INSERT INTO treino_series(treino_id, ordem, exercicio, carga, reps) VALUES(?,?,?,?,?)",
+                     (r["id"], i, s["exercicio"], s["carga"], s["reps"]))
     return r
+
+
+DIAS_ROTINA = ("A", "B", "C")
+
+
+def act_rotina(conn, body):
+    """Grade de treino ABC (um exercício por linha). CRUD normal."""
+    if not body.get("delete") and not body.get("id"):
+        n = conn.execute("SELECT COALESCE(MAX(ordem), -1) FROM rotina WHERE dia=?", (body.get("dia"),)).fetchone()[0]
+        body = {**body, "ordem": n + 1}
+    return _crud(conn, "rotina", data.ROTINA_SPEC, body, optional=("series", "reps", "ordem"))
+
+
+def rotina(conn):
+    """Grade agrupada por dia, com o último desempenho (carga/reps) de cada exercício."""
+    ex = db.rows(conn, "SELECT * FROM rotina ORDER BY dia, ordem, id")
+    ultimos = {}
+    for r in conn.execute("SELECT s.exercicio, s.carga, s.reps, t.date FROM treino_series s "
+                          "JOIN treinos t ON t.id = s.treino_id ORDER BY t.date, t.id"):
+        ultimos[r["exercicio"]] = {"carga": r["carga"], "reps": r["reps"], "date": r["date"]}
+    out = {d: [] for d in DIAS_ROTINA}
+    for r in ex:
+        out.setdefault(r["dia"], []).append({**r, "ultimo": ultimos.get(r["exercicio"])})
+    return out
+
+
+def proximo_dia(conn):
+    """Qual dia (A/B/C) vem a seguir na rotação, olhando o último treino que seguiu a grade."""
+    if not conn.execute("SELECT 1 FROM rotina LIMIT 1").fetchone():
+        return None
+    r = conn.execute("SELECT dia FROM treinos WHERE dia IS NOT NULL ORDER BY date DESC, id DESC LIMIT 1").fetchone()
+    if not r:
+        return DIAS_ROTINA[0]
+    i = DIAS_ROTINA.index(r["dia"]) if r["dia"] in DIAS_ROTINA else -1
+    return DIAS_ROTINA[(i + 1) % len(DIAS_ROTINA)]
+
+
+def progresso_exercicio(conn, exercicio):
+    """Histórico de carga/reps de um exercício, mais antigo primeiro (para gráfico)."""
+    return db.rows(conn, "SELECT t.date, s.carga, s.reps FROM treino_series s JOIN treinos t ON t.id = s.treino_id "
+                        "WHERE s.exercicio=? ORDER BY t.date, t.id", (exercicio,))
+
+
+def semear_rotina(conn):
+    from . import seed
+    if not conn.execute("SELECT 1 FROM rotina LIMIT 1").fetchone():
+        for i, (dia, exercicio, series, reps) in enumerate(seed.ROTINA_PADRAO):
+            conn.execute("INSERT INTO rotina(dia, ordem, exercicio, series, reps) VALUES(?,?,?,?,?)",
+                         (dia, i, exercicio, series, reps))
 
 
 def act_avaliacao(conn, body):
@@ -242,6 +302,7 @@ def _avisos(row, padrao):
 
 
 def saude(conn, cfg, t):
+    from . import seed
     meta = int((cfg.get("saude") or {}).get("meta_semana") or 4)
     ini, fim = semana(t)
     dias_treino = {}
@@ -267,6 +328,11 @@ def saude(conn, cfg, t):
     treinos = db.rows(conn, "SELECT t.*, a.mime AS arquivo_mime FROM treinos t LEFT JOIN arquivos a ON a.id = t.arquivo_id "
                             "ORDER BY t.date DESC, t.id DESC LIMIT 120")
     ultimo_tipo = treinos[0]["tipo"] if treinos else TIPOS_TREINO[0]
+    series_por_treino = {}
+    for r in conn.execute("SELECT * FROM treino_series ORDER BY treino_id, ordem"):
+        series_por_treino.setdefault(r["treino_id"], []).append(dict(r))
+    for tr in treinos:
+        tr["series"] = series_por_treino.get(tr["id"], [])
     return {
         "meta_semana": meta,
         "semana": {"inicio": ini.isoformat(), "fim": fim.isoformat(), "dias": week, "feitos": feitos,
@@ -281,6 +347,9 @@ def saude(conn, cfg, t):
         "treinos": treinos,
         "corpo": corpo(conn),
         "habitos": habitos(conn, t),
+        "rotina": rotina(conn),
+        "proximo_dia": proximo_dia(conn),
+        "foco_dia": seed.FOCO_DIA,
     }
 
 
@@ -399,9 +468,9 @@ def avisos(conn, now, rules, due):
             hora = n["quando"][11:16] if len(n["quando"]) > 10 else ""
             if no_horario and (k == 0 or k in (n["avisos"] if n["avisos"] is not None else padrao)):
                 titulo = f"{'Hoje' if k == 0 else 'Amanhã' if k == 1 else f'Em {k} dias'}: {n['titulo']}"
-                corpo = " · ".join(x for x in (n["pasta"], f"{d.strftime('%d/%m')}{' às ' + hora if hora else ''}",
+                texto = " · ".join(x for x in (n["pasta"], f"{d.strftime('%d/%m')}{' às ' + hora if hora else ''}",
                                                 (n["texto"] or "").strip()[:80]) if x)
-                out.append((f"nota:{n['id']}:{k}:{n['quando']}", titulo, corpo, "/#lembretes", []))
+                out.append((f"nota:{n['id']}:{k}:{n['quando']}", titulo, texto, "/#lembretes", []))
             if hora:  # perto da hora marcada
                 at = datetime.fromisoformat(n["quando"]).replace(tzinfo=now.tzinfo)
                 if at - timedelta(minutes=90) <= now <= at + timedelta(minutes=10):
@@ -415,13 +484,13 @@ def avisos(conn, now, rules, due):
                 if len(tar) == 1:
                     x = tar[0]
                     titulo = f"Tarefa {'atrasada' if x in atras else 'para hoje' if x in hoje else 'para amanhã'}: {x['titulo']}"
-                    corpo = x["pasta"] + (f" · {x['nota'][:80]}" if x["nota"] else "")
+                    texto = x["pasta"] + (f" · {x['nota'][:80]}" if x["nota"] else "")
                 else:
                     titulo = f"{len(tar)} tarefas para resolver"
                     partes = [f"{len(atras)} atrasada(s)" if atras else "", f"{len(hoje)} para hoje" if hoje else "",
                               f"{len(tar) - len(atras) - len(hoje)} para amanhã" if len(tar) > len(atras) + len(hoje) else ""]
-                    corpo = " · ".join(p for p in partes if p) + ": " + ", ".join(x["titulo"] for x in tar[:3])
-                out.append((f"tarefas:{t}", titulo, corpo, "/#tarefas", []))
+                    texto = " · ".join(p for p in partes if p) + ": " + ", ".join(x["titulo"] for x in tar[:3])
+                out.append((f"tarefas:{t}", titulo, texto, "/#tarefas", []))
             for f in ag["facul"]:
                 if f["feito"]:
                     continue
@@ -436,22 +505,30 @@ def avisos(conn, now, rules, due):
     if r.get("on", True) and due(now, r.get("time", "18:00")):
         s = saude(conn, cfg, t)
         w = s["semana"]
+        dia_txt = f" (dia {s['proximo_dia']} — {s['foco_dia'].get(s['proximo_dia'], '')})" if s.get("proximo_dia") else ""
         if not w["hoje"]:
             if w["faltam"] and w["faltam"] >= w["restam_dias"]:
                 out.append((f"treino:{t}", "Hoje é dia de treinar",
-                            f"Faltam {w['faltam']} treino(s) para a meta de {s['meta_semana']} e restam {w['restam_dias']} dia(s) na semana.",
+                            f"Faltam {w['faltam']} treino(s) para a meta de {s['meta_semana']} e restam {w['restam_dias']} dia(s) na semana{dia_txt}.",
                             "/#treino", []))
             elif s["sem_treinar"] is not None and s["sem_treinar"] >= 3 and w["faltam"]:
                 out.append((f"treino:{t}", f"{s['sem_treinar']} dias sem treinar",
-                            f"Esta semana: {w['feitos']} de {s['meta_semana']}. Faz o check-in quando voltar.", "/#treino", []))
+                            f"Esta semana: {w['feitos']} de {s['meta_semana']}. Faz o check-in quando voltar{dia_txt}.", "/#treino", []))
     r = rules.get("habitos") or {}
     if r.get("on", True) and due(now, r.get("time", "21:00")):
         falta = [h for h in habitos(conn, t) if h["ativo"] and h["hoje"] < h["meta"]]
         if falta:
             def fmt(v):
                 return f"{v:g}".replace(".", ",")
-            corpo = " · ".join(f"{h['nome']} {fmt(h['hoje'])}/{fmt(h['meta'])}{' ' + h['unidade'] if h['unidade'] else ''}" for h in falta[:4])
-            out.append((f"habitos:{t}", "Hábitos de hoje", corpo, "/#habitos", []))
+            texto = " · ".join(f"{h['nome']} {fmt(h['hoje'])}/{fmt(h['meta'])}{' ' + h['unidade'] if h['unidade'] else ''}" for h in falta[:4])
+            out.append((f"habitos:{t}", "Hábitos de hoje", texto, "/#habitos", []))
+    r = rules.get("peso") or {}
+    if r.get("on", True) and t.weekday() == int(r.get("weekday", 6)) and due(now, r.get("time", "19:00")):
+        u = corpo(conn)["ultimo"].get("peso")
+        if not u or (t - date.fromisoformat(u["date"])).days >= 7:
+            out.append((f"peso:{t.isocalendar()[1]}", "Hora de se pesar",
+                        "Faz um tempo que você não atualiza o peso — anota no módulo Corpo pra acompanhar a evolução.",
+                        "/#corpo/novo", []))
     return out
 
 

@@ -161,6 +161,46 @@ function heatmap(s) {
   return `<div class="heat-wrap" data-weeks="${Math.ceil(s.heat.length / 7)}"><div class="heat-m">${months.join("")}</div><div class="heat">${cells}</div></div>
     <div class="legend heat-leg"><span>menos</span><i class="l0"></i><i class="l1"></i><i class="l2"></i><i class="l3"></i><span>mais</span></div>`;
 }
+const DIAS_ROTINA = ["A", "B", "C"];
+function rotinaCard() {
+  const s = S.m.saude, rot = s.rotina || {};
+  if (!DIAS_ROTINA.some(d => (rot[d] || []).length)) return "";
+  const dia = d => `<section class="card flush"><div class="card-head pad"><h3>Dia ${d} · ${esc(s.foco_dia[d] || "")}</h3>
+      <button type="button" class="btn sm ghost" data-act="addex" data-dia="${d}">${icon("plus")}</button></div>
+    <div class="list">${(rot[d] || []).map(ex => `<button type="button" class="item" data-act="exdet" data-id="${ex.id}">
+      <span class="body"><span class="t">${esc(ex.exercicio)}</span><span class="sub">${ex.series ? `${ex.series}x${esc(ex.reps || "")}` : ""}</span></span>
+      ${ex.ultimo ? `<span class="amt num">${fmtN(ex.ultimo.carga)} kg</span>` : `<span class="sub muted">sem registro</span>`}
+    </button>`).join("") || emptyBox("dumbbell", "Nenhum exercício aqui ainda.")}</div></section>`;
+  return `<h2 class="sec">Minha rotina</h2><div class="grid rotina">${DIAS_ROTINA.map(dia).join("")}</div>`;
+}
+function checkinSheet(d) {
+  const s = S.m.saude, lista = (s.rotina || {})[d] || [];
+  if (!lista.length) { A._checkinRapido(); return; }
+  const fields = [
+    { name: "_t", type: "section", label: `Dia ${d} — ${s.foco_dia[d] || ""}` },
+    ...lista.map(ex => ({ name: "ex_" + ex.id, label: `${ex.exercicio}${ex.series ? ` (${ex.series}x${ex.reps || ""})` : ""} — kg`,
+                          type: "decimal", placeholder: ex.ultimo ? `últ. ${fmtN(ex.ultimo.carga)}` : "" })),
+    { name: "nota", label: "Observação", type: "textarea", rows: 2, full: true },
+  ];
+  openSheet({ title: `Treinei hoje`, fields, pairs: true, reload: reloadM,
+    onSave: async v => {
+      const series = lista.filter(ex => v["ex_" + ex.id] != null && v["ex_" + ex.id] !== "")
+        .map(ex => ({ exercicio: ex.exercicio, carga: v["ex_" + ex.id], reps: ex.reps }));
+      await api("/api/treinos", { tipo: "Musculação", dia: d, foco: s.foco_dia[d], nota: v.nota, series });
+      return `Treino dia ${d} registrado`;
+    } });
+}
+function exercicioSheet(dia, ex) {
+  openSheet({ title: ex ? "Exercício" : `Novo exercício (dia ${dia})`, reload: reloadM,
+    fields: [
+      { name: "exercicio", label: "Nome", required: true, full: true },
+      { name: "series", label: "Séries", type: "number", min: 1, max: 20 },
+      { name: "reps", label: "Repetições", placeholder: "Ex.: 8-12" },
+    ],
+    values: ex || {},
+    onSave: v => api("/api/rotina", { ...(ex ? { id: ex.id } : { dia }), exercicio: v.exercicio, series: v.series, reps: v.reps }),
+    onDelete: ex ? () => api("/api/rotina", { id: ex.id, delete: true }) : null });
+}
 VIEWS.treino = () => {
   const s = S.m.saude, w = s.semana, t = S.m.hoje;
   const byMonth = {};
@@ -179,9 +219,12 @@ VIEWS.treino = () => {
         <div class="big num">${w.feitos} <small>de ${s.meta_semana}</small></div>
         ${weekDots(w, t)}
         <div class="meta">${w.faltam ? `Faltam ${w.faltam} · restam ${w.restam_dias} ${w.restam_dias === 1 ? "dia" : "dias"} até domingo` : "Meta da semana batida!"}</div>
+        ${s.proximo_dia ? `<div class="meta">Próximo: <b>dia ${s.proximo_dia}</b> — ${esc(s.foco_dia[s.proximo_dia] || "")}</div>
+          <div class="chips-pick dia-pick">${DIAS_ROTINA.map(d => `<button type="button" class="${d === s.proximo_dia ? "on" : ""}" data-act="checkindia" data-dia="${d}">${d}</button>`).join("")}</div>` : ""}
         <div class="hero-actions">${w.hoje ? `<button type="button" class="btn light sm" data-act="treinodet">${icon("check")}Treinou hoje</button><button type="button" class="btn glass sm" data-act="checkin">Mais um</button>`
           : `<button type="button" class="btn light" data-act="checkin">${icon("dumbbell")}Treinei hoje</button>`}<button type="button" class="btn glass sm" data-act="addtreino">Outro dia</button></div>
       </section>
+      ${rotinaCard()}
       <div class="grid three">
         ${stat("Sequência", `${s.sequencia}`, s.sequencia === 1 ? "semana na meta" : "semanas na meta", "flame")}
         ${stat("Este mês", `${s.mes}`, s.mes === 1 ? "dia de treino" : "dias de treino")}
@@ -492,8 +535,13 @@ Object.assign(A, {
     const dest = "#" + (S.tabs[m.id] || m.tabs[0][0]);
     if (location.hash === dest) { scrollTo(0, 0); render(); } else location.hash = dest;
   },
-  checkin: async () => {
+  checkin: () => {
     if (!S.m) return;
+    const d = S.m.saude.proximo_dia;
+    if (d && (S.m.saude.rotina[d] || []).length) { checkinSheet(d); return; }
+    A._checkinRapido();
+  },
+  _checkinRapido: async () => {
     buzz();
     try {
       await api("/api/treinos", { tipo: S.m.saude.ultimo_tipo || "Musculação" });
@@ -501,6 +549,29 @@ Object.assign(A, {
       const s = S.m.saude, w = s.semana;
       toast(w.faltam ? `Check-in feito · ${w.feitos} de ${s.meta_semana} na semana` : "Check-in feito · meta da semana batida!");
     } catch (e) { toast(e.message); }
+  },
+  checkindia: el => checkinSheet(el.dataset.dia),
+  addex: el => exercicioSheet(el.dataset.dia, null),
+  exdet: async el => {
+    const dia = DIAS_ROTINA.find(d => (S.m.saude.rotina[d] || []).some(x => String(x.id) === el.dataset.id));
+    const ex = (S.m.saude.rotina[dia] || []).find(x => String(x.id) === el.dataset.id);
+    if (!ex) return;
+    let hist = [];
+    try { hist = (await api("/api/progresso", { exercicio: ex.exercicio })).historico; } catch (e) { toast(e.message); }
+    const pts = hist.filter(h => h.carga != null).map(h => [h.date, h.carga]);
+    openDetail({ eyebrow: `Dia ${dia}`, title: ex.exercicio, sub: ex.series ? `${ex.series} séries x ${ex.reps || "?"}` : "",
+      body: pts.length ? `${lineChart(pts, "kg")}<div class="card">${pts.slice().reverse().map(p => `<div class="kv"><span class="muted">${dmy(p[0])}</span><span class="num">${fmtN(p[1])} kg</span></div>`).join("")}</div>`
+        : emptyBox("dumbbell", "Ainda sem carga registrada neste exercício."),
+      actions: `<button type="button" class="btn secondary" data-act="exeditar" data-id="${ex.id}">Editar</button><button type="button" class="btn danger" data-act="exexcluir" data-id="${ex.id}">Excluir</button>` });
+  },
+  exeditar: el => {
+    const dia = DIAS_ROTINA.find(d => (S.m.saude.rotina[d] || []).some(x => String(x.id) === el.dataset.id));
+    const ex = (S.m.saude.rotina[dia] || []).find(x => String(x.id) === el.dataset.id);
+    if (ex) exercicioSheet(dia, ex);
+  },
+  exexcluir: async el => {
+    if (!(await confirmSheet("Excluir este exercício da rotina?", "Excluir"))) return;
+    try { await api("/api/rotina", { id: el.dataset.id, delete: true }); await reloadM(); toast("Excluído"); } catch (e) { toast(e.message); }
   },
   treinodet: () => { const x = S.m.saude.treinos.find(t => t.date === S.m.hoje); if (x) treinoSheet(x); },
   addtreino: () => treinoSheet(null),

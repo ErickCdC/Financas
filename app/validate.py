@@ -141,6 +141,7 @@ def notif(v):
         "agenda": {"on": boolean, "time": hhmm},
         "treino": {"on": boolean, "time": hhmm},
         "habitos": {"on": boolean, "time": hhmm},
+        "peso": {"on": boolean, "weekday": posint(0, 6), "time": hhmm},
     }
     out_rules = {}
     for name, fields in spec.items():
@@ -276,6 +277,22 @@ def agenda(v):
         out["cursos"] = text_list(60, 0, 6)(v["cursos"])
     if "avisos" in v:
         out["avisos"] = dias_antes(v["avisos"])
+    return out
+
+
+def series_list(v):
+    """Séries feitas num treino: [{exercicio, carga, reps}], até 20 itens."""
+    if v in (None, ""):
+        return []
+    if not isinstance(v, list) or len(v) > 20:
+        raise ValueError("séries inválidas (até 20)")
+    out = []
+    for x in v:
+        if not isinstance(x, dict) or not str(x.get("exercicio") or "").strip():
+            continue
+        out.append({"exercicio": text(80)(x["exercicio"]),
+                    "carga": opt(num)(x.get("carga")),
+                    "reps": text(20, False)(x.get("reps"))})
     return out
 
 

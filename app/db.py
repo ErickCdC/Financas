@@ -53,6 +53,14 @@ CREATE TABLE IF NOT EXISTS treinos(
   id INTEGER PRIMARY KEY AUTOINCREMENT, date TEXT NOT NULL, tipo TEXT NOT NULL, foco TEXT, minutos INTEGER,
   nota TEXT, arquivo_id INTEGER, criado TEXT);
 CREATE INDEX IF NOT EXISTS treinos_date ON treinos(date);
+-- grade de treino ABC (o que fazer em cada dia) e o que foi feito de fato em cada exercício
+CREATE TABLE IF NOT EXISTS rotina(
+  id INTEGER PRIMARY KEY AUTOINCREMENT, dia TEXT NOT NULL, ordem INTEGER NOT NULL DEFAULT 0,
+  exercicio TEXT NOT NULL, series INTEGER, reps TEXT);
+CREATE TABLE IF NOT EXISTS treino_series(
+  id INTEGER PRIMARY KEY AUTOINCREMENT, treino_id INTEGER NOT NULL, ordem INTEGER NOT NULL DEFAULT 0,
+  exercicio TEXT NOT NULL, carga REAL, reps TEXT);
+CREATE INDEX IF NOT EXISTS treino_series_treino ON treino_series(treino_id);
 CREATE TABLE IF NOT EXISTS avaliacoes(
   id INTEGER PRIMARY KEY AUTOINCREMENT, date TEXT NOT NULL, tipo TEXT NOT NULL, arquivo_id INTEGER, nota TEXT);
 CREATE TABLE IF NOT EXISTS avaliacao_valores(
@@ -124,6 +132,9 @@ def migrate(conn):
     ccols = {r[1] for r in conn.execute("PRAGMA table_info(cobrancas)")}
     if "mes_seguinte" not in ccols:
         conn.execute("ALTER TABLE cobrancas ADD COLUMN mes_seguinte INTEGER NOT NULL DEFAULT 0")
+    tcols = {r[1] for r in conn.execute("PRAGMA table_info(treinos)")}
+    if "dia" not in tcols:  # letra da rotina (A/B/C) quando o treino segue a grade
+        conn.execute("ALTER TABLE treinos ADD COLUMN dia TEXT")
 
 
 def is_empty(conn):

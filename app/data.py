@@ -17,7 +17,9 @@ TABLES = {
     "cobrancas": ["id", "nome", "pessoa", "valor", "conta_id", "dia_ini", "dia_fim", "match", "nota", "ativo", "mes_seguinte"],
     "cobranca_mes": ["cobranca_id", "month", "cobrado", "recebido", "valor"],
     "arquivos": ["id", "nome", "mime", "tamanho", "hash", "criado"],  # o conteúdo vai à parte (arquivos/<hash>)
-    "treinos": ["id", "date", "tipo", "foco", "minutos", "nota", "arquivo_id", "criado"],
+    "treinos": ["id", "date", "tipo", "foco", "minutos", "nota", "arquivo_id", "criado", "dia"],
+    "rotina": ["id", "dia", "ordem", "exercicio", "series", "reps"],
+    "treino_series": ["id", "treino_id", "ordem", "exercicio", "carga", "reps"],
     "avaliacoes": ["id", "date", "tipo", "arquivo_id", "nota"],
     "avaliacao_valores": ["avaliacao_id", "campo", "valor"],
     "habitos": ["id", "nome", "unidade", "meta", "passo", "ordem", "ativo"],
@@ -56,7 +58,9 @@ COBRANCA_SPEC = {"nome": V.text(60), "pessoa": V.text(60), "valor": V.opt(V.num)
                  "dia_ini": V.posint(1, 31), "dia_fim": V.posint(1, 31), "match": V.text(120, False),
                  "nota": V.text(160, False), "ativo": V.boolint, "mes_seguinte": V.boolint}
 TREINO_SPEC = {"date": V.iso_date, "tipo": V.text(30), "foco": V.text(80, False), "minutos": V.opt(V.posint(1, 600)),
-               "nota": V.text(300, False), "arquivo_id": V.opt(V.posint(1, 10**9))}
+               "nota": V.text(300, False), "arquivo_id": V.opt(V.posint(1, 10**9)), "dia": V.opt(V.choice("A", "B", "C"))}
+ROTINA_SPEC = {"dia": V.choice("A", "B", "C"), "exercicio": V.text(80), "series": V.opt(V.posint(1, 20)),
+               "reps": V.text(20, False), "ordem": V.posint(0, 100)}
 HABITO_SPEC = {"nome": V.text(40), "unidade": V.text(15, False), "meta": V.num, "passo": V.num,
                "ordem": V.posint(0, 100), "ativo": V.boolint}
 NOTA_SPEC = {"pasta": V.text(30), "titulo": V.text(120), "texto": V.text(5000, False), "quando": V.opt(V.quando),
@@ -112,6 +116,9 @@ def restore(conn, body):
         "arquivos": {"id": V.posint(1, 10**9), "nome": V.text(120), "mime": V.choice(*MIMES), "tamanho": V.posint(0, 10**8),
                      "hash": V.hexhash, "criado": V.text(20)},
         "treinos": {"id": V.posint(1, 10**9), **TREINO_SPEC, "criado": V.text(20, False)},
+        "rotina": {"id": V.posint(1, 10**9), **ROTINA_SPEC},
+        "treino_series": {"id": V.posint(1, 10**9), "treino_id": V.posint(1, 10**9), "ordem": V.posint(0, 100),
+                          "exercicio": V.text(80), "carga": V.opt(V.num), "reps": V.text(20, False)},
         "avaliacoes": {"id": V.posint(1, 10**9), "date": V.iso_date, "tipo": V.choice("medidas", "bio"),
                        "arquivo_id": V.opt(V.posint(1, 10**9)), "nota": V.text(300, False)},
         "avaliacao_valores": {"avaliacao_id": V.posint(1, 10**9), "campo": V.text(30), "valor": V.num},

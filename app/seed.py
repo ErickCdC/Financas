@@ -58,6 +58,7 @@ DEFAULT_SETTINGS = {
             "agenda": {"on": True, "time": "08:00"},    # lembretes, tarefas e provas do dia
             "treino": {"on": True, "time": "18:00"},    # quando precisa treinar hoje para bater a meta
             "habitos": {"on": True, "time": "21:00"},   # hábitos que ainda não bateram a meta do dia
+            "peso": {"on": True, "weekday": 6, "time": "19:00"},  # domingo: pede pra pesar e atualizar o Corpo
         },
     },
     # Saúde: treinos na semana (dias com treino) para bater a meta
@@ -81,6 +82,27 @@ HABITOS_REFEICOES = [  # check de 1 toque (meta=1, passo=1), seguindo o cronogra
     ("Pós-treino", "", 1, 1),
     ("Jantar", "", 1, 1),
     ("Ceia", "", 1, 1),
+]
+
+FOCO_DIA = {"A": "Peito, ombro e tríceps", "B": "Costas e bíceps", "C": "Pernas"}
+
+ROTINA_PADRAO = [  # dia, exercício, séries, reps — grade ABC de hipertrofia, 3x/semana + corrida avulsa
+    ("A", "Supino reto (barra ou halteres)", 4, "8-12"),
+    ("A", "Supino inclinado (halteres)", 3, "10-12"),
+    ("A", "Desenvolvimento militar", 3, "8-12"),
+    ("A", "Elevação lateral", 3, "12-15"),
+    ("A", "Tríceps corda", 3, "10-15"),
+    ("A", "Tríceps testa", 3, "10-12"),
+    ("B", "Puxada na frente", 4, "8-12"),
+    ("B", "Remada curvada (barra)", 3, "8-12"),
+    ("B", "Remada unilateral (halter)", 3, "10-12"),
+    ("B", "Rosca direta (barra)", 3, "8-12"),
+    ("B", "Rosca alternada (halteres)", 3, "10-12"),
+    ("C", "Agachamento livre", 4, "6-10"),
+    ("C", "Leg press", 3, "10-12"),
+    ("C", "Cadeira extensora", 3, "12-15"),
+    ("C", "Mesa flexora", 3, "12-15"),
+    ("C", "Panturrilha em pé", 4, "12-15"),
 ]
 
 RECURRING = [  # nome, valor, cartão (None = paga direto da conta)

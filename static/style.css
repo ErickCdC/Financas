@@ -156,7 +156,9 @@ h2.sec a, h2.sec button { text-transform: none; letter-spacing: 0; font-size: 13
   .grid.dash { grid-template-columns: 1.35fr 1fr; align-items: start; }
   .grid.four { grid-template-columns: repeat(4, 1fr); }
   .grid.cols2 { grid-template-columns: 1fr 1fr; align-items: start; }
+  .grid.rotina { grid-template-columns: repeat(3, 1fr); align-items: start; }
 }
+.dia-pick { margin-top: 8px; }
 .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow); }
 .card.flush { padding: 0; overflow: hidden; }
 .card h3 { margin: 0 0 4px; font-size: 15px; font-weight: 650; }
