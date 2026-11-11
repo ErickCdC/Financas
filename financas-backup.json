@@ -184,16 +184,16 @@
   "caixa_banco": 193.35,
   "caixa_data": "2026-11-11",
   "cartao_usado": {
-   "Nubank": 206.27,
+   "PicPay": 1382.0,
    "Mercado Pago": 1265.69,
-   "PicPay": 1382.0
+   "Nubank": 206.27
   },
   "ciclo_info": {
-   "Nubank": {
-    "conta": "27be5f3e-7a39-4e21-b734-1d4439c35288",
-    "fechou": "2026-10-25",
-    "fecha_antes": 7,
-    "compras": 27.94
+   "PicPay": {
+    "conta": "6d7341ae-373e-4d3b-b53b-f28126fded99",
+    "fechou": "2026-10-29",
+    "fecha_antes": 9,
+    "compras": 347.51
    },
    "Mercado Pago": {
     "conta": "8b778a91-1057-4662-917f-e758a49b7c3b",
@@ -201,11 +201,11 @@
     "fecha_antes": 6,
     "compras": 88.98
    },
-   "PicPay": {
-    "conta": "6d7341ae-373e-4d3b-b53b-f28126fded99",
-    "fechou": "2026-10-29",
-    "fecha_antes": 9,
-    "compras": 347.51
+   "Nubank": {
+    "conta": "27be5f3e-7a39-4e21-b734-1d4439c35288",
+    "fechou": "2026-10-25",
+    "fecha_antes": 7,
+    "compras": 27.94
    }
   },
   "entradas": {
@@ -222,10 +222,10 @@
    }
   },
   "eventos_pendentes": [],
-  "last_auto_sync": "2026-11-11T16:57",
+  "last_auto_sync": "2026-11-11T17:24",
   "last_force": "2026-11-11T16:58",
-  "last_sync": "2026-11-11 16:57",
-  "last_tick": "2026-11-11 16:57",
+  "last_sync": "2026-11-11 17:24",
+  "last_tick": "2026-11-11 17:24",
   "metas_eta": {
    "1": "2026-11"
   },
@@ -243,16 +243,16 @@
   ],
   "sync_detalhe": [
    {
-    "banco": "Nubank",
+    "banco": "PicPay",
     "tipo": "conta",
     "lidas": 0,
     "no_app": 0
    },
    {
-    "banco": "Nubank",
+    "banco": "PicPay",
     "tipo": "cartão",
-    "lidas": 18,
-    "no_app": 16
+    "lidas": 33,
+    "no_app": 32
    },
    {
     "banco": "Mercado Pago",
@@ -267,16 +267,16 @@
     "no_app": 5
    },
    {
-    "banco": "PicPay",
+    "banco": "Nubank",
     "tipo": "conta",
     "lidas": 0,
     "no_app": 0
    },
    {
-    "banco": "PicPay",
+    "banco": "Nubank",
     "tipo": "cartão",
-    "lidas": 33,
-    "no_app": 32
+    "lidas": 18,
+    "no_app": 16
    }
   ]
  },
