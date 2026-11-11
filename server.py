@@ -86,6 +86,10 @@ def main():
             from app import vida
             vida.semear_habitos(conn)
             feitas.add("habitos_padrao")
+        if "habitos_refeicoes" not in feitas:  # cronograma de alimentação virou check-in de refeição
+            from app import vida
+            vida.semear_refeicoes(conn)
+            feitas.add("habitos_refeicoes")
         db.put_setting(conn, "migracoes", sorted(feitas))
         bank.ignore_subscription_charges(conn)  # de novo, com a lista já atualizada
         # valor fixo antigo do PicPay (limite usado, não a fatura)

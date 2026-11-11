@@ -73,6 +73,16 @@ HABITOS_PADRAO = [  # nome, unidade, meta por dia, passo do botão +
     ("Sono", "h", 7, 0.5),
 ]
 
+HABITOS_REFEICOES = [  # check de 1 toque (meta=1, passo=1), seguindo o cronograma de alimentação
+    ("Café da manhã", "", 1, 1),
+    ("Lanche da manhã", "", 1, 1),
+    ("Almoço", "", 1, 1),
+    ("Pré-treino", "", 1, 1),
+    ("Pós-treino", "", 1, 1),
+    ("Jantar", "", 1, 1),
+    ("Ceia", "", 1, 1),
+]
+
 RECURRING = [  # nome, valor, cartão (None = paga direto da conta)
     ("Aluguel", 850.00, None),
     ("Faculdade", 235.23, None),

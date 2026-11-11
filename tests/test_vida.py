@@ -146,6 +146,20 @@ class Habitos(unittest.TestCase):
             got = [x for x in vida.avisos(conn, at("2026-11-12T21:10:00"), RULES, notify.due) if x[0].startswith("habitos")]
             self.assertIn("Água 0/8 copos", got[0][2])
 
+    def test_semear_refeicoes_is_idempotent(self):
+        with db.connect() as conn:
+            vida.semear_refeicoes(conn)
+            nomes = [r[0] for r in conn.execute("SELECT nome FROM habitos ORDER BY ordem")]
+            self.assertEqual(nomes, ["Água", "Sono", "Café da manhã", "Lanche da manhã", "Almoço",
+                                      "Pré-treino", "Pós-treino", "Jantar", "Ceia"])
+            cafe = conn.execute("SELECT id, meta, passo FROM habitos WHERE nome='Café da manhã'").fetchone()
+            self.assertEqual((cafe[1], cafe[2]), (1, 1))  # check de 1 toque, igual Água/Sono
+            vida.act_habito_dia(conn, {"habito_id": cafe[0], "delta": 1})
+            vida.semear_refeicoes(conn)  # rodar de novo não duplica nem reseta o que já foi marcado
+            self.assertEqual(conn.execute("SELECT COUNT(*) FROM habitos WHERE nome='Café da manhã'").fetchone()[0], 1)
+            h = next(x for x in vida.resumo(conn)["saude"]["habitos"] if x["id"] == cafe[0])
+            self.assertEqual(h["hoje"], 1)
+
 
 class Agenda(unittest.TestCase):
     def setUp(self):

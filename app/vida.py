@@ -460,3 +460,13 @@ def semear_habitos(conn):
     if not conn.execute("SELECT 1 FROM habitos LIMIT 1").fetchone():
         for i, (nome, un, meta, passo) in enumerate(seed.HABITOS_PADRAO):
             conn.execute("INSERT INTO habitos(nome, unidade, meta, passo, ordem) VALUES(?,?,?,?,?)", (nome, un, meta, passo, i))
+
+
+def semear_refeicoes(conn):
+    """Acrescenta os hábitos de refeição do cronograma de alimentação, sem duplicar os que já existem."""
+    from . import seed
+    base = conn.execute("SELECT COALESCE(MAX(ordem), -1) FROM habitos").fetchone()[0] + 1
+    for i, (nome, un, meta, passo) in enumerate(seed.HABITOS_REFEICOES):
+        if not conn.execute("SELECT 1 FROM habitos WHERE nome=?", (nome,)).fetchone():
+            conn.execute("INSERT INTO habitos(nome, unidade, meta, passo, ordem) VALUES(?,?,?,?,?)",
+                         (nome, un, meta, passo, base + i))
