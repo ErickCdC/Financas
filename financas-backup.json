@@ -218,7 +218,7 @@
   "last_auto_sync": "2026-11-11T16:03",
   "last_force": "2026-11-11T15:11",
   "last_sync": "2026-11-11 15:11",
-  "last_tick": "2026-11-11 16:19",
+  "last_tick": "2026-11-11 16:20",
   "metas_eta": {
    "1": "2026-12"
   },
@@ -1777,6 +1777,16 @@
    "avaliacao_id": 4,
    "campo": "altura",
    "valor": 183.0
+  },
+  {
+   "avaliacao_id": 4,
+   "campo": "biceps_d",
+   "valor": 32.0
+  },
+  {
+   "avaliacao_id": 4,
+   "campo": "biceps_e",
+   "valor": 31.0
   }
  ],
  "habitos": [
