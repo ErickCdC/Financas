@@ -10,7 +10,7 @@
   "aumento_pct": 25.0,
   "aumento_from": "2027-01",
   "teto_semanal": 50.0,
-  "caixa": 193.35,
+  "caixa": 0.92,
   "caixa_ref": "2026-11",
   "salario_dia": 30,
   "salario_data": "2026-10-30",
@@ -173,11 +173,10 @@
   "banco_incidentes": [
    "PicPay - Transações de cartão de crédito não sendo retornada"
   ],
-  "caixa_banco": 193.35,
+  "caixa_banco": 0.92,
   "caixa_data": "2026-11-11",
   "cartao_usado": {
    "Nubank": 206.27,
-   "Mercado Pago": 1265.69,
    "PicPay": 1382.0
   },
   "ciclo_info": {
@@ -186,12 +185,6 @@
     "fechou": "2026-10-25",
     "fecha_antes": 7,
     "compras": 27.94
-   },
-   "Mercado Pago": {
-    "conta": "8b778a91-1057-4662-917f-e758a49b7c3b",
-    "fechou": "2026-10-29",
-    "fecha_antes": 6,
-    "compras": 88.98
    },
    "PicPay": {
     "conta": "6d7341ae-373e-4d3b-b53b-f28126fded99",
@@ -214,12 +207,12 @@
    }
   },
   "eventos_pendentes": [],
-  "last_auto_sync": "2026-11-11T14:42",
-  "last_force": "2026-11-11T13:49",
-  "last_sync": "2026-11-11 14:43",
-  "last_tick": "2026-11-11 15:08",
+  "last_auto_sync": "2026-11-11T15:09",
+  "last_force": "2026-11-11T15:11",
+  "last_sync": "2026-11-11 15:11",
+  "last_tick": "2026-11-11 15:09",
   "metas_eta": {
-   "1": "2026-11"
+   "1": "2026-12"
   },
   "migracoes": [
    "assinaturas_nov26",
@@ -245,18 +238,6 @@
     "tipo": "cartão",
     "lidas": 18,
     "no_app": 16
-   },
-   {
-    "banco": "Mercado Pago",
-    "tipo": "conta",
-    "lidas": 47,
-    "no_app": 8
-   },
-   {
-    "banco": "Mercado Pago",
-    "tipo": "cartão",
-    "lidas": 9,
-    "no_app": 5
    },
    {
     "banco": "PicPay",
@@ -1000,7 +981,7 @@
   },
   {
    "id": 33,
-   "date": "2026-11-05",
+   "date": "2026-11-04",
    "description": "Estorno de Uber - NuPay",
    "amount": -19.91,
    "category": "estornado",
@@ -1011,7 +992,7 @@
   },
   {
    "id": 34,
-   "date": "2026-11-05",
+   "date": "2026-11-04",
    "description": "Estorno de Uber - NuPay",
    "amount": -18.16,
    "category": "estornado",
@@ -1022,7 +1003,7 @@
   },
   {
    "id": 35,
-   "date": "2026-11-05",
+   "date": "2026-11-04",
    "description": "Estorno de Uber - NuPay",
    "amount": -11.84,
    "category": "estornado",
@@ -1044,7 +1025,7 @@
   },
   {
    "id": 37,
-   "date": "2026-10-30",
+   "date": "2026-10-29",
    "description": "Estorno de Uber - NuPay",
    "amount": -10.95,
    "category": "estornado",
@@ -1099,7 +1080,7 @@
   },
   {
    "id": 42,
-   "date": "2026-10-19",
+   "date": "2026-10-18",
    "description": "Estorno de Uber - NuPay",
    "amount": -8.8,
    "category": "estornado",
