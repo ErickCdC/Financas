@@ -119,6 +119,9 @@
      "on": true,
      "weekday": 6,
      "time": "19:00"
+    },
+    "sugestao": {
+     "on": true
     }
    }
   },
@@ -153,7 +156,12 @@
   },
   "metas_modo": "ordem",
   "saude": {
-   "meta_semana": 4
+   "meta_semana": 4,
+   "sugestao": {
+    "cada": 12,
+    "ultimo_n": 0,
+    "atual": null
+   }
   },
   "agenda": {
    "pastas": [
@@ -207,10 +215,10 @@
    }
   },
   "eventos_pendentes": [],
-  "last_auto_sync": "2026-11-11T15:09",
+  "last_auto_sync": "2026-11-11T16:03",
   "last_force": "2026-11-11T15:11",
   "last_sync": "2026-11-11 15:11",
-  "last_tick": "2026-11-11 15:09",
+  "last_tick": "2026-11-11 16:18",
   "metas_eta": {
    "1": "2026-12"
   },
@@ -981,7 +989,7 @@
   },
   {
    "id": 33,
-   "date": "2026-11-04",
+   "date": "2026-11-05",
    "description": "Estorno de Uber - NuPay",
    "amount": -19.91,
    "category": "estornado",
@@ -992,7 +1000,7 @@
   },
   {
    "id": 34,
-   "date": "2026-11-04",
+   "date": "2026-11-05",
    "description": "Estorno de Uber - NuPay",
    "amount": -18.16,
    "category": "estornado",
@@ -1003,7 +1011,7 @@
   },
   {
    "id": 35,
-   "date": "2026-11-04",
+   "date": "2026-11-05",
    "description": "Estorno de Uber - NuPay",
    "amount": -11.84,
    "category": "estornado",
@@ -1025,7 +1033,7 @@
   },
   {
    "id": 37,
-   "date": "2026-10-29",
+   "date": "2026-10-30",
    "description": "Estorno de Uber - NuPay",
    "amount": -10.95,
    "category": "estornado",
@@ -1080,7 +1088,7 @@
   },
   {
    "id": 42,
-   "date": "2026-10-18",
+   "date": "2026-10-19",
    "description": "Estorno de Uber - NuPay",
    "amount": -8.8,
    "category": "estornado",
@@ -1863,7 +1871,7 @@
   {
    "habito_id": 1,
    "date": "2026-11-11",
-   "valor": 700.0
+   "valor": 1000.0
   },
   {
    "habito_id": 2,
