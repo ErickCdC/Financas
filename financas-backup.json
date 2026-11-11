@@ -205,7 +205,7 @@
   "last_auto_sync": "2026-11-11T07:57",
   "last_force": "2026-11-11T07:58",
   "last_sync": "2026-11-11 07:58",
-  "last_tick": "2026-11-11 07:57",
+  "last_tick": "2026-11-11 08:00",
   "metas_eta": {
    "1": "2026-11"
   },
@@ -1300,7 +1300,7 @@
    "auth": "-LZCogkbAIUGPprhqKSGMw",
    "label": "Android · Chrome",
    "created": "2026-11-06 17:47",
-   "last_ok": "2026-11-10 21:01",
+   "last_ok": "2026-11-11 08:00",
    "fails": 0
   }
  ],
@@ -1430,6 +1430,12 @@
    "sent_at": "2026-11-10 21:01",
    "title": "Hábitos de hoje",
    "body": "Água 0/8 copos · Sono 0/7 h"
+  },
+  {
+   "key": "daily:2026-11-11",
+   "sent_at": "2026-11-11 08:00",
+   "title": "Lançou seus gastos de hoje?",
+   "body": "Nada lançado hoje. Restam R$ 25,40 na semana."
   }
  ],
  "cobrancas": [
