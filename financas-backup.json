@@ -212,7 +212,7 @@
   "last_auto_sync": "2026-11-11T14:42",
   "last_force": "2026-11-11T13:49",
   "last_sync": "2026-11-11 14:43",
-  "last_tick": "2026-11-11 14:48",
+  "last_tick": "2026-11-11 14:49",
   "metas_eta": {
    "1": "2026-11"
   },
@@ -1498,6 +1498,13 @@
    "tipo": "bio",
    "arquivo_id": null,
    "nota": null
+  },
+  {
+   "id": 2,
+   "date": "2025-09-02",
+   "tipo": "bio",
+   "arquivo_id": null,
+   "nota": null
   }
  ],
  "avaliacao_valores": [
@@ -1545,6 +1552,51 @@
    "avaliacao_id": 1,
    "campo": "idade_metabolica",
    "valor": 18.0
+  },
+  {
+   "avaliacao_id": 2,
+   "campo": "peso",
+   "valor": 63.3
+  },
+  {
+   "avaliacao_id": 2,
+   "campo": "gordura_pct",
+   "valor": 15.1
+  },
+  {
+   "avaliacao_id": 2,
+   "campo": "musculo_kg",
+   "valor": 50.2
+  },
+  {
+   "avaliacao_id": 2,
+   "campo": "massa_magra_kg",
+   "valor": 53.8
+  },
+  {
+   "avaliacao_id": 2,
+   "campo": "agua_pct",
+   "valor": 62.3
+  },
+  {
+   "avaliacao_id": 2,
+   "campo": "visceral",
+   "valor": 2.0
+  },
+  {
+   "avaliacao_id": 2,
+   "campo": "ossea_kg",
+   "valor": 3.6
+  },
+  {
+   "avaliacao_id": 2,
+   "campo": "tmb",
+   "valor": 1532.0
+  },
+  {
+   "avaliacao_id": 2,
+   "campo": "idade_metabolica",
+   "valor": 19.0
   }
  ],
  "habitos": [
