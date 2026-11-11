@@ -10,7 +10,7 @@
   "aumento_pct": 25.0,
   "aumento_from": "2027-01",
   "teto_semanal": 50.0,
-  "caixa": 0.92,
+  "caixa": 193.35,
   "caixa_ref": "2026-11",
   "salario_dia": 30,
   "salario_data": "2026-10-30",
@@ -181,11 +181,12 @@
   "banco_incidentes": [
    "PicPay - Transações de cartão de crédito não sendo retornada"
   ],
-  "caixa_banco": 0.92,
+  "caixa_banco": 193.35,
   "caixa_data": "2026-11-11",
   "cartao_usado": {
    "PicPay": 1382.0,
-   "Nubank": 206.27
+   "Nubank": 206.27,
+   "Mercado Pago": 1265.69
   },
   "ciclo_info": {
    "PicPay": {
@@ -199,6 +200,12 @@
     "fechou": "2026-10-25",
     "fecha_antes": 7,
     "compras": 27.94
+   },
+   "Mercado Pago": {
+    "conta": "8b778a91-1057-4662-917f-e758a49b7c3b",
+    "fechou": "2026-10-29",
+    "fecha_antes": 6,
+    "compras": 88.98
    }
   },
   "entradas": {
@@ -215,12 +222,12 @@
    }
   },
   "eventos_pendentes": [],
-  "last_auto_sync": "2026-11-11T18:45",
+  "last_auto_sync": "2026-11-11T19:12",
   "last_force": "2026-11-11T18:19",
-  "last_sync": "2026-11-11 18:46",
-  "last_tick": "2026-11-11 18:45",
+  "last_sync": "2026-11-11 19:14",
+  "last_tick": "2026-11-11 19:12",
   "metas_eta": {
-   "1": "2026-12"
+   "1": "2026-11"
   },
   "migracoes": [
    "assinaturas_nov26",
@@ -258,6 +265,18 @@
     "tipo": "cartão",
     "lidas": 18,
     "no_app": 16
+   },
+   {
+    "banco": "Mercado Pago",
+    "tipo": "conta",
+    "lidas": 47,
+    "no_app": 8
+   },
+   {
+    "banco": "Mercado Pago",
+    "tipo": "cartão",
+    "lidas": 9,
+    "no_app": 5
    }
   ]
  },
