@@ -197,8 +197,8 @@
    },
    "Nubank": {
     "conta": "27be5f3e-7a39-4e21-b734-1d4439c35288",
-    "fechou": "2026-10-25",
-    "fecha_antes": 7,
+    "fechou": null,
+    "fecha_antes": null,
     "compras": 27.94
    },
    "Mercado Pago": {
@@ -224,8 +224,8 @@
   "eventos_pendentes": [],
   "last_auto_sync": "2026-11-11T19:12",
   "last_force": "2026-11-11T18:19",
-  "last_sync": "2026-11-11 19:14",
-  "last_tick": "2026-11-11 19:12",
+  "last_sync": "2026-11-11 19:41",
+  "last_tick": "2026-11-11 19:39",
   "metas_eta": {
    "1": "2026-11"
   },
