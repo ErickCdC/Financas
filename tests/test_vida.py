@@ -90,6 +90,35 @@ class Treinos(unittest.TestCase):
             self.assertEqual(s["proximo_dia"], "B")
             self.assertIn("A", s["rotina"])
 
+    def test_sugestao_plato_apos_n_treinos(self):
+        with db.connect() as conn:
+            vida.semear_rotina(conn)
+            ex_a = vida.rotina(conn)["A"][0]["exercicio"]
+            for _ in range(4):  # 4 ciclos ABC = 12 treinos da grade, carga do exercício A nunca sobe
+                vida.act_treino(conn, {"tipo": "Musculação", "dia": "A",
+                                       "series": [{"exercicio": ex_a, "carga": 20, "reps": "10"}]})
+                vida.act_treino(conn, {"tipo": "Musculação", "dia": "B"})
+                vida.act_treino(conn, {"tipo": "Musculação", "dia": "C"})
+            s = vida.resumo(conn)["saude"]
+            self.assertEqual(s["sugestao"]["tipo"], "plato")
+            self.assertEqual(s["sugestao"]["exercicio"], ex_a)
+            # com a sugestão pendente, mais um treino não cria outra
+            vida.act_treino(conn, {"tipo": "Musculação", "dia": "A",
+                                   "series": [{"exercicio": ex_a, "carga": 20, "reps": "10"}]})
+            self.assertEqual(vida.resumo(conn)["saude"]["sugestao"]["tipo"], "plato")
+            vida.act_sugestao(conn, {"ok": True})
+            self.assertIsNone(vida.resumo(conn)["saude"]["sugestao"])
+
+    def test_sugestao_inconsistencia_de_dia(self):
+        with db.connect() as conn:
+            vida.semear_rotina(conn)
+            for _ in range(6):  # A e B em dia, C nunca: 12 treinos da grade
+                vida.act_treino(conn, {"tipo": "Musculação", "dia": "A"})
+                vida.act_treino(conn, {"tipo": "Musculação", "dia": "B"})
+            s = vida.resumo(conn)["saude"]
+            self.assertEqual(s["sugestao"]["tipo"], "inconsistencia")
+            self.assertEqual(s["sugestao"]["dia"], "C")
+
     def test_peso_reminder_weekly(self):
         with db.connect() as conn:
             got = [x for x in vida.avisos(conn, at("2026-11-15T19:05:00"), RULES, notify.due)  # domingo

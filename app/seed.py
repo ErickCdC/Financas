@@ -59,10 +59,11 @@ DEFAULT_SETTINGS = {
             "treino": {"on": True, "time": "18:00"},    # quando precisa treinar hoje para bater a meta
             "habitos": {"on": True, "time": "21:00"},   # hábitos que ainda não bateram a meta do dia
             "peso": {"on": True, "weekday": 6, "time": "19:00"},  # domingo: pede pra pesar e atualizar o Corpo
+            "sugestao": {"on": True},  # avisa quando o personal automático tem uma sugestão nova
         },
     },
-    # Saúde: treinos na semana (dias com treino) para bater a meta
-    "saude": {"meta_semana": 4},
+    # Saúde: treinos na semana (dias com treino) para bater a meta; sugestao = personal automático
+    "saude": {"meta_semana": 4, "sugestao": {"cada": 12, "ultimo_n": 0, "atual": None}},
     # Agenda: pastas das notas e tarefas, cursos da faculdade e com quantos dias de antecedência avisar
     "agenda": {"pastas": ["Trabalho", "Pessoal", "Faculdade"],
                "cursos": ["Engenharia Elétrica (IFF)", "Engenharia de Produção (UCAM)"],

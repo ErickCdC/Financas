@@ -142,6 +142,7 @@ def notif(v):
         "treino": {"on": boolean, "time": hhmm},
         "habitos": {"on": boolean, "time": hhmm},
         "peso": {"on": boolean, "weekday": posint(0, 6), "time": hhmm},
+        "sugestao": {"on": boolean},
     }
     out_rules = {}
     for name, fields in spec.items():

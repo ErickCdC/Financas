@@ -133,6 +133,7 @@ def act_treino(conn, body):
     for i, s in enumerate(series):
         conn.execute("INSERT INTO treino_series(treino_id, ordem, exercicio, carga, reps) VALUES(?,?,?,?,?)",
                      (r["id"], i, s["exercicio"], s["carga"], s["reps"]))
+    avaliar_evolucao(conn)
     return r
 
 
@@ -183,6 +184,92 @@ def semear_rotina(conn):
         for i, (dia, exercicio, series, reps) in enumerate(seed.ROTINA_PADRAO):
             conn.execute("INSERT INTO rotina(dia, ordem, exercicio, series, reps) VALUES(?,?,?,?,?)",
                          (dia, i, exercicio, series, reps))
+
+
+# ---------------------------------------------------------------- sugestão automática (personal)
+def _cargas_por_exercicio(conn):
+    """{exercício: [cargas em ordem cronológica]}, só registros com carga."""
+    out = {}
+    for r in conn.execute("SELECT s.exercicio, s.carga FROM treino_series s JOIN treinos t ON t.id = s.treino_id "
+                          "WHERE s.carga IS NOT NULL ORDER BY t.date, t.id"):
+        out.setdefault(r["exercicio"], []).append(r["carga"])
+    return out
+
+
+def _dias_recentes(conn, desde):
+    """Quantos treinos de cada dia (A/B/C) da grade aconteceram desde essa data."""
+    cont = {d: 0 for d in DIAS_ROTINA}
+    for r in conn.execute("SELECT dia, COUNT(*) n FROM treinos WHERE dia IN ('A','B','C') AND date >= ? GROUP BY dia",
+                          (desde,)):
+        cont[r["dia"]] = r["n"]
+    return cont
+
+
+def avaliar_evolucao(conn):
+    """A cada N treinos da grade (sem sugestão pendente), olha consistência entre os dias e progressão de
+    carga por exercício, e guarda uma sugestão em settings (lida por `saude()`, avisada por `avisos()`)."""
+    from . import seed
+    cfg = db.get_cfg(conn)
+    s = dict(cfg.get("saude") or {})
+    sug = dict(s.get("sugestao") or {})
+    if sug.get("atual"):
+        return  # já tem uma sugestão esperando resposta
+    cada = max(int(sug.get("cada", 12) or 12), 1)
+    ultimo_n = int(sug.get("ultimo_n", 0) or 0)
+    total = conn.execute("SELECT COUNT(*) FROM treinos WHERE dia IN ('A','B','C')").fetchone()[0]
+    if total - ultimo_n < cada:
+        return
+    nova = None
+    # 1) consistência: um dia da grade ficando bem atrás dos outros nas últimas semanas
+    cont = _dias_recentes(conn, (C.today() - timedelta(weeks=6)).isoformat())
+    if max(cont.values(), default=0) >= 3:
+        pior = min(cont, key=lambda d: cont[d])
+        maior = max(cont.values())
+        if cont[pior] <= maior - 2:
+            nova = {"tipo": "inconsistencia", "dia": pior,
+                    "titulo": f"Dia {pior} ({seed.FOCO_DIA.get(pior, '')}) ficou pra trás",
+                    "texto": "Nas últimas 6 semanas: " + ", ".join(f"{d} {cont[d]}x" for d in DIAS_ROTINA) +
+                             f". Prioriza o dia {pior} nas próximas semanas pra equilibrar a grade."}
+    # 2) platô: carga sem subir nas últimas sessões de algum exercício da grade
+    if not nova:
+        cargas = _cargas_por_exercicio(conn)
+        grade = {r["exercicio"] for r in conn.execute("SELECT DISTINCT exercicio FROM rotina")}
+        pior_ex, pior_run = None, 0
+        for ex in grade:
+            hist = cargas.get(ex) or []
+            if len(hist) < 4:
+                continue
+            run = 1
+            for i in range(len(hist) - 1, 0, -1):
+                if hist[i] <= hist[i - 1]:
+                    run += 1
+                else:
+                    break
+            if run >= 4 and run > pior_run:
+                pior_ex, pior_run = ex, run
+        if pior_ex:
+            nova = {"tipo": "plato", "exercicio": pior_ex,
+                    "titulo": f"Carga parada em {pior_ex}",
+                    "texto": f"Sem subir carga nas últimas {pior_run} vezes. Tenta subir o peso (mesmo que caiam "
+                             "1-2 reps), trocar por uma variação do exercício, ou fazer uma série extra por 2-3 semanas."}
+    if not nova:
+        nova = {"tipo": "ok", "titulo": "Treino consistente",
+                "texto": "Sem pontos fracos claros nos últimos treinos — continua progredindo a carga aos poucos."}
+    nova["criado"] = C.today().isoformat()
+    sug["atual"], sug["cada"], sug["ultimo_n"] = nova, cada, total
+    s["sugestao"] = sug
+    db.put_setting(conn, "saude", s)
+
+
+def act_sugestao(conn, body):
+    """Descarta a sugestão pendente (o contador pra próxima já ficou marcado em `avaliar_evolucao`)."""
+    cfg = db.get_cfg(conn)
+    s = dict(cfg.get("saude") or {})
+    sug = dict(s.get("sugestao") or {})
+    sug["atual"] = None
+    s["sugestao"] = sug
+    db.put_setting(conn, "saude", s)
+    return {"ok": True}
 
 
 def act_avaliacao(conn, body):
@@ -350,6 +437,7 @@ def saude(conn, cfg, t):
         "rotina": rotina(conn),
         "proximo_dia": proximo_dia(conn),
         "foco_dia": seed.FOCO_DIA,
+        "sugestao": ((cfg.get("saude") or {}).get("sugestao") or {}).get("atual"),
     }
 
 
@@ -529,6 +617,11 @@ def avisos(conn, now, rules, due):
             out.append((f"peso:{t.isocalendar()[1]}", "Hora de se pesar",
                         "Faz um tempo que você não atualiza o peso — anota no módulo Corpo pra acompanhar a evolução.",
                         "/#corpo/novo", []))
+    r = rules.get("sugestao") or {}
+    if r.get("on", True):
+        atual = ((cfg.get("saude") or {}).get("sugestao") or {}).get("atual")
+        if atual:
+            out.append((f"sugestao:{atual['criado']}:{atual['tipo']}", atual["titulo"], atual["texto"], "/#treino", []))
     return out
 
 

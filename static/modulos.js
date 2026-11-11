@@ -224,6 +224,9 @@ VIEWS.treino = () => {
         <div class="hero-actions">${w.hoje ? `<button type="button" class="btn light sm" data-act="treinodet">${icon("check")}Treinou hoje</button><button type="button" class="btn glass sm" data-act="checkin">Mais um</button>`
           : `<button type="button" class="btn light" data-act="checkin">${icon("dumbbell")}Treinei hoje</button>`}<button type="button" class="btn glass sm" data-act="addtreino">Outro dia</button></div>
       </section>
+      ${s.sugestao ? notice(s.sugestao.tipo === "ok" ? "" : "warn", "chart",
+        `<b>${esc(s.sugestao.titulo)}</b><p class="sub">${esc(s.sugestao.texto)}</p>`,
+        `<div><button type="button" class="btn sm" data-act="sugestaook">Entendi</button></div>`) : ""}
       ${rotinaCard()}
       <div class="grid three">
         ${stat("Sequência", `${s.sequencia}`, s.sequencia === 1 ? "semana na meta" : "semanas na meta", "flame")}
@@ -551,6 +554,9 @@ Object.assign(A, {
     } catch (e) { toast(e.message); }
   },
   checkindia: el => checkinSheet(el.dataset.dia),
+  sugestaook: async () => {
+    try { await api("/api/sugestao", { ok: true }); await reloadM(); toast("Combinado"); } catch (e) { toast(e.message); }
+  },
   addex: el => exercicioSheet(el.dataset.dia, null),
   exdet: async el => {
     const dia = DIAS_ROTINA.find(d => (S.m.saude.rotina[d] || []).some(x => String(x.id) === el.dataset.id));
