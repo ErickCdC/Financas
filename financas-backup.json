@@ -1505,6 +1505,13 @@
    "tipo": "bio",
    "arquivo_id": null,
    "nota": null
+  },
+  {
+   "id": 3,
+   "date": "2026-11-11",
+   "tipo": "bio",
+   "arquivo_id": null,
+   "nota": null
   }
  ],
  "avaliacao_valores": [
@@ -1597,6 +1604,41 @@
    "avaliacao_id": 2,
    "campo": "idade_metabolica",
    "valor": 19.0
+  },
+  {
+   "avaliacao_id": 3,
+   "campo": "peso",
+   "valor": 61.9
+  },
+  {
+   "avaliacao_id": 3,
+   "campo": "gordura_pct",
+   "valor": 8.2
+  },
+  {
+   "avaliacao_id": 3,
+   "campo": "musculo_kg",
+   "valor": 29.6
+  },
+  {
+   "avaliacao_id": 3,
+   "campo": "agua_pct",
+   "valor": 62.9
+  },
+  {
+   "avaliacao_id": 3,
+   "campo": "visceral",
+   "valor": 2.0
+  },
+  {
+   "avaliacao_id": 3,
+   "campo": "ossea_kg",
+   "valor": 2.8
+  },
+  {
+   "avaliacao_id": 3,
+   "campo": "tmb",
+   "valor": 1444.0
   }
  ],
  "habitos": [
