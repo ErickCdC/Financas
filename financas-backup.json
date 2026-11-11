@@ -114,6 +114,11 @@
     "habitos": {
      "on": true,
      "time": "21:00"
+    },
+    "peso": {
+     "on": true,
+     "weekday": 6,
+     "time": "19:00"
     }
    }
   },
@@ -212,7 +217,7 @@
   "last_auto_sync": "2026-11-11T14:42",
   "last_force": "2026-11-11T13:49",
   "last_sync": "2026-11-11 14:43",
-  "last_tick": "2026-11-11 14:49",
+  "last_tick": "2026-11-11 15:06",
   "metas_eta": {
    "1": "2026-11"
   },
@@ -225,6 +230,7 @@
    "habitos_refeicoes",
    "metas_share_igual",
    "netinjection_valor",
+   "rotina_abc",
    "salario_minimo_50"
   ],
   "sync_detalhe": [
@@ -994,7 +1000,7 @@
   },
   {
    "id": 33,
-   "date": "2026-11-04",
+   "date": "2026-11-05",
    "description": "Estorno de Uber - NuPay",
    "amount": -19.91,
    "category": "estornado",
@@ -1005,7 +1011,7 @@
   },
   {
    "id": 34,
-   "date": "2026-11-04",
+   "date": "2026-11-05",
    "description": "Estorno de Uber - NuPay",
    "amount": -18.16,
    "category": "estornado",
@@ -1016,7 +1022,7 @@
   },
   {
    "id": 35,
-   "date": "2026-11-04",
+   "date": "2026-11-05",
    "description": "Estorno de Uber - NuPay",
    "amount": -11.84,
    "category": "estornado",
@@ -1038,7 +1044,7 @@
   },
   {
    "id": 37,
-   "date": "2026-10-29",
+   "date": "2026-10-30",
    "description": "Estorno de Uber - NuPay",
    "amount": -10.95,
    "category": "estornado",
@@ -1093,7 +1099,7 @@
   },
   {
    "id": 42,
-   "date": "2026-10-18",
+   "date": "2026-10-19",
    "description": "Estorno de Uber - NuPay",
    "amount": -8.8,
    "category": "estornado",
@@ -1491,6 +1497,137 @@
  ],
  "arquivos": [],
  "treinos": [],
+ "rotina": [
+  {
+   "id": 1,
+   "dia": "A",
+   "ordem": 0,
+   "exercicio": "Supino reto (barra ou halteres)",
+   "series": 4,
+   "reps": "8-12"
+  },
+  {
+   "id": 2,
+   "dia": "A",
+   "ordem": 1,
+   "exercicio": "Supino inclinado (halteres)",
+   "series": 3,
+   "reps": "10-12"
+  },
+  {
+   "id": 3,
+   "dia": "A",
+   "ordem": 2,
+   "exercicio": "Desenvolvimento militar",
+   "series": 3,
+   "reps": "8-12"
+  },
+  {
+   "id": 4,
+   "dia": "A",
+   "ordem": 3,
+   "exercicio": "Elevação lateral",
+   "series": 3,
+   "reps": "12-15"
+  },
+  {
+   "id": 5,
+   "dia": "A",
+   "ordem": 4,
+   "exercicio": "Tríceps corda",
+   "series": 3,
+   "reps": "10-15"
+  },
+  {
+   "id": 6,
+   "dia": "A",
+   "ordem": 5,
+   "exercicio": "Tríceps testa",
+   "series": 3,
+   "reps": "10-12"
+  },
+  {
+   "id": 7,
+   "dia": "B",
+   "ordem": 6,
+   "exercicio": "Puxada na frente",
+   "series": 4,
+   "reps": "8-12"
+  },
+  {
+   "id": 8,
+   "dia": "B",
+   "ordem": 7,
+   "exercicio": "Remada curvada (barra)",
+   "series": 3,
+   "reps": "8-12"
+  },
+  {
+   "id": 9,
+   "dia": "B",
+   "ordem": 8,
+   "exercicio": "Remada unilateral (halter)",
+   "series": 3,
+   "reps": "10-12"
+  },
+  {
+   "id": 10,
+   "dia": "B",
+   "ordem": 9,
+   "exercicio": "Rosca direta (barra)",
+   "series": 3,
+   "reps": "8-12"
+  },
+  {
+   "id": 11,
+   "dia": "B",
+   "ordem": 10,
+   "exercicio": "Rosca alternada (halteres)",
+   "series": 3,
+   "reps": "10-12"
+  },
+  {
+   "id": 12,
+   "dia": "C",
+   "ordem": 11,
+   "exercicio": "Agachamento livre",
+   "series": 4,
+   "reps": "6-10"
+  },
+  {
+   "id": 13,
+   "dia": "C",
+   "ordem": 12,
+   "exercicio": "Leg press",
+   "series": 3,
+   "reps": "10-12"
+  },
+  {
+   "id": 14,
+   "dia": "C",
+   "ordem": 13,
+   "exercicio": "Cadeira extensora",
+   "series": 3,
+   "reps": "12-15"
+  },
+  {
+   "id": 15,
+   "dia": "C",
+   "ordem": 14,
+   "exercicio": "Mesa flexora",
+   "series": 3,
+   "reps": "12-15"
+  },
+  {
+   "id": 16,
+   "dia": "C",
+   "ordem": 15,
+   "exercicio": "Panturrilha em pé",
+   "series": 4,
+   "reps": "12-15"
+  }
+ ],
+ "treino_series": [],
  "avaliacoes": [
   {
    "id": 1,
@@ -1675,7 +1812,7 @@
   {
    "id": 3,
    "nome": "Café da manhã",
-   "unidade": "",
+   "unidade": null,
    "meta": 1.0,
    "passo": 1.0,
    "ordem": 2,
@@ -1684,7 +1821,7 @@
   {
    "id": 4,
    "nome": "Lanche da manhã",
-   "unidade": "",
+   "unidade": null,
    "meta": 1.0,
    "passo": 1.0,
    "ordem": 3,
@@ -1693,7 +1830,7 @@
   {
    "id": 5,
    "nome": "Almoço",
-   "unidade": "",
+   "unidade": null,
    "meta": 1.0,
    "passo": 1.0,
    "ordem": 4,
@@ -1702,7 +1839,7 @@
   {
    "id": 6,
    "nome": "Pré-treino",
-   "unidade": "",
+   "unidade": null,
    "meta": 1.0,
    "passo": 1.0,
    "ordem": 5,
@@ -1711,7 +1848,7 @@
   {
    "id": 7,
    "nome": "Pós-treino",
-   "unidade": "",
+   "unidade": null,
    "meta": 1.0,
    "passo": 1.0,
    "ordem": 6,
@@ -1720,7 +1857,7 @@
   {
    "id": 8,
    "nome": "Jantar",
-   "unidade": "",
+   "unidade": null,
    "meta": 1.0,
    "passo": 1.0,
    "ordem": 7,
@@ -1729,7 +1866,7 @@
   {
    "id": 9,
    "nome": "Ceia",
-   "unidade": "",
+   "unidade": null,
    "meta": 1.0,
    "passo": 1.0,
    "ordem": 8,
