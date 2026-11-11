@@ -67,7 +67,7 @@ CREATE TABLE IF NOT EXISTS avaliacao_valores(
   avaliacao_id INTEGER NOT NULL, campo TEXT NOT NULL, valor REAL NOT NULL, PRIMARY KEY(avaliacao_id, campo));
 CREATE TABLE IF NOT EXISTS habitos(
   id INTEGER PRIMARY KEY AUTOINCREMENT, nome TEXT NOT NULL, unidade TEXT, meta REAL NOT NULL DEFAULT 1,
-  passo REAL NOT NULL DEFAULT 1, ordem INTEGER NOT NULL DEFAULT 0, ativo INTEGER NOT NULL DEFAULT 1);
+  passo REAL NOT NULL DEFAULT 1, ordem INTEGER NOT NULL DEFAULT 0, ativo INTEGER NOT NULL DEFAULT 1, detalhe TEXT);
 CREATE TABLE IF NOT EXISTS habito_dia(
   habito_id INTEGER NOT NULL, date TEXT NOT NULL, valor REAL NOT NULL, PRIMARY KEY(habito_id, date));
 -- módulo Agenda
@@ -135,6 +135,9 @@ def migrate(conn):
     tcols = {r[1] for r in conn.execute("PRAGMA table_info(treinos)")}
     if "dia" not in tcols:  # letra da rotina (A/B/C) quando o treino segue a grade
         conn.execute("ALTER TABLE treinos ADD COLUMN dia TEXT")
+    hcols = {r[1] for r in conn.execute("PRAGMA table_info(habitos)")}
+    if "detalhe" not in hcols:  # sugestão de alimento, pro hábito de refeição mostrar o que comer
+        conn.execute("ALTER TABLE habitos ADD COLUMN detalhe TEXT")
 
 
 def is_empty(conn):

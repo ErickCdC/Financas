@@ -325,7 +325,7 @@ def act_habito(conn, body):
     for k in ("meta", "passo"):
         if k in body and V.num(body[k]) <= 0:
             raise ValueError("meta e passo precisam ser maiores que zero")
-    return _crud(conn, "habitos", data.HABITO_SPEC, body, optional=("unidade", "ordem", "ativo"))
+    return _crud(conn, "habitos", data.HABITO_SPEC, body, optional=("unidade", "ordem", "ativo", "detalhe"))
 
 
 def act_habito_dia(conn, body):
@@ -633,10 +633,14 @@ def semear_habitos(conn):
 
 
 def semear_refeicoes(conn):
-    """Acrescenta os hábitos de refeição do cronograma de alimentação, sem duplicar os que já existem."""
+    """Acrescenta os hábitos de refeição do cronograma de alimentação, sem duplicar os que já existem.
+    Também atualiza o `detalhe` (o que comer) dos que já existem, pra refletir ajustes no cronograma."""
     from . import seed
     base = conn.execute("SELECT COALESCE(MAX(ordem), -1) FROM habitos").fetchone()[0] + 1
-    for i, (nome, un, meta, passo) in enumerate(seed.HABITOS_REFEICOES):
-        if not conn.execute("SELECT 1 FROM habitos WHERE nome=?", (nome,)).fetchone():
-            conn.execute("INSERT INTO habitos(nome, unidade, meta, passo, ordem) VALUES(?,?,?,?,?)",
-                         (nome, un, meta, passo, base + i))
+    for i, (nome, un, meta, passo, detalhe) in enumerate(seed.HABITOS_REFEICOES):
+        row = conn.execute("SELECT id FROM habitos WHERE nome=?", (nome,)).fetchone()
+        if row:
+            conn.execute("UPDATE habitos SET detalhe=? WHERE id=?", (detalhe, row["id"]))
+        else:
+            conn.execute("INSERT INTO habitos(nome, unidade, meta, passo, ordem, detalhe) VALUES(?,?,?,?,?,?)",
+                         (nome, un, meta, passo, base + i, detalhe))

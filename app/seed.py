@@ -75,14 +75,18 @@ HABITOS_PADRAO = [  # nome, unidade, meta por dia, passo do botão +
     ("Sono", "h", 7, 0.5),
 ]
 
-HABITOS_REFEICOES = [  # check de 1 toque (meta=1, passo=1), seguindo o cronograma de alimentação
-    ("Café da manhã", "", 1, 1),
-    ("Lanche da manhã", "", 1, 1),
-    ("Almoço", "", 1, 1),
-    ("Pré-treino", "", 1, 1),
-    ("Pós-treino", "", 1, 1),
-    ("Jantar", "", 1, 1),
-    ("Ceia", "", 1, 1),
+HABITOS_REFEICOES = [  # check de 1 toque (meta=1, passo=1); detalhe = sugestão do cronograma de alimentação
+    # (~2.800 kcal/dia, ~130g proteína, calculado a partir da sua bioimpedância — peso, % gordura e altura —
+    # pra ganho de peso magro com o treino 4x/semana; cuidando de açúcar/laticínio em excesso pela pele)
+    ("Café da manhã", "", 1, 1, "3 ovos mexidos + 2 fatias de pão integral + 1 banana"),
+    ("Lanche da manhã", "", 1, 1, "Aveia (3 col. sopa) com iogurte natural ou leite (alterne com vegetal se notar "
+                                 "piora na pele) + banana, ou granola"),
+    ("Almoço", "", 1, 1, "Arroz + feijão + 150–200g de frango (ou ovo/carne moída) + salada à vontade + azeite"),
+    ("Pré-treino", "", 1, 1, "Pão com pasta de amendoim ou uma fruta + café, ~1h antes do treino"),
+    ("Pós-treino", "", 1, 1, "Whey 3–4x/semana (alternando com ovo/frango) ou 2 ovos + banana, ou iogurte natural "
+                            "com mel, até 1h depois"),
+    ("Jantar", "", 1, 1, "Igual ao almoço, trocando o acompanhamento (batata-doce, macarrão)"),
+    ("Ceia", "", 1, 1, "Iogurte natural com canela e castanhas (evite leite com achocolatado no dia a dia)"),
 ]
 
 FOCO_DIA = {"A": "Peito, ombro e tríceps", "B": "Costas e bíceps", "C": "Pernas"}

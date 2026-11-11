@@ -94,6 +94,10 @@ def main():
             from app import vida
             vida.semear_rotina(conn)
             feitas.add("rotina_abc")
+        if "refeicoes_detalhe" not in feitas:  # hábitos de refeição ganham o "o que comer" (cronograma de alimentação)
+            from app import vida
+            vida.semear_refeicoes(conn)
+            feitas.add("refeicoes_detalhe")
         db.put_setting(conn, "migracoes", sorted(feitas))
         bank.ignore_subscription_charges(conn)  # de novo, com a lista já atualizada
         # valor fixo antigo do PicPay (limite usado, não a fatura)

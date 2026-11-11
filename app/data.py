@@ -22,7 +22,7 @@ TABLES = {
     "treino_series": ["id", "treino_id", "ordem", "exercicio", "carga", "reps"],
     "avaliacoes": ["id", "date", "tipo", "arquivo_id", "nota"],
     "avaliacao_valores": ["avaliacao_id", "campo", "valor"],
-    "habitos": ["id", "nome", "unidade", "meta", "passo", "ordem", "ativo"],
+    "habitos": ["id", "nome", "unidade", "meta", "passo", "ordem", "ativo", "detalhe"],
     "habito_dia": ["habito_id", "date", "valor"],
     "notas": ["id", "pasta", "titulo", "texto", "quando", "avisos", "feito", "fixada", "criado", "atualizado"],
     "tarefas": ["id", "pasta", "titulo", "prazo", "nota", "importante", "feito_em", "criado"],
@@ -62,7 +62,7 @@ TREINO_SPEC = {"date": V.iso_date, "tipo": V.text(30), "foco": V.text(80, False)
 ROTINA_SPEC = {"dia": V.choice("A", "B", "C"), "exercicio": V.text(80), "series": V.opt(V.posint(1, 20)),
                "reps": V.text(20, False), "ordem": V.posint(0, 100)}
 HABITO_SPEC = {"nome": V.text(40), "unidade": V.text(15, False), "meta": V.num, "passo": V.num,
-               "ordem": V.posint(0, 100), "ativo": V.boolint}
+               "ordem": V.posint(0, 100), "ativo": V.boolint, "detalhe": V.text(300, False)}
 NOTA_SPEC = {"pasta": V.text(30), "titulo": V.text(120), "texto": V.text(5000, False), "quando": V.opt(V.quando),
              "feito": V.boolint, "fixada": V.boolint}
 TAREFA_SPEC = {"pasta": V.text(30), "titulo": V.text(160), "prazo": V.opt(V.iso_date), "nota": V.text(1000, False),

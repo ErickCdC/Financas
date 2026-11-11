@@ -748,6 +748,7 @@ a.modcard:hover { border-color: var(--line-strong); }
 .choose { display: flex; flex-direction: column; }
 .choose .item { border-radius: 12px; }
 .hab .sub { font-size: 12.5px; color: var(--muted); margin-top: 1px; }
+.hab-det { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.35; }
 .stat .srow { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; min-height: 22px; }
 .catrow.wide { grid-template-columns: minmax(0, 1.3fr) 1fr auto; }
 .quickadd .seg { padding: 2px; }

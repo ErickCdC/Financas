@@ -217,6 +217,17 @@ class Habitos(unittest.TestCase):
             self.assertEqual(conn.execute("SELECT COUNT(*) FROM habitos WHERE nome='Café da manhã'").fetchone()[0], 1)
             h = next(x for x in vida.resumo(conn)["saude"]["habitos"] if x["id"] == cafe[0])
             self.assertEqual(h["hoje"], 1)
+            self.assertIn("ovos", h["detalhe"])  # cada refeição mostra o que comer, do cronograma de alimentação
+
+    def test_semear_refeicoes_atualiza_detalhe_em_habito_existente(self):
+        with db.connect() as conn:
+            vida.semear_refeicoes(conn)
+            cafe_id = conn.execute("SELECT id FROM habitos WHERE nome='Café da manhã'").fetchone()[0]
+            conn.execute("UPDATE habitos SET detalhe='antigo' WHERE id=?", (cafe_id,))
+            vida.semear_refeicoes(conn)  # reaplica o cronograma atual, sem duplicar a linha
+            self.assertEqual(conn.execute("SELECT COUNT(*) FROM habitos WHERE nome='Café da manhã'").fetchone()[0], 1)
+            novo = conn.execute("SELECT detalhe FROM habitos WHERE id=?", (cafe_id,)).fetchone()[0]
+            self.assertIn("ovos", novo)
 
 
 class Agenda(unittest.TestCase):

@@ -63,7 +63,8 @@ function habitRow(h, dia) {
   const v = Number((h.dias || {})[dia] || 0), meta = Number(h.meta), ok = v >= meta;
   const streak = h.sequencia > 1 ? `<span class="chip warn">${icon("flame")}${h.sequencia} dias</span>` : "";
   if (isCheck(h)) {
-    return `<div class="hab"><div class="hb-body"><div class="t">${esc(h.nome)} ${streak}</div><div class="sub">${ok ? "Feito" : "Ainda não"}</div></div>
+    return `<div class="hab"><div class="hb-body"><div class="t">${esc(h.nome)} ${streak}</div><div class="sub">${ok ? "Feito" : "Ainda não"}</div>
+      ${h.detalhe ? `<div class="sub muted hab-det">${esc(h.detalhe)}</div>` : ""}</div>
       <input type="checkbox" class="check" data-chg="hab" data-id="${h.id}" data-date="${dia}" ${ok ? "checked" : ""} aria-label="${esc(h.nome)}"></div>`;
   }
   return `<div class="hab"><div class="hb-body"><div class="t">${esc(h.nome)} ${streak}</div>
