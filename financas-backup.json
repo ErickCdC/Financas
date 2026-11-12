@@ -215,12 +215,12 @@
    }
   },
   "eventos_pendentes": [],
-  "last_auto_sync": "2026-11-12T07:30",
-  "last_force": "2026-11-11T22:49",
+  "last_auto_sync": "2026-11-12T07:57",
+  "last_force": "2026-11-12T07:58",
   "last_sync": "2026-11-12 07:57",
   "last_tick": "2026-11-12 07:57",
   "metas_eta": {
-   "1": "2026-11"
+   "1": "2026-12"
   },
   "migracoes": [
    "assinaturas_nov26",
