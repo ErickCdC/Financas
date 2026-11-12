@@ -191,8 +191,8 @@
   "ciclo_info": {
    "Mercado Pago": {
     "conta": "8b778a91-1057-4662-917f-e758a49b7c3b",
-    "fechou": null,
-    "fecha_antes": null,
+    "fechou": "2026-10-29",
+    "fecha_antes": 6,
     "compras": 88.98
    },
    "Nubank": {
@@ -224,8 +224,8 @@
   "eventos_pendentes": [],
   "last_auto_sync": "2026-11-12T10:39",
   "last_force": "2026-11-12T09:48",
-  "last_sync": "2026-11-12 10:42",
-  "last_tick": "2026-11-12 10:39",
+  "last_sync": "2026-11-12 11:08",
+  "last_tick": "2026-11-12 11:06",
   "metas_eta": {
    "1": "2026-12"
   },
