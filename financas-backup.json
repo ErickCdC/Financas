@@ -10,7 +10,7 @@
   "aumento_pct": 25.0,
   "aumento_from": "2027-01",
   "teto_semanal": 50.0,
-  "caixa": 0.92,
+  "caixa": 71.51,
   "caixa_ref": "2026-11",
   "salario_dia": 30,
   "salario_data": "2026-10-30",
@@ -181,24 +181,17 @@
   "banco_incidentes": [
    "PicPay - Transações de cartão de crédito não sendo retornada"
   ],
-  "caixa_banco": 0.92,
+  "caixa_banco": 71.51,
   "caixa_data": "2026-11-12",
   "cartao_usado": {
-   "Nubank": 206.27,
-   "PicPay": 1382.0
+   "Mercado Pago": 1603.35
   },
   "ciclo_info": {
-   "Nubank": {
-    "conta": "27be5f3e-7a39-4e21-b734-1d4439c35288",
-    "fechou": "2026-10-25",
-    "fecha_antes": 7,
-    "compras": 27.94
-   },
-   "PicPay": {
-    "conta": "6d7341ae-373e-4d3b-b53b-f28126fded99",
-    "fechou": "2026-10-29",
-    "fecha_antes": 9,
-    "compras": 347.51
+   "Mercado Pago": {
+    "conta": "8b778a91-1057-4662-917f-e758a49b7c3b",
+    "fechou": null,
+    "fecha_antes": null,
+    "compras": 88.98
    }
   },
   "entradas": {
@@ -215,10 +208,10 @@
    }
   },
   "eventos_pendentes": [],
-  "last_auto_sync": "2026-11-12T07:57",
+  "last_auto_sync": "2026-11-12T08:51",
   "last_force": "2026-11-12T07:58",
-  "last_sync": "2026-11-12 07:57",
-  "last_tick": "2026-11-12 08:00",
+  "last_sync": "2026-11-12 08:52",
+  "last_tick": "2026-11-12 08:51",
   "metas_eta": {
    "1": "2026-12"
   },
@@ -237,28 +230,16 @@
   ],
   "sync_detalhe": [
    {
-    "banco": "Nubank",
+    "banco": "Mercado Pago",
     "tipo": "conta",
-    "lidas": 0,
-    "no_app": 0
+    "lidas": 48,
+    "no_app": 9
    },
    {
-    "banco": "Nubank",
+    "banco": "Mercado Pago",
     "tipo": "cartão",
-    "lidas": 18,
-    "no_app": 16
-   },
-   {
-    "banco": "PicPay",
-    "tipo": "conta",
-    "lidas": 0,
-    "no_app": 0
-   },
-   {
-    "banco": "PicPay",
-    "tipo": "cartão",
-    "lidas": 33,
-    "no_app": 32
+    "lidas": 10,
+    "no_app": 5
    }
   ]
  },
@@ -1306,6 +1287,17 @@
    "ext_id": "6d7341ae-373e-4d3b-b53b-f28126fded99:fc9375d2-966b-40cc-8b8d-7c058f214910",
    "ignored": 0,
    "card": "PicPay"
+  },
+  {
+   "id": 62,
+   "date": "2026-11-11",
+   "description": "Pagamento com Pix AMPLA ENERGIA E SERVICOS S A",
+   "amount": 120.92,
+   "category": "outros",
+   "source": "banco",
+   "ext_id": "40bb4be3-1095-40f0-92da-8c9f80c5767c:db10bfb7-32ba-405d-af69-1e1bdbfbfea7",
+   "ignored": 0,
+   "card": null
   }
  ],
  "push_subs": [
@@ -1316,7 +1308,7 @@
    "auth": "-LZCogkbAIUGPprhqKSGMw",
    "label": "Android · Chrome",
    "created": "2026-11-06 17:47",
-   "last_ok": "2026-11-12 08:00",
+   "last_ok": "2026-11-12 08:52",
    "fails": 0
   }
  ],
@@ -1464,6 +1456,24 @@
    "sent_at": "2026-11-12 08:00",
    "title": "Lançou seus gastos de hoje?",
    "body": "Nada lançado hoje. Restam R$ 25,40 na semana."
+  },
+  {
+   "key": "teto:2026-11-09:100",
+   "sent_at": "2026-11-12 08:52",
+   "title": "Teto da semana estourado",
+   "body": "Você gastou R$ 145,52 de R$ 50,00. Passou R$ 95,52. A caixinha deste salário caiu para R$ 428,65."
+  },
+  {
+   "key": "teto:2026-11-09:80",
+   "sent_at": "2026-11-12 08:52",
+   "title": "",
+   "body": ""
+  },
+  {
+   "key": "grande:62",
+   "sent_at": "2026-11-12 08:52",
+   "title": "Compra de R$ 120,92",
+   "body": "Pagamento com Pix AMPLA ENERGIA E SERVIC · conta. Semana: R$ 145,52 de R$ 50,00 (passou do teto)."
   }
  ],
  "cobrancas": [
