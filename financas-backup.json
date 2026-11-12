@@ -218,7 +218,7 @@
   "last_auto_sync": "2026-11-12T18:45",
   "last_force": "2026-11-12T18:20",
   "last_sync": "2026-11-12 18:46",
-  "last_tick": "2026-11-12 18:45",
+  "last_tick": "2026-11-12 19:00",
   "metas_eta": {
    "1": "2026-12"
   },
@@ -1349,7 +1349,7 @@
    "auth": "-LZCogkbAIUGPprhqKSGMw",
    "label": "Android · Chrome",
    "created": "2026-11-06 17:47",
-   "last_ok": "2026-11-12 18:00",
+   "last_ok": "2026-11-12 19:00",
    "fails": 0
   }
  ],
@@ -1521,6 +1521,12 @@
    "sent_at": "2026-11-12 18:00",
    "title": "Hoje é dia de treinar",
    "body": "Faltam 4 treino(s) para a meta de 4 e restam 4 dia(s) na semana (dia A — Peito, ombro e tríceps)."
+  },
+  {
+   "key": "ritmo:2026-11-12",
+   "sent_at": "2026-11-12 19:00",
+   "title": "No ritmo atual, faltam R$ 171,10 no fim do mês",
+   "body": "Você está gastando R$ 38,31 por dia. Para fechar no zero até o salário, o limite é R$ 28,80 por dia."
   }
  ],
  "cobrancas": [
