@@ -222,10 +222,10 @@
    }
   },
   "eventos_pendentes": [],
-  "last_auto_sync": "2026-11-11T20:33",
+  "last_auto_sync": "2026-11-11T21:00",
   "last_force": "2026-11-11T19:41",
   "last_sync": "2026-11-11 20:34",
-  "last_tick": "2026-11-11 20:33",
+  "last_tick": "2026-11-11 21:00",
   "metas_eta": {
    "1": "2026-11"
   },
@@ -238,6 +238,7 @@
    "habitos_refeicoes",
    "metas_share_igual",
    "netinjection_valor",
+   "refeicoes_detalhe",
    "rotina_abc",
    "salario_minimo_50"
   ],
@@ -1008,7 +1009,7 @@
   },
   {
    "id": 33,
-   "date": "2026-11-04",
+   "date": "2026-11-05",
    "description": "Estorno de Uber - NuPay",
    "amount": -19.91,
    "category": "estornado",
@@ -1019,7 +1020,7 @@
   },
   {
    "id": 34,
-   "date": "2026-11-04",
+   "date": "2026-11-05",
    "description": "Estorno de Uber - NuPay",
    "amount": -18.16,
    "category": "estornado",
@@ -1030,7 +1031,7 @@
   },
   {
    "id": 35,
-   "date": "2026-11-04",
+   "date": "2026-11-05",
    "description": "Estorno de Uber - NuPay",
    "amount": -11.84,
    "category": "estornado",
@@ -1052,7 +1053,7 @@
   },
   {
    "id": 37,
-   "date": "2026-10-29",
+   "date": "2026-10-30",
    "description": "Estorno de Uber - NuPay",
    "amount": -10.95,
    "category": "estornado",
@@ -1107,7 +1108,7 @@
   },
   {
    "id": 42,
-   "date": "2026-10-18",
+   "date": "2026-10-19",
    "description": "Estorno de Uber - NuPay",
    "amount": -8.8,
    "category": "estornado",
@@ -1334,7 +1335,7 @@
    "auth": "-LZCogkbAIUGPprhqKSGMw",
    "label": "Android · Chrome",
    "created": "2026-11-06 17:47",
-   "last_ok": "2026-11-11 08:00",
+   "last_ok": "2026-11-11 21:03",
    "fails": 0
   }
  ],
@@ -1470,6 +1471,12 @@
    "sent_at": "2026-11-11 08:00",
    "title": "Lançou seus gastos de hoje?",
    "body": "Nada lançado hoje. Restam R$ 25,40 na semana."
+  },
+  {
+   "key": "habitos:2026-11-11",
+   "sent_at": "2026-11-11 21:03",
+   "title": "Hábitos de hoje",
+   "body": "Água 1300/2000 ml · Sono 5,5/7 h · Café da manhã 0/1 · Lanche da manhã 0/1"
   }
  ],
  "cobrancas": [
@@ -1816,7 +1823,8 @@
    "meta": 2000.0,
    "passo": 100.0,
    "ordem": 0,
-   "ativo": 1
+   "ativo": 1,
+   "detalhe": null
   },
   {
    "id": 2,
@@ -1825,7 +1833,8 @@
    "meta": 7.0,
    "passo": 0.5,
    "ordem": 1,
-   "ativo": 1
+   "ativo": 1,
+   "detalhe": null
   },
   {
    "id": 3,
@@ -1834,7 +1843,8 @@
    "meta": 1.0,
    "passo": 1.0,
    "ordem": 2,
-   "ativo": 1
+   "ativo": 1,
+   "detalhe": "3 ovos mexidos + 2 fatias de pão integral + 1 banana"
   },
   {
    "id": 4,
@@ -1843,7 +1853,8 @@
    "meta": 1.0,
    "passo": 1.0,
    "ordem": 3,
-   "ativo": 1
+   "ativo": 1,
+   "detalhe": "Aveia (3 col. sopa) com iogurte natural ou leite (alterne com vegetal se notar piora na pele) + banana, ou granola"
   },
   {
    "id": 5,
@@ -1852,7 +1863,8 @@
    "meta": 1.0,
    "passo": 1.0,
    "ordem": 4,
-   "ativo": 1
+   "ativo": 1,
+   "detalhe": "Arroz + feijão + 150–200g de frango (ou ovo/carne moída) + salada à vontade + azeite"
   },
   {
    "id": 6,
@@ -1861,7 +1873,8 @@
    "meta": 1.0,
    "passo": 1.0,
    "ordem": 5,
-   "ativo": 1
+   "ativo": 1,
+   "detalhe": "Pão com pasta de amendoim ou uma fruta + café, ~1h antes do treino"
   },
   {
    "id": 7,
@@ -1870,7 +1883,8 @@
    "meta": 1.0,
    "passo": 1.0,
    "ordem": 6,
-   "ativo": 1
+   "ativo": 1,
+   "detalhe": "Whey 3–4x/semana (alternando com ovo/frango) ou 2 ovos + banana, ou iogurte natural com mel, até 1h depois"
   },
   {
    "id": 8,
@@ -1879,7 +1893,8 @@
    "meta": 1.0,
    "passo": 1.0,
    "ordem": 7,
-   "ativo": 1
+   "ativo": 1,
+   "detalhe": "Igual ao almoço, trocando o acompanhamento (batata-doce, macarrão)"
   },
   {
    "id": 9,
@@ -1888,7 +1903,8 @@
    "meta": 1.0,
    "passo": 1.0,
    "ordem": 8,
-   "ativo": 1
+   "ativo": 1,
+   "detalhe": "Iogurte natural com canela e castanhas (evite leite com achocolatado no dia a dia)"
   }
  ],
  "habito_dia": [
