@@ -222,10 +222,10 @@
    }
   },
   "eventos_pendentes": [],
-  "last_auto_sync": "2026-11-12T17:24",
+  "last_auto_sync": "2026-11-12T17:51",
   "last_force": "2026-11-12T16:31",
   "last_sync": "2026-11-12 17:25",
-  "last_tick": "2026-11-12 17:24",
+  "last_tick": "2026-11-12 18:00",
   "metas_eta": {
    "1": "2026-12"
   },
@@ -1368,7 +1368,7 @@
    "auth": "-LZCogkbAIUGPprhqKSGMw",
    "label": "Android · Chrome",
    "created": "2026-11-06 17:47",
-   "last_ok": "2026-11-12 08:52",
+   "last_ok": "2026-11-12 18:00",
    "fails": 0
   }
  ],
@@ -1534,6 +1534,12 @@
    "sent_at": "2026-11-12 08:52",
    "title": "Compra de R$ 120,92",
    "body": "Pagamento com Pix AMPLA ENERGIA E SERVIC · conta. Semana: R$ 145,52 de R$ 50,00 (passou do teto)."
+  },
+  {
+   "key": "treino:2026-11-12",
+   "sent_at": "2026-11-12 18:00",
+   "title": "Hoje é dia de treinar",
+   "body": "Faltam 4 treino(s) para a meta de 4 e restam 4 dia(s) na semana (dia A — Peito, ombro e tríceps)."
   }
  ],
  "cobrancas": [
