@@ -208,10 +208,10 @@
    }
   },
   "eventos_pendentes": [],
-  "last_auto_sync": "2026-11-12T08:51",
+  "last_auto_sync": "2026-11-12T09:18",
   "last_force": "2026-11-12T07:58",
   "last_sync": "2026-11-12 08:52",
-  "last_tick": "2026-11-12 08:51",
+  "last_tick": "2026-11-12 09:33",
   "metas_eta": {
    "1": "2026-12"
   },
@@ -1296,7 +1296,7 @@
    "category": "outros",
    "source": "banco",
    "ext_id": "40bb4be3-1095-40f0-92da-8c9f80c5767c:db10bfb7-32ba-405d-af69-1e1bdbfbfea7",
-   "ignored": 0,
+   "ignored": 1,
    "card": null
   }
  ],
