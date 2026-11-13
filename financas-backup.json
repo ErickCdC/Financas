@@ -225,7 +225,7 @@
   "last_auto_sync": "2026-11-13T17:51",
   "last_force": "2026-11-13T16:57",
   "last_sync": "2026-11-13 17:52",
-  "last_tick": "2026-11-13 17:51",
+  "last_tick": "2026-11-13 18:00",
   "metas_eta": {
    "1": "2026-12"
   },
@@ -1390,7 +1390,7 @@
    "auth": "-LZCogkbAIUGPprhqKSGMw",
    "label": "Android · Chrome",
    "created": "2026-11-06 17:47",
-   "last_ok": "2026-11-13 08:00",
+   "last_ok": "2026-11-13 18:00",
    "fails": 0
   }
  ],
@@ -1580,6 +1580,12 @@
    "sent_at": "2026-11-13 08:00",
    "title": "Lançou seus gastos de hoje?",
    "body": "Nada lançado hoje. Restam R$ 0,00 na semana."
+  },
+  {
+   "key": "treino:2026-11-13",
+   "sent_at": "2026-11-13 18:00",
+   "title": "Hoje é dia de treinar",
+   "body": "Faltam 4 treino(s) para a meta de 4 e restam 3 dia(s) na semana (dia A — Peito, ombro e tríceps)."
   }
  ],
  "cobrancas": [
