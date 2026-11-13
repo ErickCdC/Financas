@@ -10,7 +10,7 @@
   "aumento_pct": 25.0,
   "aumento_from": "2027-01",
   "teto_semanal": 50.0,
-  "caixa": 56.54,
+  "caixa": 48.54,
   "caixa_ref": "2026-11",
   "salario_dia": 30,
   "salario_data": "2026-10-30",
@@ -181,12 +181,12 @@
   "banco_incidentes": [
    "PicPay - Transações de cartão de crédito não sendo retornada"
   ],
-  "caixa_banco": 56.54,
+  "caixa_banco": 48.54,
   "caixa_data": "2026-11-13",
   "cartao_usado": {
    "Mercado Pago": 1626.25,
-   "Nubank": 230.17,
-   "PicPay": 1382.0
+   "PicPay": 1382.0,
+   "Nubank": 230.17
   },
   "ciclo_info": {
    "Mercado Pago": {
@@ -195,17 +195,17 @@
     "fecha_antes": 6,
     "compras": 111.88
    },
-   "Nubank": {
-    "conta": "27be5f3e-7a39-4e21-b734-1d4439c35288",
-    "fechou": "2026-10-25",
-    "fecha_antes": 7,
-    "compras": 51.84
-   },
    "PicPay": {
     "conta": "6d7341ae-373e-4d3b-b53b-f28126fded99",
     "fechou": "2026-10-29",
     "fecha_antes": 9,
     "compras": 347.51
+   },
+   "Nubank": {
+    "conta": "27be5f3e-7a39-4e21-b734-1d4439c35288",
+    "fechou": "2026-10-25",
+    "fecha_antes": 7,
+    "compras": 51.84
    }
   },
   "entradas": {
@@ -222,10 +222,10 @@
    }
   },
   "eventos_pendentes": [],
-  "last_auto_sync": "2026-11-13T12:54",
+  "last_auto_sync": "2026-11-13T13:48",
   "last_force": "2026-11-13T12:55",
-  "last_sync": "2026-11-13 12:54",
-  "last_tick": "2026-11-13 12:54",
+  "last_sync": "2026-11-13 13:49",
+  "last_tick": "2026-11-13 13:48",
   "metas_eta": {
    "1": "2026-12"
   },
@@ -246,26 +246,14 @@
    {
     "banco": "Mercado Pago",
     "tipo": "conta",
-    "lidas": 51,
-    "no_app": 10
+    "lidas": 52,
+    "no_app": 11
    },
    {
     "banco": "Mercado Pago",
     "tipo": "cartão",
     "lidas": 11,
     "no_app": 6
-   },
-   {
-    "banco": "Nubank",
-    "tipo": "conta",
-    "lidas": 0,
-    "no_app": 0
-   },
-   {
-    "banco": "Nubank",
-    "tipo": "cartão",
-    "lidas": 19,
-    "no_app": 17
    },
    {
     "banco": "PicPay",
@@ -278,6 +266,18 @@
     "tipo": "cartão",
     "lidas": 33,
     "no_app": 32
+   },
+   {
+    "banco": "Nubank",
+    "tipo": "conta",
+    "lidas": 0,
+    "no_app": 0
+   },
+   {
+    "banco": "Nubank",
+    "tipo": "cartão",
+    "lidas": 19,
+    "no_app": 17
    }
   ]
  },
@@ -1369,6 +1369,17 @@
    "ext_id": "27be5f3e-7a39-4e21-b734-1d4439c35288:7719fc03-79da-4d99-a39d-c017cac0b359",
    "ignored": 0,
    "card": "Nubank"
+  },
+  {
+   "id": 66,
+   "date": "2026-11-13",
+   "description": "Pagamento com Pix 64.019.082 DAYANNE DA SILVA RODRIGUES",
+   "amount": 8.0,
+   "category": "transporte",
+   "source": "banco",
+   "ext_id": "40bb4be3-1095-40f0-92da-8c9f80c5767c:c2d0e915-4c7e-497c-bb5c-d0bc89f03b66",
+   "ignored": 0,
+   "card": null
   }
  ],
  "push_subs": [
