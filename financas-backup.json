@@ -10,7 +10,7 @@
   "aumento_pct": 25.0,
   "aumento_from": "2027-01",
   "teto_semanal": 50.0,
-  "caixa": 0.92,
+  "caixa": 30.64,
   "caixa_ref": "2026-11",
   "salario_dia": 30,
   "salario_data": "2026-10-30",
@@ -181,10 +181,11 @@
   "banco_incidentes": [
    "PicPay - Transações de cartão de crédito não sendo retornada"
   ],
-  "caixa_banco": 0.92,
+  "caixa_banco": 30.64,
   "caixa_data": "2026-11-14",
   "cartao_usado": {
    "Nubank": 231.2,
+   "Mercado Pago": 1626.25,
    "PicPay": 1397.0
   },
   "ciclo_info": {
@@ -193,6 +194,12 @@
     "fechou": "2026-10-25",
     "fecha_antes": 7,
     "compras": 52.87
+   },
+   "Mercado Pago": {
+    "conta": "8b778a91-1057-4662-917f-e758a49b7c3b",
+    "fechou": "2026-10-29",
+    "fecha_antes": 6,
+    "compras": 111.88
    },
    "PicPay": {
     "conta": "6d7341ae-373e-4d3b-b53b-f28126fded99",
@@ -215,10 +222,10 @@
    }
   },
   "eventos_pendentes": [],
-  "last_auto_sync": "2026-11-14T14:15",
+  "last_auto_sync": "2026-11-14T14:42",
   "last_force": "2026-11-14T13:50",
-  "last_sync": "2026-11-14 14:16",
-  "last_tick": "2026-11-14 14:15",
+  "last_sync": "2026-11-14 14:44",
+  "last_tick": "2026-11-14 14:42",
   "metas_eta": {
    "1": "2026-12"
   },
@@ -247,6 +254,18 @@
     "tipo": "cartão",
     "lidas": 21,
     "no_app": 19
+   },
+   {
+    "banco": "Mercado Pago",
+    "tipo": "conta",
+    "lidas": 54,
+    "no_app": 13
+   },
+   {
+    "banco": "Mercado Pago",
+    "tipo": "cartão",
+    "lidas": 11,
+    "no_app": 6
    },
    {
     "banco": "PicPay",
@@ -1383,6 +1402,28 @@
    "ext_id": "27be5f3e-7a39-4e21-b734-1d4439c35288:a5195e50-7e29-4c61-ab19-5ad461c44feb",
    "ignored": 0,
    "card": "Nubank"
+  },
+  {
+   "id": 69,
+   "date": "2026-11-14",
+   "description": "Pagamento com Pix 99 TECNOLOGIA LTDA",
+   "amount": 9.4,
+   "category": "transporte",
+   "source": "banco",
+   "ext_id": "40bb4be3-1095-40f0-92da-8c9f80c5767c:c3049b4f-2a15-476f-ad0d-98fd7dfd6b64",
+   "ignored": 0,
+   "card": null
+  },
+  {
+   "id": 70,
+   "date": "2026-11-14",
+   "description": "Pagamento com Pix L P ALVES AGROPECUARIA E BAZAR",
+   "amount": 8.5,
+   "category": "outros",
+   "source": "banco",
+   "ext_id": "40bb4be3-1095-40f0-92da-8c9f80c5767c:d813f4c6-355d-48f5-bd24-85f0a66d3bfd",
+   "ignored": 0,
+   "card": null
   }
  ],
  "push_subs": [
