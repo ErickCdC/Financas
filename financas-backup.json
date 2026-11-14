@@ -178,9 +178,7 @@
     1
    ]
   },
-  "banco_incidentes": [
-   "PicPay - Transações de cartão de crédito não sendo retornada"
-  ],
+  "banco_incidentes": [],
   "caixa_banco": 48.54,
   "caixa_data": "2026-11-14",
   "cartao_usado": {
@@ -222,10 +220,10 @@
    }
   },
   "eventos_pendentes": [],
-  "last_auto_sync": "2026-11-14T08:24",
+  "last_auto_sync": "2026-11-14T08:51",
   "last_force": "2026-11-14T07:58",
-  "last_sync": "2026-11-14 08:27",
-  "last_tick": "2026-11-14 08:24",
+  "last_sync": "2026-11-14 08:51",
+  "last_tick": "2026-11-14 08:51",
   "metas_eta": {
    "1": "2026-12"
   },
