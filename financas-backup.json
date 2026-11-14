@@ -10,7 +10,7 @@
   "aumento_pct": 25.0,
   "aumento_from": "2027-01",
   "teto_semanal": 50.0,
-  "caixa": 47.62,
+  "caixa": 0.0,
   "caixa_ref": "2026-11",
   "salario_dia": 30,
   "salario_data": "2026-10-30",
@@ -181,19 +181,12 @@
   "banco_incidentes": [
    "PicPay - Transações de cartão de crédito não sendo retornada"
   ],
-  "caixa_banco": 47.62,
+  "caixa_banco": 0.0,
   "caixa_data": "2026-11-14",
   "cartao_usado": {
-   "Mercado Pago": 1626.25,
    "PicPay": 1397.0
   },
   "ciclo_info": {
-   "Mercado Pago": {
-    "conta": "8b778a91-1057-4662-917f-e758a49b7c3b",
-    "fechou": "2026-10-29",
-    "fecha_antes": 6,
-    "compras": 111.88
-   },
    "PicPay": {
     "conta": "6d7341ae-373e-4d3b-b53b-f28126fded99",
     "fechou": "2026-10-29",
@@ -215,10 +208,10 @@
    }
   },
   "eventos_pendentes": [],
-  "last_auto_sync": "2026-11-14T11:33",
-  "last_force": "2026-11-14T10:40",
-  "last_sync": "2026-11-14 11:34",
-  "last_tick": "2026-11-14 11:33",
+  "last_auto_sync": "2026-11-14T12:27",
+  "last_force": "2026-11-14T12:28",
+  "last_sync": "2026-11-14 12:28",
+  "last_tick": "2026-11-14 12:27",
   "metas_eta": {
    "1": "2026-12"
   },
@@ -236,18 +229,6 @@
    "salario_minimo_50"
   ],
   "sync_detalhe": [
-   {
-    "banco": "Mercado Pago",
-    "tipo": "conta",
-    "lidas": 52,
-    "no_app": 11
-   },
-   {
-    "banco": "Mercado Pago",
-    "tipo": "cartão",
-    "lidas": 11,
-    "no_app": 6
-   },
    {
     "banco": "PicPay",
     "tipo": "conta",
