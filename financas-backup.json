@@ -184,17 +184,10 @@
   "caixa_banco": 48.54,
   "caixa_data": "2026-11-14",
   "cartao_usado": {
-   "PicPay": 1397.0,
    "Mercado Pago": 1626.25,
    "Nubank": 230.17
   },
   "ciclo_info": {
-   "PicPay": {
-    "conta": "6d7341ae-373e-4d3b-b53b-f28126fded99",
-    "fechou": "2026-10-29",
-    "fecha_antes": 9,
-    "compras": 347.51
-   },
    "Mercado Pago": {
     "conta": "8b778a91-1057-4662-917f-e758a49b7c3b",
     "fechou": "2026-10-29",
@@ -222,10 +215,10 @@
    }
   },
   "eventos_pendentes": [],
-  "last_auto_sync": "2026-11-14T10:39",
+  "last_auto_sync": "2026-11-14T11:06",
   "last_force": "2026-11-14T10:40",
-  "last_sync": "2026-11-14 10:40",
-  "last_tick": "2026-11-14 10:39",
+  "last_sync": "2026-11-14 11:07",
+  "last_tick": "2026-11-14 11:06",
   "metas_eta": {
    "1": "2026-12"
   },
@@ -243,18 +236,6 @@
    "salario_minimo_50"
   ],
   "sync_detalhe": [
-   {
-    "banco": "PicPay",
-    "tipo": "conta",
-    "lidas": 0,
-    "no_app": 0
-   },
-   {
-    "banco": "PicPay",
-    "tipo": "cartão",
-    "lidas": 33,
-    "no_app": 32
-   },
    {
     "banco": "Mercado Pago",
     "tipo": "conta",
