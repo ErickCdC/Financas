@@ -182,7 +182,7 @@
    "PicPay - Transações de cartão de crédito não sendo retornada"
   ],
   "caixa_banco": 30.64,
-  "caixa_data": "2026-11-14",
+  "caixa_data": "2026-11-15",
   "cartao_usado": {
    "Mercado Pago": 1626.25,
    "PicPay": 1449.0,
@@ -224,8 +224,8 @@
   "eventos_pendentes": [],
   "last_auto_sync": "2026-11-15T07:57",
   "last_force": "2026-11-14T21:55",
-  "last_sync": "2026-11-14 22:48",
-  "last_tick": "2026-11-15 08:00",
+  "last_sync": "2026-11-15 08:26",
+  "last_tick": "2026-11-15 08:24",
   "metas_eta": {
    "1": "2026-12"
   },
