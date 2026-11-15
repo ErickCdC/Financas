@@ -191,8 +191,8 @@
   "ciclo_info": {
    "PicPay": {
     "conta": "6d7341ae-373e-4d3b-b53b-f28126fded99",
-    "fechou": null,
-    "fecha_antes": null,
+    "fechou": "2026-10-29",
+    "fecha_antes": 9,
     "compras": 347.51
    },
    "Mercado Pago": {
@@ -222,10 +222,10 @@
    }
   },
   "eventos_pendentes": [],
-  "last_auto_sync": "2026-11-15T13:48",
+  "last_auto_sync": "2026-11-15T14:15",
   "last_force": "2026-11-15T12:54",
-  "last_sync": "2026-11-15 13:51",
-  "last_tick": "2026-11-15 13:48",
+  "last_sync": "2026-11-15 14:42",
+  "last_tick": "2026-11-15 14:42",
   "metas_eta": {
    "1": "2026-12"
   },
