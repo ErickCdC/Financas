@@ -211,7 +211,7 @@
   "last_auto_sync": "2026-11-17T11:06",
   "last_force": "2026-11-17T10:13",
   "last_sync": "2026-11-17 11:07",
-  "last_tick": "2026-11-17 11:17",
+  "last_tick": "2026-11-17 11:18",
   "metas_eta": {
    "1": "2026-12"
   },
@@ -2151,6 +2151,17 @@
   }
  ],
  "notas": [],
- "tarefas": [],
+ "tarefas": [
+  {
+   "id": 1,
+   "pasta": "Trabalho",
+   "titulo": "Pegar cartão wago",
+   "prazo": "2026-11-18",
+   "nota": null,
+   "importante": 0,
+   "feito_em": null,
+   "criado": "2026-11-17 11:18"
+  }
+ ],
  "facul": []
 }
