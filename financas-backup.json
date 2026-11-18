@@ -184,16 +184,16 @@
   "caixa_banco": 198.67,
   "caixa_data": "2026-11-17",
   "cartao_usado": {
-   "Mercado Pago": 1740.1,
+   "Nubank": 231.2,
    "PicPay": 1449.0,
-   "Nubank": 231.2
+   "Mercado Pago": 1740.1
   },
   "ciclo_info": {
-   "Mercado Pago": {
-    "conta": "8b778a91-1057-4662-917f-e758a49b7c3b",
-    "fechou": "2026-10-29",
-    "fecha_antes": 6,
-    "compras": 111.88
+   "Nubank": {
+    "conta": "27be5f3e-7a39-4e21-b734-1d4439c35288",
+    "fechou": "2026-10-25",
+    "fecha_antes": 7,
+    "compras": 52.87
    },
    "PicPay": {
     "conta": "6d7341ae-373e-4d3b-b53b-f28126fded99",
@@ -201,11 +201,11 @@
     "fecha_antes": 9,
     "compras": 347.51
    },
-   "Nubank": {
-    "conta": "27be5f3e-7a39-4e21-b734-1d4439c35288",
-    "fechou": "2026-10-25",
-    "fecha_antes": 7,
-    "compras": 52.87
+   "Mercado Pago": {
+    "conta": "8b778a91-1057-4662-917f-e758a49b7c3b",
+    "fechou": "2026-10-29",
+    "fecha_antes": 6,
+    "compras": 111.88
    }
   },
   "entradas": {
@@ -222,10 +222,10 @@
    }
   },
   "eventos_pendentes": [],
-  "last_auto_sync": "2026-11-17T21:27",
+  "last_auto_sync": "2026-11-17T21:54",
   "last_force": "2026-11-17T21:28",
-  "last_sync": "2026-11-17 21:28",
-  "last_tick": "2026-11-17 21:27",
+  "last_sync": "2026-11-17 21:54",
+  "last_tick": "2026-11-17 21:54",
   "metas_eta": {
    "1": "2026-11"
   },
@@ -244,16 +244,16 @@
   ],
   "sync_detalhe": [
    {
-    "banco": "Mercado Pago",
+    "banco": "Nubank",
     "tipo": "conta",
-    "lidas": 59,
-    "no_app": 13
+    "lidas": 0,
+    "no_app": 0
    },
    {
-    "banco": "Mercado Pago",
+    "banco": "Nubank",
     "tipo": "cartão",
-    "lidas": 12,
-    "no_app": 6
+    "lidas": 21,
+    "no_app": 19
    },
    {
     "banco": "PicPay",
@@ -268,16 +268,16 @@
     "no_app": 32
    },
    {
-    "banco": "Nubank",
+    "banco": "Mercado Pago",
     "tipo": "conta",
-    "lidas": 0,
-    "no_app": 0
+    "lidas": 59,
+    "no_app": 13
    },
    {
-    "banco": "Nubank",
+    "banco": "Mercado Pago",
     "tipo": "cartão",
-    "lidas": 21,
-    "no_app": 19
+    "lidas": 12,
+    "no_app": 6
    }
   ]
  },
