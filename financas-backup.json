@@ -10,7 +10,7 @@
   "aumento_pct": 25.0,
   "aumento_from": "2027-01",
   "teto_semanal": 50.0,
-  "caixa": 0.92,
+  "caixa": 84.91,
   "caixa_ref": "2026-11",
   "salario_dia": 30,
   "salario_data": "2026-10-30",
@@ -181,10 +181,12 @@
   "banco_incidentes": [
    "PicPay - Transações de cartão de crédito não sendo retornada"
   ],
-  "caixa_banco": 0.92,
+  "caixa_banco": 84.91,
   "caixa_data": "2026-11-19",
   "cartao_usado": {
-   "Nubank": 231.2
+   "Nubank": 231.2,
+   "PicPay": 1458.0,
+   "Mercado Pago": 1740.1
   },
   "ciclo_info": {
    "Nubank": {
@@ -192,6 +194,18 @@
     "fechou": "2026-10-25",
     "fecha_antes": 7,
     "compras": 52.87
+   },
+   "PicPay": {
+    "conta": "6d7341ae-373e-4d3b-b53b-f28126fded99",
+    "fechou": "2026-10-29",
+    "fecha_antes": 9,
+    "compras": 414.46
+   },
+   "Mercado Pago": {
+    "conta": "8b778a91-1057-4662-917f-e758a49b7c3b",
+    "fechou": "2026-10-29",
+    "fecha_antes": 6,
+    "compras": 111.88
    }
   },
   "entradas": {
@@ -208,10 +222,10 @@
    }
   },
   "eventos_pendentes": [],
-  "last_auto_sync": "2026-11-19T14:15",
+  "last_auto_sync": "2026-11-19T14:42",
   "last_force": "2026-11-19T13:49",
-  "last_sync": "2026-11-19 14:16",
-  "last_tick": "2026-11-19 14:15",
+  "last_sync": "2026-11-19 14:43",
+  "last_tick": "2026-11-19 14:42",
   "metas_eta": {
    "1": "2026-12"
   },
@@ -240,6 +254,30 @@
     "tipo": "cartão",
     "lidas": 23,
     "no_app": 21
+   },
+   {
+    "banco": "PicPay",
+    "tipo": "conta",
+    "lidas": 0,
+    "no_app": 0
+   },
+   {
+    "banco": "PicPay",
+    "tipo": "cartão",
+    "lidas": 35,
+    "no_app": 34
+   },
+   {
+    "banco": "Mercado Pago",
+    "tipo": "conta",
+    "lidas": 66,
+    "no_app": 17
+   },
+   {
+    "banco": "Mercado Pago",
+    "tipo": "cartão",
+    "lidas": 12,
+    "no_app": 6
    }
   ]
  },
@@ -1461,6 +1499,17 @@
    "category": "transporte",
    "source": "banco",
    "ext_id": "40bb4be3-1095-40f0-92da-8c9f80c5767c:0264e3dd-f900-476b-bdfa-91415ecaa68d",
+   "ignored": 0,
+   "card": null
+  },
+  {
+   "id": 78,
+   "date": "2026-11-19",
+   "description": "Pix enviado Alessandra Goncalves de Castro",
+   "amount": 13.0,
+   "category": "outros",
+   "source": "banco",
+   "ext_id": "40bb4be3-1095-40f0-92da-8c9f80c5767c:3aa42d85-82b7-4d8b-ba63-e9b17bca437d",
    "ignored": 0,
    "card": null
   }
