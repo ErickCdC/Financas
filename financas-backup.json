@@ -222,10 +222,10 @@
    }
   },
   "eventos_pendentes": [],
-  "last_auto_sync": "2026-11-18T20:06",
+  "last_auto_sync": "2026-11-18T21:00",
   "last_force": "2026-11-18T19:14",
   "last_sync": "2026-11-18 20:08",
-  "last_tick": "2026-11-18 20:06",
+  "last_tick": "2026-11-18 21:00",
   "metas_eta": {
    "1": "2026-12"
   },
@@ -1500,7 +1500,7 @@
    "auth": "-LZCogkbAIUGPprhqKSGMw",
    "label": "Android · Chrome",
    "created": "2026-11-06 17:47",
-   "last_ok": "2026-11-18 08:00",
+   "last_ok": "2026-11-18 21:01",
    "fails": 0
   }
  ],
@@ -1780,6 +1780,12 @@
    "sent_at": "2026-11-18 08:00",
    "title": "Tarefa para hoje: Pegar cartão wago",
    "body": "Trabalho"
+  },
+  {
+   "key": "habitos:2026-11-18",
+   "sent_at": "2026-11-18 21:01",
+   "title": "Hábitos de hoje",
+   "body": "Água 0/2000 ml · Sono 0/7 h · Café da manhã 0/1 · Lanche da manhã 0/1"
   }
  ],
  "cobrancas": [
