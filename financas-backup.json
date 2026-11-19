@@ -10,7 +10,7 @@
   "aumento_pct": 25.0,
   "aumento_from": "2027-01",
   "teto_semanal": 50.0,
-  "caixa": 112.82,
+  "caixa": 97.86,
   "caixa_ref": "2026-11",
   "salario_dia": 30,
   "salario_data": "2026-10-30",
@@ -181,19 +181,19 @@
   "banco_incidentes": [
    "PicPay - Transações de cartão de crédito não sendo retornada"
   ],
-  "caixa_banco": 112.82,
+  "caixa_banco": 97.86,
   "caixa_data": "2026-11-18",
   "cartao_usado": {
-   "PicPay": 1449.0,
+   "Mercado Pago": 1740.1,
    "Nubank": 231.2,
-   "Mercado Pago": 1740.1
+   "PicPay": 1449.0
   },
   "ciclo_info": {
-   "PicPay": {
-    "conta": "6d7341ae-373e-4d3b-b53b-f28126fded99",
+   "Mercado Pago": {
+    "conta": "8b778a91-1057-4662-917f-e758a49b7c3b",
     "fechou": "2026-10-29",
-    "fecha_antes": 9,
-    "compras": 414.46
+    "fecha_antes": 6,
+    "compras": 111.88
    },
    "Nubank": {
     "conta": "27be5f3e-7a39-4e21-b734-1d4439c35288",
@@ -201,11 +201,11 @@
     "fecha_antes": 7,
     "compras": 52.87
    },
-   "Mercado Pago": {
-    "conta": "8b778a91-1057-4662-917f-e758a49b7c3b",
+   "PicPay": {
+    "conta": "6d7341ae-373e-4d3b-b53b-f28126fded99",
     "fechou": "2026-10-29",
-    "fecha_antes": 6,
-    "compras": 111.88
+    "fecha_antes": 9,
+    "compras": 414.46
    }
   },
   "entradas": {
@@ -222,10 +222,10 @@
    }
   },
   "eventos_pendentes": [],
-  "last_auto_sync": "2026-11-18T21:27",
+  "last_auto_sync": "2026-11-18T21:54",
   "last_force": "2026-11-18T21:27",
-  "last_sync": "2026-11-18 21:27",
-  "last_tick": "2026-11-18 21:27",
+  "last_sync": "2026-11-18 21:55",
+  "last_tick": "2026-11-18 21:54",
   "metas_eta": {
    "1": "2026-12"
   },
@@ -244,16 +244,16 @@
   ],
   "sync_detalhe": [
    {
-    "banco": "PicPay",
+    "banco": "Mercado Pago",
     "tipo": "conta",
-    "lidas": 0,
-    "no_app": 0
+    "lidas": 64,
+    "no_app": 16
    },
    {
-    "banco": "PicPay",
+    "banco": "Mercado Pago",
     "tipo": "cartão",
-    "lidas": 35,
-    "no_app": 34
+    "lidas": 12,
+    "no_app": 6
    },
    {
     "banco": "Nubank",
@@ -268,16 +268,16 @@
     "no_app": 21
    },
    {
-    "banco": "Mercado Pago",
+    "banco": "PicPay",
     "tipo": "conta",
-    "lidas": 63,
-    "no_app": 15
+    "lidas": 0,
+    "no_app": 0
    },
    {
-    "banco": "Mercado Pago",
+    "banco": "PicPay",
     "tipo": "cartão",
-    "lidas": 12,
-    "no_app": 6
+    "lidas": 35,
+    "no_app": 34
    }
   ]
  },
@@ -1490,6 +1490,17 @@
    "ext_id": "6d7341ae-373e-4d3b-b53b-f28126fded99:2926fae3-b193-470f-a03e-2e30f0009ca3",
    "ignored": 0,
    "card": "PicPay"
+  },
+  {
+   "id": 77,
+   "date": "2026-11-18",
+   "description": "Pagamento com Pix UBER DO BRASIL TECNOLOGIA LTDA.",
+   "amount": 14.96,
+   "category": "transporte",
+   "source": "banco",
+   "ext_id": "40bb4be3-1095-40f0-92da-8c9f80c5767c:0264e3dd-f900-476b-bdfa-91415ecaa68d",
+   "ignored": 0,
+   "card": null
   }
  ],
  "push_subs": [
@@ -1500,7 +1511,7 @@
    "auth": "-LZCogkbAIUGPprhqKSGMw",
    "label": "Android · Chrome",
    "created": "2026-11-06 17:47",
-   "last_ok": "2026-11-18 21:01",
+   "last_ok": "2026-11-18 21:55",
    "fails": 0
   }
  ],
@@ -1786,6 +1797,18 @@
    "sent_at": "2026-11-18 21:01",
    "title": "Hábitos de hoje",
    "body": "Água 0/2000 ml · Sono 0/7 h · Café da manhã 0/1 · Lanche da manhã 0/1"
+  },
+  {
+   "key": "teto:2026-11-16:100",
+   "sent_at": "2026-11-18 21:55",
+   "title": "Teto da semana estourado",
+   "body": "Você gastou R$ 50,89 de R$ 50,00. Passou R$ 0,89. A caixinha deste salário caiu para R$ 383,08."
+  },
+  {
+   "key": "teto:2026-11-16:80",
+   "sent_at": "2026-11-18 21:55",
+   "title": "",
+   "body": ""
   }
  ],
  "cobrancas": [
