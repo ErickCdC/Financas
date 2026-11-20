@@ -10,7 +10,7 @@
   "aumento_pct": 25.0,
   "aumento_from": "2027-01",
   "teto_semanal": 50.0,
-  "caixa": 68.41,
+  "caixa": 32.35,
   "caixa_ref": "2026-11",
   "salario_dia": 30,
   "salario_data": "2026-10-30",
@@ -181,20 +181,14 @@
   "banco_incidentes": [
    "PicPay - Transações de cartão de crédito não sendo retornada"
   ],
-  "caixa_banco": 68.41,
+  "caixa_banco": 32.35,
   "caixa_data": "2026-11-20",
   "cartao_usado": {
-   "Mercado Pago": 1740.1,
    "PicPay": 1458.0,
-   "Nubank": 231.2
+   "Nubank": 231.2,
+   "Mercado Pago": 1740.1
   },
   "ciclo_info": {
-   "Mercado Pago": {
-    "conta": "8b778a91-1057-4662-917f-e758a49b7c3b",
-    "fechou": "2026-10-29",
-    "fecha_antes": 6,
-    "compras": 111.88
-   },
    "PicPay": {
     "conta": "6d7341ae-373e-4d3b-b53b-f28126fded99",
     "fechou": "2026-10-29",
@@ -206,6 +200,12 @@
     "fechou": "2026-10-25",
     "fecha_antes": 7,
     "compras": 52.87
+   },
+   "Mercado Pago": {
+    "conta": "8b778a91-1057-4662-917f-e758a49b7c3b",
+    "fechou": "2026-10-29",
+    "fecha_antes": 6,
+    "compras": 111.88
    }
   },
   "entradas": {
@@ -222,10 +222,10 @@
    }
   },
   "eventos_pendentes": [],
-  "last_auto_sync": "2026-11-20T07:57",
+  "last_auto_sync": "2026-11-20T08:24",
   "last_force": "2026-11-20T07:59",
-  "last_sync": "2026-11-20 07:58",
-  "last_tick": "2026-11-20 08:00",
+  "last_sync": "2026-11-20 08:24",
+  "last_tick": "2026-11-20 08:24",
   "metas_eta": {
    "1": "2026-12"
   },
@@ -243,18 +243,6 @@
    "salario_minimo_50"
   ],
   "sync_detalhe": [
-   {
-    "banco": "Mercado Pago",
-    "tipo": "conta",
-    "lidas": 67,
-    "no_app": 18
-   },
-   {
-    "banco": "Mercado Pago",
-    "tipo": "cartão",
-    "lidas": 12,
-    "no_app": 6
-   },
    {
     "banco": "PicPay",
     "tipo": "conta",
@@ -278,6 +266,18 @@
     "tipo": "cartão",
     "lidas": 23,
     "no_app": 21
+   },
+   {
+    "banco": "Mercado Pago",
+    "tipo": "conta",
+    "lidas": 68,
+    "no_app": 19
+   },
+   {
+    "banco": "Mercado Pago",
+    "tipo": "cartão",
+    "lidas": 12,
+    "no_app": 6
    }
   ]
  },
@@ -1521,6 +1521,17 @@
    "category": "mercado",
    "source": "banco",
    "ext_id": "40bb4be3-1095-40f0-92da-8c9f80c5767c:73c20f34-48ad-4174-baf2-64d7f231baf8",
+   "ignored": 0,
+   "card": null
+  },
+  {
+   "id": 80,
+   "date": "2026-11-20",
+   "description": "Pagamento com Pix 59.468.391 HAMZA SELLAMI",
+   "amount": 36.06,
+   "category": "comida",
+   "source": "banco",
+   "ext_id": "40bb4be3-1095-40f0-92da-8c9f80c5767c:b5a2f835-be77-42ba-9bd4-58347440727b",
    "ignored": 0,
    "card": null
   }
