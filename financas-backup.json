@@ -10,7 +10,7 @@
   "aumento_pct": 25.0,
   "aumento_from": "2027-01",
   "teto_semanal": 50.0,
-  "caixa": 83.99,
+  "caixa": 68.41,
   "caixa_ref": "2026-11",
   "salario_dia": 30,
   "salario_data": "2026-10-30",
@@ -181,13 +181,20 @@
   "banco_incidentes": [
    "PicPay - Transações de cartão de crédito não sendo retornada"
   ],
-  "caixa_banco": 83.99,
+  "caixa_banco": 68.41,
   "caixa_data": "2026-11-19",
   "cartao_usado": {
+   "Nubank": 231.2,
    "Mercado Pago": 1740.1,
    "PicPay": 1458.0
   },
   "ciclo_info": {
+   "Nubank": {
+    "conta": "27be5f3e-7a39-4e21-b734-1d4439c35288",
+    "fechou": "2026-10-25",
+    "fecha_antes": 7,
+    "compras": 52.87
+   },
    "Mercado Pago": {
     "conta": "8b778a91-1057-4662-917f-e758a49b7c3b",
     "fechou": "2026-10-29",
@@ -215,10 +222,10 @@
    }
   },
   "eventos_pendentes": [],
-  "last_auto_sync": "2026-11-19T21:00",
+  "last_auto_sync": "2026-11-19T21:27",
   "last_force": "2026-11-19T20:34",
-  "last_sync": "2026-11-19 20:34",
-  "last_tick": "2026-11-19 21:00",
+  "last_sync": "2026-11-19 21:28",
+  "last_tick": "2026-11-19 21:27",
   "metas_eta": {
    "1": "2026-12"
   },
@@ -237,10 +244,22 @@
   ],
   "sync_detalhe": [
    {
+    "banco": "Nubank",
+    "tipo": "conta",
+    "lidas": 0,
+    "no_app": 0
+   },
+   {
+    "banco": "Nubank",
+    "tipo": "cartão",
+    "lidas": 23,
+    "no_app": 21
+   },
+   {
     "banco": "Mercado Pago",
     "tipo": "conta",
-    "lidas": 66,
-    "no_app": 17
+    "lidas": 67,
+    "no_app": 18
    },
    {
     "banco": "Mercado Pago",
@@ -1491,6 +1510,17 @@
    "category": "outros",
    "source": "banco",
    "ext_id": "40bb4be3-1095-40f0-92da-8c9f80c5767c:3aa42d85-82b7-4d8b-ba63-e9b17bca437d",
+   "ignored": 0,
+   "card": null
+  },
+  {
+   "id": 79,
+   "date": "2026-11-19",
+   "description": "Pagamento com Pix RENATA JORGE LUZ BRETAS 08445586726",
+   "amount": 16.5,
+   "category": "mercado",
+   "source": "banco",
+   "ext_id": "40bb4be3-1095-40f0-92da-8c9f80c5767c:73c20f34-48ad-4174-baf2-64d7f231baf8",
    "ignored": 0,
    "card": null
   }
