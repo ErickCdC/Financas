@@ -215,10 +215,10 @@
    }
   },
   "eventos_pendentes": [],
-  "last_auto_sync": "2026-11-19T20:33",
+  "last_auto_sync": "2026-11-19T21:00",
   "last_force": "2026-11-19T20:34",
   "last_sync": "2026-11-19 20:34",
-  "last_tick": "2026-11-19 20:33",
+  "last_tick": "2026-11-19 21:00",
   "metas_eta": {
    "1": "2026-12"
   },
@@ -1503,7 +1503,7 @@
    "auth": "-LZCogkbAIUGPprhqKSGMw",
    "label": "Android · Chrome",
    "created": "2026-11-06 17:47",
-   "last_ok": "2026-11-19 19:00",
+   "last_ok": "2026-11-19 21:01",
    "fails": 0
   }
  ],
@@ -1825,6 +1825,12 @@
    "sent_at": "2026-11-19 19:00",
    "title": "No ritmo atual, faltam R$ 4,22 no fim do mês",
    "body": "Você está gastando R$ 34,19 por dia. Para fechar no zero até o salário, o limite é R$ 33,80 por dia."
+  },
+  {
+   "key": "habitos:2026-11-19",
+   "sent_at": "2026-11-19 21:01",
+   "title": "Hábitos de hoje",
+   "body": "Água 0/2000 ml · Sono 0/7 h · Café da manhã 0/1 · Lanche da manhã 0/1"
   }
  ],
  "cobrancas": [
