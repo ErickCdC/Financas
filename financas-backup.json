@@ -10,7 +10,7 @@
   "aumento_pct": 25.0,
   "aumento_from": "2027-01",
   "teto_semanal": 50.0,
-  "caixa": 32.35,
+  "caixa": 21.43,
   "caixa_ref": "2026-11",
   "salario_dia": 30,
   "salario_data": "2026-10-30",
@@ -181,12 +181,10 @@
   "banco_incidentes": [
    "PicPay - Transações de cartão de crédito não sendo retornada"
   ],
-  "caixa_banco": 32.35,
+  "caixa_banco": 21.43,
   "caixa_data": "2026-11-21",
   "cartao_usado": {
-   "Mercado Pago": 1740.1,
-   "Nubank": 231.2,
-   "PicPay": 1550.0
+   "Mercado Pago": 1740.1
   },
   "ciclo_info": {
    "Mercado Pago": {
@@ -194,18 +192,6 @@
     "fechou": "2026-10-29",
     "fecha_antes": 6,
     "compras": 111.88
-   },
-   "Nubank": {
-    "conta": "27be5f3e-7a39-4e21-b734-1d4439c35288",
-    "fechou": "2026-10-25",
-    "fecha_antes": 7,
-    "compras": 52.87
-   },
-   "PicPay": {
-    "conta": "6d7341ae-373e-4d3b-b53b-f28126fded99",
-    "fechou": "2026-10-29",
-    "fecha_antes": 9,
-    "compras": 414.46
    }
   },
   "entradas": {
@@ -222,10 +208,10 @@
    }
   },
   "eventos_pendentes": [],
-  "last_auto_sync": "2026-11-21T15:09",
+  "last_auto_sync": "2026-11-21T15:36",
   "last_force": "2026-11-21T15:10",
-  "last_sync": "2026-11-21 15:10",
-  "last_tick": "2026-11-21 15:09",
+  "last_sync": "2026-11-21 15:38",
+  "last_tick": "2026-11-21 15:36",
   "metas_eta": {
    "1": "2026-12"
   },
@@ -246,38 +232,14 @@
    {
     "banco": "Mercado Pago",
     "tipo": "conta",
-    "lidas": 68,
-    "no_app": 19
+    "lidas": 69,
+    "no_app": 20
    },
    {
     "banco": "Mercado Pago",
     "tipo": "cartão",
     "lidas": 12,
     "no_app": 6
-   },
-   {
-    "banco": "Nubank",
-    "tipo": "conta",
-    "lidas": 0,
-    "no_app": 0
-   },
-   {
-    "banco": "Nubank",
-    "tipo": "cartão",
-    "lidas": 23,
-    "no_app": 21
-   },
-   {
-    "banco": "PicPay",
-    "tipo": "conta",
-    "lidas": 0,
-    "no_app": 0
-   },
-   {
-    "banco": "PicPay",
-    "tipo": "cartão",
-    "lidas": 35,
-    "no_app": 34
    }
   ]
  },
@@ -1532,6 +1494,17 @@
    "category": "comida",
    "source": "banco",
    "ext_id": "40bb4be3-1095-40f0-92da-8c9f80c5767c:b5a2f835-be77-42ba-9bd4-58347440727b",
+   "ignored": 0,
+   "card": null
+  },
+  {
+   "id": 81,
+   "date": "2026-11-21",
+   "description": "Pagamento com Pix S.H. COMERCIO DE ARMARINHO LTDA",
+   "amount": 10.0,
+   "category": "casa",
+   "source": "banco",
+   "ext_id": "40bb4be3-1095-40f0-92da-8c9f80c5767c:ada259ff-45bb-4843-bb76-05b61462cd0f",
    "ignored": 0,
    "card": null
   }
