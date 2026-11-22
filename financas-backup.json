@@ -10,7 +10,7 @@
   "aumento_pct": 25.0,
   "aumento_from": "2027-01",
   "teto_semanal": 50.0,
-  "caixa": 22.35,
+  "caixa": 0.92,
   "caixa_ref": "2026-11",
   "salario_dia": 30,
   "salario_data": "2026-10-30",
@@ -181,31 +181,17 @@
   "banco_incidentes": [
    "PicPay - Transações de cartão de crédito não sendo retornada"
   ],
-  "caixa_banco": 22.35,
+  "caixa_banco": 0.92,
   "caixa_data": "2026-11-21",
   "cartao_usado": {
-   "Nubank": 231.2,
-   "PicPay": 1550.0,
-   "Mercado Pago": 1740.1
+   "Nubank": 231.2
   },
   "ciclo_info": {
    "Nubank": {
     "conta": "27be5f3e-7a39-4e21-b734-1d4439c35288",
-    "fechou": "2026-10-25",
-    "fecha_antes": 7,
+    "fechou": null,
+    "fecha_antes": null,
     "compras": 52.87
-   },
-   "PicPay": {
-    "conta": "6d7341ae-373e-4d3b-b53b-f28126fded99",
-    "fechou": "2026-10-29",
-    "fecha_antes": 9,
-    "compras": 414.46
-   },
-   "Mercado Pago": {
-    "conta": "8b778a91-1057-4662-917f-e758a49b7c3b",
-    "fechou": "2026-10-29",
-    "fecha_antes": 6,
-    "compras": 111.88
    }
   },
   "entradas": {
@@ -222,10 +208,10 @@
    }
   },
   "eventos_pendentes": [],
-  "last_auto_sync": "2026-11-21T20:33",
+  "last_auto_sync": "2026-11-21T21:00",
   "last_force": "2026-11-21T20:10",
-  "last_sync": "2026-11-21 20:33",
-  "last_tick": "2026-11-21 20:33",
+  "last_sync": "2026-11-21 21:02",
+  "last_tick": "2026-11-21 21:00",
   "metas_eta": {
    "1": "2026-12"
   },
@@ -254,30 +240,6 @@
     "tipo": "cartão",
     "lidas": 23,
     "no_app": 21
-   },
-   {
-    "banco": "PicPay",
-    "tipo": "conta",
-    "lidas": 0,
-    "no_app": 0
-   },
-   {
-    "banco": "PicPay",
-    "tipo": "cartão",
-    "lidas": 35,
-    "no_app": 34
-   },
-   {
-    "banco": "Mercado Pago",
-    "tipo": "conta",
-    "lidas": 69,
-    "no_app": 20
-   },
-   {
-    "banco": "Mercado Pago",
-    "tipo": "cartão",
-    "lidas": 12,
-    "no_app": 6
    }
   ]
  },
@@ -1555,7 +1517,7 @@
    "auth": "-LZCogkbAIUGPprhqKSGMw",
    "label": "Android · Chrome",
    "created": "2026-11-06 17:47",
-   "last_ok": "2026-11-21 18:00",
+   "last_ok": "2026-11-21 21:02",
    "fails": 0
   }
  ],
@@ -1925,6 +1887,12 @@
    "sent_at": "2026-11-21 18:00",
    "title": "Hoje é dia de treinar",
    "body": "Faltam 4 treino(s) para a meta de 4 e restam 2 dia(s) na semana (dia A — Peito, ombro e tríceps)."
+  },
+  {
+   "key": "habitos:2026-11-21",
+   "sent_at": "2026-11-21 21:02",
+   "title": "Hábitos de hoje",
+   "body": "Água 0/2000 ml · Sono 0/7 h · Café da manhã 0/1 · Lanche da manhã 0/1"
   }
  ],
  "cobrancas": [
