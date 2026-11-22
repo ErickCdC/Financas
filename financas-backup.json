@@ -189,8 +189,8 @@
   "ciclo_info": {
    "Mercado Pago": {
     "conta": "8b778a91-1057-4662-917f-e758a49b7c3b",
-    "fechou": null,
-    "fecha_antes": null,
+    "fechou": "2026-10-29",
+    "fecha_antes": 6,
     "compras": 111.88
    }
   },
@@ -208,10 +208,10 @@
    }
   },
   "eventos_pendentes": [],
-  "last_auto_sync": "2026-11-22T12:54",
+  "last_auto_sync": "2026-11-22T13:21",
   "last_force": "2026-11-22T12:29",
-  "last_sync": "2026-11-22 12:55",
-  "last_tick": "2026-11-22 12:54",
+  "last_sync": "2026-11-22 13:22",
+  "last_tick": "2026-11-22 13:21",
   "metas_eta": {
    "1": "2026-12"
   },
