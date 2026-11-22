@@ -10,7 +10,7 @@
   "aumento_pct": 25.0,
   "aumento_from": "2027-01",
   "teto_semanal": 50.0,
-  "caixa": 21.43,
+  "caixa": 22.35,
   "caixa_ref": "2026-11",
   "salario_dia": 30,
   "salario_data": "2026-10-30",
@@ -181,24 +181,31 @@
   "banco_incidentes": [
    "PicPay - Transações de cartão de crédito não sendo retornada"
   ],
-  "caixa_banco": 21.43,
+  "caixa_banco": 22.35,
   "caixa_data": "2026-11-21",
   "cartao_usado": {
-   "PicPay": 1550.0,
-   "Mercado Pago": 1740.1
+   "Nubank": 231.2,
+   "Mercado Pago": 1740.1,
+   "PicPay": 1550.0
   },
   "ciclo_info": {
-   "PicPay": {
-    "conta": "6d7341ae-373e-4d3b-b53b-f28126fded99",
-    "fechou": "2026-10-29",
-    "fecha_antes": 9,
-    "compras": 414.46
+   "Nubank": {
+    "conta": "27be5f3e-7a39-4e21-b734-1d4439c35288",
+    "fechou": "2026-10-25",
+    "fecha_antes": 7,
+    "compras": 52.87
    },
    "Mercado Pago": {
     "conta": "8b778a91-1057-4662-917f-e758a49b7c3b",
     "fechou": "2026-10-29",
     "fecha_antes": 6,
     "compras": 111.88
+   },
+   "PicPay": {
+    "conta": "6d7341ae-373e-4d3b-b53b-f28126fded99",
+    "fechou": "2026-10-29",
+    "fecha_antes": 9,
+    "compras": 414.46
    }
   },
   "entradas": {
@@ -215,10 +222,10 @@
    }
   },
   "eventos_pendentes": [],
-  "last_auto_sync": "2026-11-21T21:27",
+  "last_auto_sync": "2026-11-21T21:54",
   "last_force": "2026-11-21T21:28",
-  "last_sync": "2026-11-21 21:28",
-  "last_tick": "2026-11-21 21:27",
+  "last_sync": "2026-11-21 21:54",
+  "last_tick": "2026-11-21 21:54",
   "metas_eta": {
    "1": "2026-12"
   },
@@ -237,16 +244,16 @@
   ],
   "sync_detalhe": [
    {
-    "banco": "PicPay",
+    "banco": "Nubank",
     "tipo": "conta",
     "lidas": 0,
     "no_app": 0
    },
    {
-    "banco": "PicPay",
+    "banco": "Nubank",
     "tipo": "cartão",
-    "lidas": 35,
-    "no_app": 34
+    "lidas": 23,
+    "no_app": 21
    },
    {
     "banco": "Mercado Pago",
@@ -259,6 +266,18 @@
     "tipo": "cartão",
     "lidas": 12,
     "no_app": 6
+   },
+   {
+    "banco": "PicPay",
+    "tipo": "conta",
+    "lidas": 0,
+    "no_app": 0
+   },
+   {
+    "banco": "PicPay",
+    "tipo": "cartão",
+    "lidas": 35,
+    "no_app": 34
    }
   ]
  },
