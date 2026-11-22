@@ -10,7 +10,7 @@
   "aumento_pct": 25.0,
   "aumento_from": "2027-01",
   "teto_semanal": 50.0,
-  "caixa": 22.36,
+  "caixa": 21.44,
   "caixa_ref": "2026-11",
   "salario_dia": 30,
   "salario_data": "2026-10-30",
@@ -181,20 +181,13 @@
   "banco_incidentes": [
    "PicPay - Transações de cartão de crédito não sendo retornada"
   ],
-  "caixa_banco": 22.36,
+  "caixa_banco": 21.44,
   "caixa_data": "2026-11-22",
   "cartao_usado": {
-   "Nubank": 231.2,
    "PicPay": 1563.0,
    "Mercado Pago": 1740.1
   },
   "ciclo_info": {
-   "Nubank": {
-    "conta": "27be5f3e-7a39-4e21-b734-1d4439c35288",
-    "fechou": "2026-10-25",
-    "fecha_antes": 7,
-    "compras": 52.87
-   },
    "PicPay": {
     "conta": "6d7341ae-373e-4d3b-b53b-f28126fded99",
     "fechou": "2026-10-29",
@@ -222,10 +215,10 @@
    }
   },
   "eventos_pendentes": [],
-  "last_auto_sync": "2026-11-22T15:09",
+  "last_auto_sync": "2026-11-22T15:36",
   "last_force": "2026-11-22T15:12",
-  "last_sync": "2026-11-22 15:11",
-  "last_tick": "2026-11-22 15:09",
+  "last_sync": "2026-11-22 15:37",
+  "last_tick": "2026-11-22 15:36",
   "metas_eta": {
    "1": "2026-12"
   },
@@ -243,18 +236,6 @@
    "salario_minimo_50"
   ],
   "sync_detalhe": [
-   {
-    "banco": "Nubank",
-    "tipo": "conta",
-    "lidas": 0,
-    "no_app": 0
-   },
-   {
-    "banco": "Nubank",
-    "tipo": "cartão",
-    "lidas": 23,
-    "no_app": 21
-   },
    {
     "banco": "PicPay",
     "tipo": "conta",
