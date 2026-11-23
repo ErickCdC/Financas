@@ -222,10 +222,10 @@
    }
   },
   "eventos_pendentes": [],
-  "last_auto_sync": "2026-11-22T20:33",
+  "last_auto_sync": "2026-11-22T21:00",
   "last_force": "2026-11-22T20:34",
   "last_sync": "2026-11-22 20:34",
-  "last_tick": "2026-11-22 20:33",
+  "last_tick": "2026-11-22 21:00",
   "metas_eta": {
    "1": "2026-12"
   },
@@ -1555,7 +1555,7 @@
    "auth": "-LZCogkbAIUGPprhqKSGMw",
    "label": "Android · Chrome",
    "created": "2026-11-06 17:47",
-   "last_ok": "2026-11-22 19:00",
+   "last_ok": "2026-11-22 21:01",
    "fails": 0
   }
  ],
@@ -1955,6 +1955,12 @@
    "sent_at": "2026-11-22 19:00",
    "title": "Hora de se pesar",
    "body": "Faz um tempo que você não atualiza o peso — anota no módulo Corpo pra acompanhar a evolução."
+  },
+  {
+   "key": "habitos:2026-11-22",
+   "sent_at": "2026-11-22 21:01",
+   "title": "Hábitos de hoje",
+   "body": "Água 0/2000 ml · Sono 0/7 h · Café da manhã 0/1 · Lanche da manhã 0/1"
   }
  ],
  "cobrancas": [
