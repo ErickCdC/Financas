@@ -626,6 +626,12 @@
    "key": "bill:Mercado Pago",
    "paid": 0,
    "amount": 920.0
+  },
+  {
+   "month": "2026-12",
+   "key": "bill:PicPay",
+   "paid": 0,
+   "amount": 954.0
   }
  ],
  "overrides": [
