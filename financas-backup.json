@@ -222,10 +222,10 @@
    }
   },
   "eventos_pendentes": [],
-  "last_auto_sync": "2026-11-23T16:03",
+  "last_auto_sync": "2026-11-23T21:00",
   "last_force": "2026-11-23T15:10",
   "last_sync": "2026-11-23 16:03",
-  "last_tick": "2026-11-23 16:03",
+  "last_tick": "2026-11-23 21:00",
   "metas_eta": {
    "1": "2026-12"
   },
@@ -1555,7 +1555,7 @@
    "auth": "-LZCogkbAIUGPprhqKSGMw",
    "label": "Android · Chrome",
    "created": "2026-11-06 17:47",
-   "last_ok": "2026-11-23 08:30",
+   "last_ok": "2026-11-23 21:00",
    "fails": 0
   }
  ],
@@ -1979,6 +1979,12 @@
    "sent_at": "2026-11-23 08:30",
    "title": "Resumo da semana",
    "body": "Semana passada: R$ 126,45 (acima do teto em R$ 76,45). Esta semana: teto de R$ 50,00."
+  },
+  {
+   "key": "habitos:2026-11-23",
+   "sent_at": "2026-11-23 21:00",
+   "title": "Hábitos de hoje",
+   "body": "Água 0/2000 ml · Sono 0/7 h · Café da manhã 0/1 · Lanche da manhã 0/1"
   }
  ],
  "cobrancas": [
